@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>全能单位换算工具箱</title>
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.5;
+    transition:background .3s ease,color .3s ease;overflow-x:hidden;
+  }
+  :root{
+    --bg:#f4f6fb;--panel:#ffffff;--text:#1f2530;--muted:#6b7280;
+    --border:#e2e7f0;--accent:#3b82f6;--accent-text:#ffffff;
+    --input-bg:#ffffff;--shadow:0 2px 12px rgba(20,30,60,.07);--hover:#eef3ff;
+    --danger:#ef4444;--ok:#10b981;
+  }
+  body.dark{
+    --bg:#0f141b;--panel:#18212c;--text:#e7ecf3;--muted:#95a2b1;
+    --border:#28343f;--accent:#4f8cff;--accent-text:#ffffff;
+    --input-bg:#111922;--shadow:0 2px 16px rgba(0,0,0,.45);--hover:#212d3a;
+    --danger:#f87171;--ok:#34d399;
+  }
+  .wrap{max-width:1180px;width:100%;margin:0 auto;padding:clamp(12px,2vw,24px);}
+
+  /* Header */
+  header.app-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px;}
+  .brand{font-size:clamp(18px,2.6vw,25px);font-weight:800;display:flex;align-items:center;gap:10px;min-width:0;}
+  .brand .logo{font-size:1.4em;line-height:1;}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;}
+
+  .btn{
+    appearance:none;border:1px solid var(--border);background:var(--panel);color:var(--text);
+    padding:9px 14px;border-radius:10px;font-size:14px;cursor:pointer;
+    transition:background .2s,border-color .2s,transform .1s;white-space:nowrap;
+  }
+  .btn:hover{background:var(--hover);}
+  .btn:active{transform:scale(.97);}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-text);}
+  .btn.primary:hover{filter:brightness(1.05);}
+  .btn.ghost{background:transparent;}
+  .btn.danger{color:var(--danger);border-color:var(--danger);}
+  .btn.danger:hover{background:rgba(239,68,68,.1);}
+
+  /* Tabs */
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
+  .tab{
+    appearance:none;border:1px solid var(--border);background:var(--panel);color:var(--text);
+    padding:9px 16px;border-radius:999px;font-size:14px;cursor:pointer;
+    transition:all .2s;flex:0 0 auto;white-space:nowrap;
+  }
+  .tab:hover{background:var(--hover);}
+  .tab.active{background:var(--accent);border-color:var(--accent);color:var(--accent-text);font-weight:600;}
+
+  /* Card */
+  .card{display:none;background:var(--panel);border:1px solid var(--border);border-radius:16px;
+    padding:clamp(14px,2.4vw,22px);box-shadow:var(--shadow);}
+  .card.active{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+  .card-head{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .card-head h2{margin:0;font-size:clamp(17px,2.2vw,20px);}
+  .card-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .conv-list{display:flex;flex-direction:column;gap:10px;}
+  .conv-row{display:grid;grid-template-columns:minmax(74px,150px) minmax(0,1fr) auto;gap:10px;align-items:center;}
+  .conv-label{font-size:14px;color:var(--text);min-width:0;word-break:break-word;}
+  .conv-field{min-width:0;}
+  .conv-input{
+    width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:11px;
+    background:var(--input-bg);color:var(--text);font-size:15px;transition:border-color .2s,box-shadow .2s;
+  }
+  .conv-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.15);}
+  .conv-actions{display:flex;gap:6px;flex:0 0 auto;}
+  .btn-icon{
+    appearance:none;border:1px solid var(--border);background:var(--panel);color:var(--text);
+    padding:9px 11px;border-radius:10px;font-size:15px;cursor:pointer;line-height:1;transition:background .2s;
+  }
+  .btn-icon:hover{background:var(--hover);}
+  .btn-small{
+    appearance:none;border:1px solid var(--border);background:var(--panel);color:var(--text);
+    padding:7px 12px;border-radius:9px;font-size:13px;cursor:pointer;transition:background .2s;
+  }
+  .btn-small:hover{background:var(--hover);}
+  .card-foot{margin-top:16px;display:flex;flex-wrap:wrap;gap:8px;}
+  .seg{appearance:none;border:1px solid var(--border);background:var(--panel);color:var(--text);
+    padding:7px 12px;border-radius:9px;font-size:13px;cursor:pointer;transition:all .2s;}
+  .seg.on{background:var(--accent);border-color:var(--accent);color:var(--accent-text);font-weight:600;}
+  .hint{font-size:12px;color:var(--muted);}
+  .mini-input{width:74px;padding:7px 9px;border:1px solid var(--border);border-radius:9px;
+    background:var(--input-bg);color:var(--text);font-size:14px;}
+
+  /* History */
+  .history{margin-top:24px;background:var(--panel);border:1px solid var(--border);border-radius:16px;
+    padding:clamp(14px,2.4vw,22px);box-shadow:var(--shadow);}
+  .history h2{margin:0 0 4px;font-size:18px;}
+  .history-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .hist-list{display:flex;flex-direction:column;}
+  .hist-item{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+    border-bottom:1px solid var(--border);padding:10px 0;}
+  .hist-item:last-child{border-bottom:none;}
+  .hist-meta{display:flex;flex-direction:column;gap:2px;flex:1 1 200px;min-width:0;}
+  .hist-cat{font-weight:600;font-size:14px;}
+  .hist-time{font-size:12px;color:var(--muted);}
+  .hist-summary{font-size:13px;color:var(--muted);flex:1 1 260px;min-width:0;word-break:break-word;}
+  .hist-actions{display:flex;gap:6px;flex:0 0 auto;}
+  .empty{color:var(--muted);font-size:14px;padding:14px 0;text-align:center;}
+
+  /* Modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;
+    justify-content:center;padding:16px;z-index:50;}
+  .modal-backdrop.open{display:flex;animation:fade .2s ease;}
+  .modal-content{background:var(--panel);border-radius:18px;max-width:min(92vw,560px);width:100%;
+    max-height:86vh;overflow:auto;padding:clamp(16px,3vw,28px);box-shadow:var(--shadow);
+    border:1px solid var(--border);}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .modal-head h3{margin:0;font-size:20px;}
+  .modal-close{appearance:none;border:none;background:transparent;color:var(--muted);font-size:24px;
+    cursor:pointer;line-height:1;padding:2px 6px;border-radius:8px;}
+  .modal-close:hover{background:var(--hover);color:var(--text);}
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:14px;margin-bottom:6px;}
+  .field input,.field select{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;
+    background:var(--input-bg);color:var(--text);font-size:15px;}
+  .help-list{margin:0;padding-left:18px;}
+  .help-list li{margin-bottom:8px;font-size:14px;}
+  .kbd{display:inline-block;padding:1px 7px;border:1px solid var(--border);border-radius:6px;
+    background:var(--hover);font-size:13px;font-family:ui-monospace,monospace;}
+
+  /* Toast */
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+    background:var(--text);color:var(--bg);padding:11px 20px;border-radius:999px;font-size:14px;
+    opacity:0;pointer-events:none;transition:all .25s ease;z-index:100;max-width:90vw;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:11px;height:11px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:7px;border:2px solid var(--bg);}
+  ::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+  *{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+
+  /* Mobile */
+  @media (max-width:560px){
+    .conv-row{grid-template-columns:minmax(0,1fr) auto;}
+    .conv-label{grid-column:1 / -1;font-weight:600;font-size:13px;}
+    .conv-actions{justify-content:flex-end;}
+    .toolbar .btn{font-size:13px;padding:8px 11px;}
+  }
+  @media (max-width:380px){
+    .brand{font-size:17px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app-header">
+    <div class="brand"><span class="logo">🧮</span><span>全能单位换算工具箱</span></div>
+    <div class="toolbar">
+      <button class="btn" id="themeToggle" title="切换深浅色">🌓 主题</button>
+      <button class="btn" id="settingsBtn">⚙ 设置</button>
+      <button class="btn" id="helpBtn">❓ 帮助</button>
+      <button class="btn ghost" id="clearInputsBtn">🧹 清空输入</button>
+      <button class="btn danger" id="resetBtn">↺ 恢复默认</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs"></nav>
+
+  <div id="cards"></div>
+
+  <section class="history">
+    <div class="history-head">
+      <div>
+        <h2>换算记录</h2>
+        <span class="hint" id="histCount">共 0 条</span>
+      </div>
+      <div class="toolbar">
+        <button class="btn-small" id="exportBtn">⬇ 导出</button>
+        <button class="btn-small danger" id="clearHistBtn">🗑 清空历史</button>
+      </div>
+    </div>
+    <div class="hist-list" id="histList"></div>
+  </section>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-backdrop" id="settingsModal">
+  <div class="modal-content">
+    <div class="modal-head"><h3>⚙ 设置</h3><button class="modal-close" data-close="settingsModal">×</button></div>
+    <div class="field">
+      <label for="decimalsInput">小数保留位数（0 - 10）</label>
+      <input type="number" id="decimalsInput" min="0" max="10" step="1">
+    </div>
+    <div class="field">
+      <label for="maxHistInput">最大历史记录条数（1 - 2000）</label>
+      <input type="number" id="maxHistInput" min="1" max="2000" step="1">
+    </div>
+    <div class="field">
+      <label for="themeSelect">主题</label>
+      <select id="themeSelect">
+        <option value="light">浅色</option>
+        <option value="dark">深色</option>
+      </select>
+    </div>
+    <p class="hint">提示：长度模块的 DPI 与存储模块的进制可在对应卡片内直接调整。</p>
+    <div class="toolbar" style="margin-top:6px;">
+      <button class="btn primary" id="settingsSave">保存设置</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal-backdrop" id="helpModal">
+  <div class="modal-content">
+    <div class="modal-head"><h3>❓ 使用帮助</h3><button class="modal-close" data-close="helpModal">×</button></div>
+    <ul class="help-list">
+      <li><b>双向同步换算：</b>在任意分类的任一输入框中输入数值，其余单位会自动换算。</li>
+      <li><b>温度：</b>非线性换算，请点击每行右侧的 <span class="kbd">⇄</span> 按钮进行计算。</li>
+      <li><b>长度 / DPI：</b>在长度卡片设置 DPI，可实现像素(px)与物理尺寸互转。</li>
+      <li><b>存储进制：</b>支持 1000（厂商十进制）与 1024（二进制系统）两种标准切换。</li>
+      <li><b>汇率：</b>点击“更新汇率”联网获取实时汇率，离线时自动读取本地缓存。</li>
+      <li><b>时间码：</b>支持 天/时/分/秒/毫秒 与 <span class="kbd">HH:MM:SS.mmm</span> 时间码互转，点击“时间码换算”按钮。</li>
+      <li><b>复制：</b>每行右侧 <span class="kbd">⧉</span> 按钮一键复制结果（已做浏览器兼容降级）。</li>
+      <li><b>快捷键：</b>按下 <span class="kbd">ESC</span> 清空当前激活输入框所在分类；ESC 也可关闭弹窗。</li>
+      <li><b>记录：</b>点击卡片内“保存本次换算”可存档，支持导出与清空，超出上限自动丢弃最早记录。</li>
+      <li>所有配置、汇率缓存与历史记录均保存在本地浏览器（localStorage）。</li>
+    </ul>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+(function(){
+  /* ============ Storage keys & defaults ============ */
+  var STORE = { settings:"uc_settings_v1", rates:"uc_rates_v1", history:"uc_history_v1" };
+  var DEFAULTS = { decimals:4, theme:"light", storageBase:1024, dpi:96, maxHistory:100 };
+
+  var state = Object.assign({}, DEFAULTS, loadJSON(STORE.settings, {}));
+  state.lastEdited = {};
+  var rates = loadJSON(STORE.rates, {rates:{}, time:""});
+  var history = loadJSON(STORE.history, []);
+  if(!Array.isArray(history)) history = [];
+
+  function loadJSON(key, fallback){
+    try{ var v = JSON.parse(localStorage.getItem(key)); return (v==null)?fallback:v; }
+    catch(e){ return fallback; }
+  }
+  function saveJSON(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){} }
+
+  /* ============ Category definitions ============ */
+  var CATEGORIES = {
+    length: { name:"长度", type:"linear", units:[
+      {key:"km",name:"千米 (km)",factor:1000},
+      {key:"m",name:"米 (m)",factor:1},
+      {key:"dm",name:"分米 (dm)",factor:0.1},
+      {key:"cm",name:"厘米 (cm)",factor:0.01},
+      {key:"mm",name:"毫米 (mm)",factor:0.001},
+      {key:"um",name:"微米 (µm)",factor:1e-6},
+      {key:"nmi",name:"海里 (nmi)",factor:1852},
+      {key:"mi",name:"英里 (mi)",factor:1609.344},
+      {key:"yd",name:"码 (yd)",factor:0.9144},
+      {key:"ft",name:"英尺 (ft)",factor:0.3048},
+      {key:"in",name:"英寸 (in)",factor:0.0254},
+      {key:"px",name:"像素 (px)",factor:null}
+    ]},
+    time: { name:"时间", type:"time", units:[
+      {key:"day",name:"天",factor:86400},
+      {key:"h",name:"小时",factor:3600},
+      {key:"min",name:"分钟",factor:60},
+      {key:"s",name:"秒",factor:1},
+      {key:"ms",name:"毫秒",factor:0.001}
+    ]},
+    storage: { name:"存储", type:"storage", units:null },
+    currency: { name:"汇率", type:"currency", units:[
+      {key:"CNY",name:"人民币 CNY"},
+      {key:"USD",name:"美元 USD"},
+      {key:"EUR",name:"欧元 EUR"},
+      {key:"JPY",name:"日元 JPY"},
+      {key:"GBP",name:"英镑 GBP"},
+      {key:"HKD",name:"港币 HKD"},
+      {key:"KRW",name:"韩元 KRW"},
+      {key:"AUD",name:"澳元 AUD"},
+      {key:"CAD",name:"加元 CAD"},
+      {key:"SGD",name:"新加坡元 SGD"}
+    ]},
+    weight: { name:"重量", type:"linear", units:[
+      {key:"t",name:"吨 (t)",factor:1e6},
+      {key:"kg",name:"千克 (kg)",factor:1000},
+      {key:"g",name:"克 (g)",factor:1},
+      {key:"mg",name:"毫克 (mg)",factor:0.001},
+      {key:"ug",name:"微克 (µg)",factor:1e-6},
+      {key:"jin",name:"斤",factor:500},
+      {key:"liang",name:"两",factor:50},
+      {key:"lb",name:"磅 (lb)",factor:453.59237},
+      {key:"oz",name:"盎司 (oz)",factor:28.349523125},
+      {key:"ct",name:"克拉 (ct)",factor:0.2}
+    ]},
+    area: { name:"面积", type:"linear", units:[
+      {key:"km2",name:"平方千米 km²",factor:1e6},
+      {key:"ha",name:"公顷 (ha)",factor:10000},
+      {key:"mu",name:"亩",factor:666.6666666667},
+      {key:"m2",name:"平方米 m²",factor:1},
+      {key:"dm2",name:"平方分米 dm²",factor:0.01},
+      {key:"cm2",name:"平方厘米 cm²",factor:0.0001},
+      {key:"mm2",name:"平方毫米 mm²",factor:1e-6},
+      {key:"mi2",name:"平方英里 mi²",factor:2589988.110336},
+      {key:"acre",name:"英亩 (acre)",factor:4046.8564224},
+      {key:"ft2",name:"平方英尺 ft²",factor:0.09290304},
+      {key:"in2",name:"平方英寸 in²",factor:0.00064516}
+    ]},
+    volume: { name:"体积", type:"linear", units:[
+      {key:"m3",name:"立方米 m³",factor:1000},
+      {key:"L",name:"升 (L)",factor:1},
+      {key:"dL",name:"分升 (dL)",factor:0.1},
+      {key:"mL",name:"毫升 (mL)",factor:0.001},
+      {key:"cm3",name:"立方厘米 cm³",factor:0.001},
+      {key:"galUS",name:"加仑(美)",factor:3.785411784},
+      {key:"galUK",name:"加仑(英)",factor:4.54609},
+      {key:"qt",name:"夸脱(美)",factor:0.946352946},
+      {key:"pt",name:"品脱(美)",factor:0.473176473},
+      {key:"cup",name:"杯(美)",factor:0.2365882365},
+      {key:"floz",name:"液量盎司(美)",factor:0.0295735295625},
+      {key:"in3",name:"立方英寸 in³",factor:0.016387064}
+    ]},
+    speed: { name:"速度", type:"linear", units:[
+      {key:"mps",name:"米/秒 m/s",factor:1},
+      {key:"kmh",name:"千米/时 km/h",factor:1/3.6},
+      {key:"mph",name:"英里/时 mph",factor:0.44704},
+      {key:"fps",name:"英尺/秒 ft/s",factor:0.3048},
+      {key:"knot",name:"节 (knot)",factor:0.514444444444},
+      {key:"mach",name:"马赫 (Mach)",factor:340.29}
+    ]},
+    angle: { name:"角度", type:"linear", units:[
+      {key:"deg",name:"度 (°)",factor:1},
+      {key:"rad",name:"弧度 (rad)",factor:57.295779513082},
+      {key:"grad",name:"梯度 (grad)",factor:0.9},
+      {key:"min",name:"角分 (′)",factor:1/60},
+      {key:"sec",name:"角秒 (″)",factor:1/3600},
+      {key:"rev",name:"圆周 (rev)",factor:360}
+    ]},
+    temp: { name:"温度", type:"temp", units:[
+      {key:"C",name:"摄氏度 °C"},
+      {key:"F",name:"华氏度 °F"},
+      {key:"K",name:"开尔文 K"},
+      {key:"R",name:"兰氏度 °R"}
+    ]}
+  };
+
+  function storageUnits(){
+    var b = state.storageBase;
+    return [
+      {key:"bit",name:"比特 (bit)",factor:0.125},
+      {key:"B",name:"字节 (B)",factor:1},
+      {key:"KB",name:"千字节 (KB)",factor:b},
+      {key:"MB",name:"兆字节 (MB)",factor:b*b},
+      {key:"GB",name:"吉字节 (GB)",factor:b*b*b},
+      {key:"TB",name:"太字节 (TB)",factor:Math.pow(b,4)},
+      {key:"PB",name:"拍字节 (PB)",factor:Math.pow(b,5)}
+    ];
+  }
+
+  /* ============ Number formatting ============ */
+  function tidyExp(s){
+    var parts = s.toLowerCase().split("e");
+    var m = parts[0], e = parts[1];
+    if(m.indexOf(".") >= 0){ m = m.replace(/0+$/,"").replace(/\.$/,""); }
+    var neg = e.charAt(0) === "-";
+    var en = parseInt(e.replace("-",""), 10);
+    return m + "e" + (neg ? "-" : "") + en;
+  }
+  function formatNumber(value, dec){
+    if(value === null || value === undefined || !isFinite(value)) return "";
+    if(Math.abs(value) < 1e-12) value = 0; // kill -0 and tiny noise
+    if(value === 0) return "0";
+    var abs = Math.abs(value);
+    var s;
+    if(abs >= 1e15){
+      s = tidyExp(value.toExponential(Math.min(dec, 6)));
+    } else {
+      s = value.toFixed(dec);
+      if(s.indexOf(".") >= 0){ s = s.replace(/0+$/,"").replace(/\.$/,""); }
+      // If the value is smaller than the current decimal resolution it would
+      // otherwise round to "0" and lose information -> reveal via scientific notation.
+      if(abs < Math.pow(10, -dec)){
+        s = tidyExp(value.toExponential(Math.min(dec, 6)));
+      }
+    }
+    return s;
+  }
+
+  /* ============ Conversion engine ============ */
+  var calcLock = false;
+
+  function getLinearFactor(cat, unit){
+    if(cat === "length" && unit === "px") return 0.0254 / state.dpi;
+    if(cat === "storage"){ var su = storageUnits().find(function(u){return u.key===unit;}); return su?su.factor:1; }
+    var u = CATEGORIES[cat].units.find(function(x){return x.key===unit;});
+    return u ? u.factor : 1;
+  }
+
+  function setVal(cat, unit, num){
+    var inp = document.querySelector('.conv-input[data-cat="'+cat+'"][data-unit="'+unit+'"]');
+    if(!inp) return;
+    if(inp === document.activeElement) return; // never overwrite what user is typing
+    inp.value = formatNumber(num, state.decimals);
+  }
+
+  function computeFrom(cat, unit, raw){
+    if(calcLock) return;
+    calcLock = true;
+    try{
+      var val = parseFloat(raw);
+      if(isNaN(val)){ clearCatExcept(cat, unit); return; }
+      state.lastEdited[cat] = unit;
+      if(cat === "currency"){
+        var r = rates.rates || {};
+        var rf = r[unit] || 1;
+        var baseUSD = val / rf;
+        CATEGORIES[cat].units.forEach(function(u){
+          if(u.key === unit) return;
+          var rf2 = r[u.key] || 1;
+          setVal(cat, u.key, baseUSD * rf2);
+        });
+      } else {
+        var f = getLinearFactor(cat, unit);
+        var base = val * f;
+        var units = (cat === "storage") ? storageUnits() : CATEGORIES[cat].units;
+        units.forEach(function(u){
+          if(u.key === unit) return;
+          var f2 = getLinearFactor(cat, u.key);
+          setVal(cat, u.key, base / f2);
+        });
+        if(cat === "time") setTimecode(base);
+      }
+    } finally {
+      calcLock = false;
+    }
+  }
+
+  /* Temperature (nonlinear, button triggered) */
+  function tempToC(unit, val){
+    switch(unit){
+      case "C": return val;
+      case "F": return (val - 32) * 5 / 9;
+      case "K": return val - 273.15;
+      case "R": return (val - 491.67) * 5 / 9;
+    }
+    return val;
+  }
+  function cToTemp(unit, c){
+    switch(unit){
+      case "C": return c;
+      case "F": return c * 9 / 5 + 32;
+      case "K": return c + 273.15;
+      case "R": return c * 9 / 5 + 491.67;
+    }
+    return c;
+  }
+  function computeTempFrom(unit, raw){
+    if(calcLock) return;
+    calcLock = true;
+    try{
+      var val = parseFloat(raw);
+      if(isNaN(val)){ clearCatExcept("temp", unit); return; }
+      state.lastEdited.temp = unit;
+      var c = tempToC(unit, val);
+      ["C","F","K","R"].forEach(function(u){
+        if(u === unit) return;
+        setVal("temp", u, cToTemp(u, c));
+      });
+    } finally {
+      calcLock = false;
+    }
+  }
+
+  /* Time code */
+  function setTimecode(baseSec){
+    var inp = document.querySelector('.conv-input[data-cat="time"][data-unit="tc"]');
+    if(inp && inp !== document.activeElement) inp.value = formatTimecode(baseSec);
+  }
+  function parseTimecode(str){
+    if(!str) return NaN;
+    var p = String(str).trim().split(":");
+    var h=0,m=0,s=0,ms=0, ok=true;
+    function num(x){ var n = parseFloat(x); if(isNaN(n)) ok=false; return n; }
+    if(p.length === 3){ h=num(p[0]); var sp3=p[2].split("."); s=num(sp3[0]); ms=sp3[1]?num((sp3[1]+"00").slice(0,3)):0; m=num(p[1]); }
+    else if(p.length === 2){ var sp2=p[1].split("."); s=num(sp2[0]); ms=sp2[1]?num((sp2[1]+"00").slice(0,3)):0; m=num(p[0]); }
+    else if(p.length === 1){ var sp1=p[0].split("."); s=num(sp1[0]); ms=sp1[1]?num((sp1[1]+"00").slice(0,3)):0; }
+    else ok=false;
+    if(!ok) return NaN;
+    return (h*3600 + m*60 + s) + ms/1000;
+  }
+  function formatTimecode(sec){
+    if(!isFinite(sec)) return "";
+    var sign = sec < 0 ? "-" : "";
+    sec = Math.abs(sec);
+    var totalMs = Math.round(sec * 1000);
+    var ms = totalMs % 1000; totalMs = (totalMs - ms) / 1000;
+    var s = totalMs % 60; totalMs = (totalMs - s) / 60;
+    var m = totalMs % 60; totalMs = (totalMs - m) / 60;
+    var h = totalMs;
+    function pad(n,l){ return String(n).padStart(l||2,"0"); }
+    return sign + pad(h) + ":" + pad(m) + ":" + pad(s) + "." + pad(ms,3);
+  }
+
+  /* ============ DOM building ============ */
+  var tabsEl = document.getElementById("tabs");
+  var cardsEl = document.getElementById("cards");
+
+  function rowHtml(k, u){
+    var isTemp = (k === "temp");
+    var extra = isTemp ? '<button class="btn-icon btn-temp" data-cat="'+k+'" data-unit="'+u.key+'" title="换算">⇄</button>' : "";
+    return '<div class="conv-row">'+
+      '<label class="conv-label">'+u.name+'</label>'+
+      '<div class="conv-field"><input class="conv-input" data-cat="'+k+'" data-unit="'+u.key+'" inputmode="decimal" placeholder="0" autocomplete="off"></div>'+
+      '<div class="conv-actions"><button class="btn-icon btn-copy" data-cat="'+k+'" data-unit="'+u.key+'" title="复制">⧉</button>'+extra+'</div>'+
+    '</div>';
+  }
+
+  function cardInner(k){
+    var c = CATEGORIES[k];
+    var header = "";
+    if(k === "length"){
+      header = '<div class="card-head"><h2>'+c.name+'</h2>'+
+        '<div class="card-tools">DPI: <input type="number" id="dpiInput" class="mini-input" value="'+state.dpi+'" min="1" step="1"> <span class="hint">像素↔物理尺寸</span></div></div>';
+    } else if(k === "storage"){
+      header = '<div class="card-head"><h2>'+c.name+'</h2>'+
+        '<div class="card-tools"><span class="hint">进制:</span>'+
+        '<button class="seg '+(state.storageBase===1000?"on":"")+'" data-base="1000">1000 十进制</button>'+
+        '<button class="seg '+(state.storageBase===1024?"on":"")+'" data-base="1024">1024 二进制</button></div></div>';
+    } else if(k === "currency"){
+      header = '<div class="card-head"><h2>'+c.name+'</h2>'+
+        '<div class="card-tools"><button class="btn-small" id="updateRates">更新汇率</button><span class="hint" id="rateStatus"></span></div></div>';
+    } else {
+      header = '<div class="card-head"><h2>'+c.name+'</h2></div>';
+    }
+    var units = (k === "storage") ? storageUnits() : c.units;
+    var rows = units.map(function(u){ return rowHtml(k,u); }).join("");
+    if(k === "time"){
+      rows += '<div class="conv-row">'+
+        '<label class="conv-label">时间码<br><span class="hint">HH:MM:SS.mmm</span></label>'+
+        '<div class="conv-field"><input class="conv-input" data-cat="time" data-unit="tc" placeholder="00:00:00.000" autocomplete="off"></div>'+
+        '<div class="conv-actions"><button class="btn-small btn-tc" data-cat="time">时间码换算</button>'+
+        '<button class="btn-icon btn-copy" data-cat="time" data-unit="tc" title="复制">⧉</button></div>'+
+      '</div>';
+    }
+    var foot = '<div class="card-foot"><button class="btn-small btn-save" data-cat="'+k+'">💾 保存本次换算</button></div>';
+    return header + '<div class="conv-list">'+rows+'</div>' + foot;
+  }
+
+  function buildTabs(){
+    tabsEl.innerHTML = Object.keys(CATEGORIES).map(function(k){
+      return '<button class="tab" data-cat="'+k+'">'+CATEGORIES[k].name+'</button>';
+    }).join("");
+    tabsEl.firstElementChild.classList.add("active");
+  }
+  function buildCards(){
+    var html = "";
+    var idx = 0;
+    Object.keys(CATEGORIES).forEach(function(k){
+      html += '<section class="card'+(idx===0?" active":"")+'" id="card-'+k+'">'+cardInner(k)+'</section>';
+      idx++;
+    });
+    cardsEl.innerHTML = html;
+  }
+
+  /* ============ Event delegation ============ */
+  var debounceTimer = null;
+  cardsEl.addEventListener("input", function(e){
+    var t = e.target;
+    if(!t.classList.contains("conv-input")) return;
+    var cat = t.dataset.cat, unit = t.dataset.unit;
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function(){
+      if(cat === "temp") return;            // temperature needs button
+      if(unit === "tc") return;             // timecode needs button
+      computeFrom(cat, unit, t.value);
+    }, 120);
+  });
+
+  cardsEl.addEventListener("click", function(e){
+    var copyBtn = e.target.closest(".btn-copy");
+    if(copyBtn){ copyValue(copyBtn.dataset.cat, copyBtn.dataset.unit); return; }
+    var tempBtn = e.target.closest(".btn-temp");
+    if(tempBtn){ var v=getInputVal(tempBtn.dataset.cat, tempBtn.dataset.unit); computeTempFrom(tempBtn.dataset.unit, v); return; }
+    var tcBtn = e.target.closest(".btn-tc");
+    if(tcBtn){
+      var tc = getInputVal("time","tc");
+      var sec = parseTimecode(tc);
+      if(isNaN(sec)){ toast("时间码格式无效"); return; }
+      setVal("time","s",sec); computeFrom("time","s",String(sec));
+      return;
+    }
+    var saveBtn = e.target.closest(".btn-save");
+    if(saveBtn){ saveRecord(saveBtn.dataset.cat); return; }
+    var seg = e.target.closest(".seg");
+    if(seg){
+      var base = parseInt(seg.dataset.base,10);
+      if(base !== state.storageBase){
+        state.storageBase = base; saveJSON(STORE.settings, pickSettings());
+        Array.prototype.forEach.call(cardsEl.querySelectorAll(".seg"), function(x){
+          x.classList.toggle("on", parseInt(x.dataset.base,10) === base);
+        });
+        reformatAll(); toast("进制已切换为 "+base);
+      }
+      return;
+    }
+  });
+
+  tabsEl.addEventListener("click", function(e){
+    var b = e.target.closest(".tab");
+    if(!b) return;
+    var cat = b.dataset.cat;
+    Array.prototype.forEach.call(tabsEl.children, function(x){ x.classList.toggle("active", x.dataset.cat === cat); });
+    Object.keys(CATEGORIES).forEach(function(c){
+      document.getElementById("card-"+c).classList.toggle("active", c === cat);
+    });
+  });
+
+  function getInputVal(cat, unit){
+    var inp = document.querySelector('.conv-input[data-cat="'+cat+'"][data-unit="'+unit+'"]');
+    return inp ? inp.value : "";
+  }
+
+  function clearCatExcept(cat, exceptUnit){
+    var card = document.getElementById("card-"+cat);
+    if(!card) return;
+    Array.prototype.forEach.call(card.querySelectorAll(".conv-input"), function(inp){
+      if(inp.dataset.unit === exceptUnit) return;
+      inp.value = "";
+    });
+  }
+  function clearCat(cat){
+    var card = document.getElementById("card-"+cat);
+    if(!card) return;
+    Array.prototype.forEach.call(card.querySelectorAll(".conv-input"), function(inp){ inp.value = ""; });
+    state.lastEdited[cat] = undefined;
+    toast("已清空当前分类输入");
+  }
+  function clearAllInputs(){
+    Object.keys(CATEGORIES).forEach(clearCat);
+    toast("已清空全部输入");
+  }
+
+  /* ============ Clipboard with fallback ============ */
+  function fallbackCopy(text){
+    try{
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.top = "-9999px"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.focus(); ta.select();
+      var ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    }catch(err){ return false; }
+  }
+  function copyText(text){
+    if(navigator.clipboard && window.isSecureContext){
+      return navigator.clipboard.writeText(text).catch(function(){ return fallbackCopy(text); });
+    }
+    return Promise.resolve(fallbackCopy(text));
+  }
+  function copyValue(cat, unit){
+    var v = getInputVal(cat, unit);
+    if(v === ""){ toast("没有可复制的内容"); return; }
+    Promise.resolve(copyText(v)).then(function(ok){
+      toast(ok ? ("已复制: "+v) : "复制失败，请手动复制");
+    });
+  }
+
+  /* ============ Toast ============ */
+  var toastTimer = null;
+  function toast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg; t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 1800);
+  }
+
+  /* ============ Theme ============ */
+  function applyTheme(t){
+    state.theme = t;
+    document.body.classList.toggle("dark", t === "dark");
+    saveJSON(STORE.settings, pickSettings());
+    var sel = document.getElementById("themeSelect");
+    if(sel) sel.value = t;
+  }
+
+  /* ============ Settings ============ */
+  function pickSettings(){
+    return { decimals:state.decimals, theme:state.theme, storageBase:state.storageBase, dpi:state.dpi, maxHistory:state.maxHistory };
+  }
+  function openModal(id){ document.getElementById(id).classList.add("open"); }
+  function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+  function anyModalOpen(){ return !!document.querySelector(".modal-backdrop.open"); }
+
+  /* ============ History ============ */
+  function renderHistory(){
+    var list = document.getElementById("histList");
+    document.getElementById("histCount").textContent = "共 "+history.length+" 条";
+    if(history.length === 0){ list.innerHTML = '<div class="empty">暂无记录，在任意分类点击“保存本次换算”即可存档。</div>'; return; }
+    list.innerHTML = history.map(function(r){
+      return '<div class="hist-item" data-id="'+r.id+'">'+
+        '<div class="hist-meta"><span class="hist-cat">'+r.catName+' · '+r.unitName+' = '+r.value+'</span>'+
+        '<span class="hist-time">'+fmtTime(r.time)+'</span></div>'+
+        '<div class="hist-summary">'+escapeHtml(r.summary)+'</div>'+
+        '<div class="hist-actions"><button class="btn-small btn-hist-copy" data-id="'+r.id+'">复制</button>'+
+        '<button class="btn-small danger btn-hist-del" data-id="'+r.id+'">删除</button></div>'+
+      '</div>';
+    }).join("");
+  }
+  function fmtTime(iso){
+    try{ var d = new Date(iso); return d.toLocaleString("zh-CN"); }catch(e){ return iso; }
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c];
+    });
+  }
+  function saveRecord(cat){
+    var card = document.getElementById("card-"+cat);
+    if(!card) return;
+    var inputs = Array.prototype.slice.call(card.querySelectorAll(".conv-input"));
+    var srcUnit = state.lastEdited[cat];
+    var srcInp = srcUnit ? inputs.find(function(i){ return i.dataset.unit === srcUnit; }) : null;
+    if(!srcInp || srcInp.value === ""){
+      srcInp = inputs.find(function(i){ return i.value !== "" && i.dataset.unit !== "tc"; });
+    }
+    if(!srcInp || srcInp.value === ""){ toast("没有可保存的数值"); return; }
+    var unitName = CATEGORIES[cat].units ?
+      (CATEGORIES[cat].units.find(function(u){return u.key===srcInp.dataset.unit;})||{name:srcInp.dataset.unit}).name :
+      srcInp.dataset.unit;
+    if(cat === "storage"){ var su = storageUnits().find(function(u){return u.key===srcInp.dataset.unit;}); unitName = su?su.name:srcInp.dataset.unit; }
+    var summary = inputs.filter(function(i){ return i.dataset.unit !== "tc"; }).map(function(i){
+      var nm = i.dataset.unit;
+      var u = (cat==="storage") ? (storageUnits().find(function(x){return x.key===nm;})||{name:nm}) :
+        (CATEGORIES[cat].units ? (CATEGORIES[cat].units.find(function(x){return x.key===nm;})||{name:nm}) : {name:nm});
+      return u.name + ": " + i.value;
+    }).join("  |  ");
+    var rec = {
+      id: Date.now() + "-" + Math.random().toString(36).slice(2,7),
+      time: new Date().toISOString(),
+      catName: CATEGORIES[cat].name,
+      unitName: unitName,
+      value: srcInp.value,
+      summary: summary
+    };
+    history.unshift(rec);
+    if(history.length > state.maxHistory) history = history.slice(0, state.maxHistory);
+    saveJSON(STORE.history, history);
+    renderHistory();
+    toast("已保存记录");
+  }
+  function deleteRecord(id){
+    history = history.filter(function(r){ return r.id !== id; });
+    saveJSON(STORE.history, history);
+    renderHistory();
+  }
+  function exportHistory(){
+    if(history.length === 0){ toast("没有可导出的记录"); return; }
+    var rows = [["时间","分类","单位","数值","结果摘要"]];
+    history.forEach(function(r){ rows.push([fmtTime(r.time), r.catName, r.unitName, r.value, r.summary]); });
+    var csv = rows.map(function(row){
+      return row.map(function(cell){ return '"'+String(cell).replace(/"/g,'""')+'"'; }).join(",");
+    }).join("\r\n");
+    var blob = new Blob(["﻿"+csv], {type:"text/csv;charset=utf-8"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "unit-converter-history.csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    toast("已导出 "+history.length+" 条记录");
+  }
+  function clearHistory(){
+    history = []; saveJSON(STORE.history, history); renderHistory(); toast("历史已清空");
+  }
+
+  /* ============ Currency rates ============ */
+  function updateRateStatus(failed){
+    var el = document.getElementById("rateStatus");
+    if(!el) return;
+    if(failed){
+      el.textContent = rates.time ? ("⚠ 更新失败，使用缓存("+fmtTime(rates.time)+")") : "⚠ 无缓存，离线不可用";
+    } else if(rates.time){
+      el.textContent = "已缓存: "+fmtTime(rates.time);
+    } else {
+      el.textContent = "未缓存";
+    }
+  }
+  function fetchRates(showToast){
+    var btn = document.getElementById("updateRates");
+    if(btn){ btn.disabled = true; btn.textContent = "更新中…"; }
+    fetch("https://open.er-api.com/v6/latest/USD")
+      .then(function(res){ if(!res.ok) throw new Error("http"); return res.json(); })
+      .then(function(data){
+        if(data && data.rates){
+          rates = { rates: data.rates, time: data.time_last_update_utc || new Date().toISOString() };
+          saveJSON(STORE.rates, rates);
+          updateRateStatus(false);
+          reformatAll();
+          if(showToast) toast("汇率已更新");
+        } else { throw new Error("no rates"); }
+      })
+      .catch(function(){
+        updateRateStatus(true);
+        if(showToast) toast("汇率更新失败，使用本地缓存");
+      })
+      .then(function(){
+        if(btn){ btn.disabled = false; btn.textContent = "更新汇率"; }
+      });
+  }
+
+  /* ============ Reformat (after settings change) ============ */
+  function reformatAll(){
+    Object.keys(CATEGORIES).forEach(function(cat){
+      var card = document.getElementById("card-"+cat);
+      if(!card) return;
+      var inputs = Array.prototype.slice.call(card.querySelectorAll(".conv-input"));
+      var srcUnit = state.lastEdited[cat];
+      var srcInp = srcUnit ? inputs.find(function(i){ return i.dataset.unit === srcUnit; }) : null;
+      if(!srcInp || srcInp.value === ""){
+        srcInp = inputs.find(function(i){ return i.value !== "" && i.dataset.unit !== "tc"; });
+      }
+      if(srcInp && srcInp.value !== ""){
+        var u = srcInp.dataset.unit;
+        if(cat === "temp") computeTempFrom(u, srcInp.value);
+        else computeFrom(cat, u, srcInp.value);
+      }
+    });
+    updateRateStatus(false);
+  }
+
+  /* ============ ESC handling ============ */
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){
+      if(anyModalOpen()){ Array.prototype.forEach.call(document.querySelectorAll(".modal-backdrop.open"), function(m){ m.classList.remove("open"); }); return; }
+      var a = document.activeElement;
+      if(a && a.classList && a.classList.contains("conv-input")){
+        clearCat(a.dataset.cat);
+      }
+    }
+  });
+
+  /* ============ Wire up static controls ============ */
+  function initStaticControls(){
+    document.getElementById("themeToggle").addEventListener("click", function(){
+      applyTheme(state.theme === "dark" ? "light" : "dark");
+    });
+    document.getElementById("settingsBtn").addEventListener("click", function(){
+      document.getElementById("decimalsInput").value = state.decimals;
+      document.getElementById("maxHistInput").value = state.maxHistory;
+      document.getElementById("themeSelect").value = state.theme;
+      openModal("settingsModal");
+    });
+    document.getElementById("helpBtn").addEventListener("click", function(){ openModal("helpModal"); });
+    document.getElementById("clearInputsBtn").addEventListener("click", clearAllInputs);
+    document.getElementById("resetBtn").addEventListener("click", function(){
+      state = Object.assign({}, DEFAULTS);
+      state.lastEdited = {};
+      saveJSON(STORE.settings, pickSettings());
+      applyTheme(state.theme);
+      // refresh DPI & storage seg in cards
+      var dpi = document.getElementById("dpiInput"); if(dpi) dpi.value = state.dpi;
+      Array.prototype.forEach.call(cardsEl.querySelectorAll(".seg"), function(x){
+        x.classList.toggle("on", parseInt(x.dataset.base,10) === state.storageBase);
+      });
+      reformatAll();
+      toast("已恢复默认配置");
+    });
+
+    // Settings modal
+    document.getElementById("settingsSave").addEventListener("click", function(){
+      var d = parseInt(document.getElementById("decimalsInput").value,10);
+      if(isNaN(d) || d < 0) d = 0; if(d > 10) d = 10; state.decimals = d;
+      var m = parseInt(document.getElementById("maxHistInput").value,10);
+      if(isNaN(m) || m < 1) m = 1; if(m > 2000) m = 2000; state.maxHistory = m;
+      var th = document.getElementById("themeSelect").value; state.theme = th;
+      saveJSON(STORE.settings, pickSettings());
+      applyTheme(th);
+      reformatAll();
+      // trim history if over new limit
+      if(history.length > state.maxHistory){ history = history.slice(0, state.maxHistory); saveJSON(STORE.history, history); renderHistory(); }
+      closeModal("settingsModal");
+      toast("设置已保存");
+    });
+    document.getElementById("themeSelect").addEventListener("change", function(){
+      applyTheme(this.value);
+    });
+
+    // Close buttons
+    Array.prototype.forEach.call(document.querySelectorAll("[data-close]"), function(b){
+      b.addEventListener("click", function(){ closeModal(b.dataset.close); });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll(".modal-backdrop"), function(m){
+      m.addEventListener("click", function(e){ if(e.target === m) m.classList.remove("open"); });
+    });
+
+    // History buttons
+    document.getElementById("exportBtn").addEventListener("click", exportHistory);
+    document.getElementById("clearHistBtn").addEventListener("click", clearHistory);
+    document.getElementById("histList").addEventListener("click", function(e){
+      var del = e.target.closest(".btn-hist-del");
+      if(del){ deleteRecord(del.dataset.id); return; }
+      var cp = e.target.closest(".btn-hist-copy");
+      if(cp){
+        var rec = history.find(function(r){ return r.id === cp.dataset.id; });
+        if(rec){ Promise.resolve(copyText(rec.summary)).then(function(ok){ toast(ok?"已复制记录":"复制失败"); }); }
+      }
+    });
+
+    // DPI input (delegated since inside card)
+    cardsEl.addEventListener("input", function(e){
+      if(e.target && e.target.id === "dpiInput"){
+        var v = parseFloat(e.target.value);
+        if(!isNaN(v) && v > 0){ state.dpi = v; saveJSON(STORE.settings, pickSettings()); reformatAll(); }
+      }
+    });
+    // Currency update button
+    cardsEl.addEventListener("click", function(e){
+      if(e.target && e.target.id === "updateRates"){ fetchRates(true); }
+    });
+    // Enter key triggers compute for temp rows and the timecode field
+    cardsEl.addEventListener("keydown", function(e){
+      if(e.key !== "Enter") return;
+      var t = e.target;
+      if(!t.classList || !t.classList.contains("conv-input")) return;
+      if(t.dataset.cat === "temp"){
+        computeTempFrom(t.dataset.unit, t.value);
+      } else if(t.dataset.unit === "tc"){
+        var sec = parseTimecode(t.value);
+        if(!isNaN(sec)){ setVal("time","s",sec); computeFrom("time","s",String(sec)); }
+        else { toast("时间码格式无效"); }
+      }
+    });
+  }
+
+  /* ============ Init ============ */
+  function init(){
+    applyTheme(state.theme);
+    buildTabs();
+    buildCards();
+    initStaticControls();
+    renderHistory();
+    updateRateStatus(false);
+    fetchRates(false); // background refresh, falls back to cache if offline
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
