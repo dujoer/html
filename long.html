@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长视频文字摘要辅助工具</title>
+    <style>
+        :root {
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.07);
+            --bg-color: #f7f8fa;
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --btn-bg: #ffffff;
+            --btn-hover: #f2f3f7;
+            --btn-active: #e5e7eb;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-active: #1e40af;
+            --danger: #dc2626;
+            --warn: #f59e0b;
+            --success: #10b981;
+            --highlight-bg: #fef08a;
+            --highlight-text: #111;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #111217;
+            --card-bg: #1c1d26;
+            --text-primary: #e8ebf2;
+            --text-secondary: #9ca3af;
+            --border-color: #30323f;
+            --btn-bg: #262834;
+            --btn-hover: #323442;
+            --btn-active: #3a3c4b;
+            --highlight-bg: #947b06;
+            --highlight-text: #fff;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 24px 16px;
+            min-height: 100vh;
+            transition: background 0.32s ease, color 0.32s ease;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-secondary);
+            border-radius: 99px;
+        }
+
+        .container {
+            max-width: 920px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .header-text h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header-text p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .theme-btn, .tip-btn {
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            background: var(--btn-bg);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .theme-btn:hover, .tip-btn:hover {
+            background: var(--btn-hover);
+        }
+        .theme-btn:active, .tip-btn:active {
+            background: var(--btn-active);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-bottom: 18px;
+            box-shadow: var(--shadow-card);
+        }
+        .card-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        textarea, input[type="text"], input[type="number"], select {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--btn-bg);
+            color: var(--text-primary);
+            outline: none;
+            transition: 0.2s;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        textarea:focus, input:focus, select:focus {
+            border-color: var(--primary);
+        }
+        textarea {
+            min-height: 160px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .stat-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin: 10px 0 16px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top:12px;
+        }
+        .btn-normal {
+            flex:1;
+            min-width: 110px;
+            padding:11px;
+            border:1px solid var(--border-color);
+            background:var(--btn-bg);
+            color:var(--text-primary);
+            border-radius: var(--radius-sm);
+            cursor:pointer;
+            transition:0.2s;
+        }
+        .btn-normal:hover {
+            background:var(--btn-hover);
+        }
+        .btn-normal:active{
+            background:var(--btn-active);
+        }
+        .btn-normal:disabled{
+            opacity:0.5;
+            cursor:not-allowed;
+        }
+        .btn-primary {
+            padding: 0 18px;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: 0.2s;
+            min-height:44px;
+            white-space: nowrap;
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+        .btn-primary:active {
+            background: var(--primary-active);
+        }
+        .btn-primary:disabled{
+            opacity:0.5;
+            cursor:not-allowed;
+        }
+        .btn-danger{
+            background:var(--danger);
+        }
+        .btn-danger:hover{
+            background:#b91c1c;
+        }
+
+        .config-row {
+            display:flex;
+            flex-wrap:wrap;
+            gap:20px;
+            align-items:center;
+            margin-bottom:16px;
+        }
+        .config-item{
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+        .config-label{
+            font-size:14px;
+        }
+        .short-input{
+            width:90px !important;
+        }
+
+        .result-editor{
+            min-height:220px;
+            margin-bottom:14px;
+        }
+        .summary-box{
+            min-height:120px;
+        }
+
+        .history-header {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:14px;
+            flex-wrap:wrap;
+            gap:8px;
+        }
+        .history-operate{
+            display:flex;
+            gap:14px;
+        }
+        .history-clear, .export-all-history {
+            font-size:14px;
+            color:var(--primary);
+            cursor:pointer;
+        }
+        .history-list {
+            display:flex;
+            flex-direction:column;
+            gap:9px;
+            max-height:360px;
+            overflow-y:auto;
+        }
+        .history-item {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:12px;
+            border:1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background:var(--btn-bg);
+        }
+        .history-info{
+            flex:1;
+            overflow:hidden;
+        }
+        .history-title{
+            font-weight:500;
+            cursor:pointer;
+        }
+        .history-preview{
+            font-size:12px;
+            color:var(--text-secondary);
+            margin-top:3px;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+        }
+        .history-meta{
+            display:flex;
+            gap:10px;
+            font-size:12px;
+            color:var(--text-secondary);
+            margin-top:4px;
+        }
+        .history-btn button {
+            font-size:12px;
+            padding:5px 10px;
+            border:1px solid var(--border-color);
+            background:transparent;
+            border-radius: var(--radius-sm);
+            cursor:pointer;
+            color:var(--text-secondary);
+            margin-left:6px;
+            transition:0.2s;
+        }
+        .history-btn button:hover{
+            background:var(--btn-hover);
+        }
+        .empty-history {
+            text-align:center;
+            padding:26px 0;
+            color:var(--text-secondary);
+            font-size:14px;
+        }
+
+        .toast {
+            position:fixed;
+            bottom:40px;
+            left:50%;
+            transform:translateX(-50%);
+            padding:10px 22px;
+            background:rgba(0,0,0,0.78);
+            color:#fff;
+            border-radius: var(--radius-md);
+            font-size:14px;
+            opacity:0;
+            pointer-events:none;
+            transition:opacity 0.3s ease;
+            z-index:9999;
+        }
+        .toast.show {
+            opacity:1;
+        }
+
+        .modal-mask{
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,0.5);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            z-index:9998;
+            opacity:0;
+            pointer-events:none;
+            transition:0.3s;
+        }
+        .modal-mask.show{
+            opacity:1;
+            pointer-events:auto;
+        }
+        .modal-box{
+            width:min(90%,520px);
+            background:var(--card-bg);
+            border-radius:var(--radius-md);
+            padding:24px;
+            max-height:85vh;
+            overflow-y:auto;
+        }
+        .modal-box h3{
+            margin-bottom:12px;
+        }
+        .modal-box p{
+            font-size:14px;
+            color:var(--text-secondary);
+            line-height:1.7;
+            margin-bottom:16px;
+        }
+        .modal-close{
+            width:100%;
+            padding:10px;
+            border:none;
+            border-radius:var(--radius-sm);
+            background:var(--primary);
+            color:#fff;
+            cursor:pointer;
+        }
+
+        .clipboard-fallback{
+            position:absolute;
+            left:-9999px;
+            opacity:0;
+        }
+
+        .search-wrap{
+            display:flex;
+            gap:8px;
+            margin-bottom:12px;
+        }
+        .highlight-mark{
+            background:var(--highlight-bg);
+            color:var(--highlight-text);
+            padding:0 2px;
+        }
+        .switch-row{
+            display:flex;
+            align-items:center;
+            gap:6px;
+            font-size:14px;
+        }
+
+        @media(max-width:640px){
+            .config-row{
+                flex-direction:column;
+                align-items:stretch;
+            }
+            .search-wrap{
+                flex-direction:column;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="header-text">
+            <h1>长视频文字摘要辅助工具</h1>
+            <p>本地离线运算｜字幕/逐字稿清洗分段｜视频文案时长测算</p>
+        </div>
+        <div class="header-actions">
+            <button class="tip-btn" id="openTip">使用说明</button>
+            <button class="theme-btn" id="toggleTheme">切换明暗模式</button>
+        </div>
+    </header>
+
+    <!-- 卡片1 文本粘贴与清洗 -->
+    <div class="card">
+        <div class="card-title">文本粘贴 & 字幕清洗</div>
+        <textarea id="rawInput" placeholder="粘贴SRT字幕、口播逐字稿文本...
+支持剪映导出字幕，工具将自动清除时间轴、序号多余字符"></textarea>
+        <div class="stat-row">
+            <span>总字符(含标点)：<strong id="statAll">0</strong></span>
+            <span>纯汉字：<strong id="statChinese">0</strong></span>
+            <span>有效文字(汉字+字母数字)：<strong id="statText">0</strong></span>
+            <span>句子数量：<strong id="statSentence">0</strong></span>
+        </div>
+        <div class="btn-group">
+            <button class="btn-normal" id="btnCleanSrt">一键清洗SRT字幕</button>
+            <button class="btn-normal" id="btnTrimLine">清理多余空行</button>
+            <button class="btn-normal" id="btnNormalPunct">统一中英文标点</button>
+            <button class="btn-normal" id="btnRestoreRaw">撤销清洗</button>
+            <button class="btn-normal btn-danger" id="btnClearInput">清空输入</button>
+        </div>
+    </div>
+
+    <!-- 卡片2 文稿处理与时长测算 -->
+    <div class="card">
+        <div class="card-title">文稿处理 & 口播时长测算</div>
+        <div class="config-row">
+            <div class="config-item">
+                <label class="config-label">分段模式：</label>
+                <select id="splitMode">
+                    <option value="fixed">固定句数分段</option>
+                    <option value="punct">标点语义分段</option>
+                </select>
+            </div>
+            <div class="config-item">
+                <label class="config-label">每 <input class="short-input" type="number" id="splitCount" min="2" max="8" value="4"> 句分段</label>
+            </div>
+            <label class="switch-row">
+                <input type="checkbox" id="autoKeywordRule" checked>启用关键词自动摘要
+            </label>
+            <button class="btn-primary" id="btnSplit">执行智能分段</button>
+        </div>
+        <div class="config-row">
+            <div class="config-item">
+                <label class="config-label">口播语速：</label>
+                <select id="speedSelect">
+                    <option value="180">慢速科普：180字/分钟</option>
+                    <option value="220" selected>标准口播：220字/分钟</option>
+                    <option value="260">快速干货：260字/分钟</option>
+                    <option value="custom">自定义</option>
+                </select>
+            </div>
+            <div class="config-item" id="customSpeedWrap" style="display:none">
+                <label class="config-label">每分钟字数：
+                    <input class="short-input" type="number" id="customSpeed" min="120" max="350" value="220">
+                </label>
+            </div>
+            <div style="font-size:15px">预估口播时长：<strong id="timeResult">--</strong></div>
+        </div>
+    </div>
+
+    <!-- 卡片3 格式化文稿与重点提取 -->
+    <div class="card">
+        <div class="card-title">格式化文稿 · 重点标记提取</div>
+        <div class="search-wrap">
+            <input type="text" id="searchText" placeholder="文稿内搜索关键词">
+            <button class="btn-normal" id="btnSearch">查找</button>
+        </div>
+        <textarea class="result-editor" id="formattedText" placeholder="执行分段后，整理后的文稿将展示在这里，支持手动编辑"></textarea>
+        <div class="btn-group">
+            <button class="btn-normal" id="btnMark">标记选中内容为重点</button>
+            <button class="btn-normal" id="btnUnMark">取消选中重点标记</button>
+            <button class="btn-normal" id="btnClearMark">清除全部标记</button>
+            <button class="btn-primary" id="btnExtract">提取全部重点</button>
+        </div>
+        <div style="margin:14px 0 8px;font-weight:500;">重点摘要汇总</div>
+        <textarea class="summary-box" id="summaryOutput" readonly placeholder="提取后的重点内容将展示在此处"></textarea>
+        <div class="btn-group" style="margin-top:12px;">
+            <button class="btn-normal" id="copyFullText">复制完整文稿</button>
+            <button class="btn-normal" id="copySummary">复制重点摘要</button>
+            <button class="btn-normal btn-danger" id="btnClearAllOutput">清空文稿+摘要</button>
+        </div>
+    </div>
+
+    <!-- 卡片4 导出工具 -->
+    <div class="card">
+        <div class="card-title">导出文本存档</div>
+        <div class="btn-group">
+            <button class="btn-normal" id="exportFull">导出【完整格式化文稿】TXT</button>
+            <button class="btn-normal" id="exportSummary">导出【仅重点摘要】TXT</button>
+            <button class="btn-normal" id="exportMerge">导出【文稿+摘要合并文档】TXT</button>
+        </div>
+    </div>
+
+    <!-- 卡片5 历史记录 -->
+    <div class="card">
+        <div class="history-header">
+            <div class="card-title">历史文稿记录（点击标题重命名）</div>
+            <div class="history-operate">
+                <span class="export-all-history" id="exportAllHistory">导出全部记录</span>
+                <span class="history-clear" id="clearAllHistory">清空全部</span>
+            </div>
+        </div>
+        <div class="history-list" id="historyBox"></div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<textarea class="clipboard-fallback" id="fallbackTextarea"></textarea>
+
+<div class="modal-mask" id="tipModal">
+    <div class="modal-box">
+        <h3>📄 使用说明 & 安全提示</h3>
+        <p>1. 本工具为纯离线网页，所有文本仅保存在本机浏览器LocalStorage，<strong>不会上传任何文字到网络</strong>，适合保密口播脚本。<br>
+        2. 支持SRT字幕清洗：粘贴剪映、Whisper导出字幕，一键删除时间轴、序号、空行，提取纯台词。<br>
+        3. 智能分段：两种模式可选，把大段无分割文稿自动切分为适合剪辑阅读的段落。<br>
+        4. 口播时长计算公式：有效汉字 ÷ 每分钟字数 = 预估朗读时长，仅作为参考。<br>
+        5. 操作流程：粘贴文本 → 清洗字幕 → 执行分段 → 选中文字标记重点 → 提取摘要 → 复制或导出TXT。<br>
+        6. 本地双击html打开存在剪贴板限制，复制失败可以手动选中Ctrl+C。<br>
+        7. 历史记录上限50条，清除浏览器缓存会清空所有文稿记录。<br>
+        8. 新增功能：文稿关键词搜索、标点统一、历史标题自定义重命名、一键清空输出区。</p>
+        <button class="modal-close" id="closeModal">我已知晓</button>
+    </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+// DOM
+const toggleTheme = $("#toggleTheme");
+const openTip = $("#openTip");
+const tipModal = $("#tipModal");
+const closeModal = $("#closeModal");
+const fallbackTextarea = $("#fallbackTextarea");
+const toast = $("#toast");
+
+const rawInput = $("#rawInput");
+const statAll = $("#statAll");
+const statChinese = $("#statChinese");
+const statText = $("#statText");
+const statSentence = $("#statSentence");
+const btnCleanSrt = $("#btnCleanSrt");
+const btnTrimLine = $("#btnTrimLine");
+const btnNormalPunct = $("#btnNormalPunct");
+const btnRestoreRaw = $("#btnRestoreRaw");
+const btnClearInput = $("#btnClearInput");
+
+const splitMode = $("#splitMode");
+const splitCount = $("#splitCount");
+const speedSelect = $("#speedSelect");
+const customSpeedWrap = $("#customSpeedWrap");
+const customSpeed = $("#customSpeed");
+const timeResult = $("#timeResult");
+const btnSplit = $("#btnSplit");
+const autoKeywordRule = $("#autoKeywordRule");
+
+const formattedText = $("#formattedText");
+const summaryOutput = $("#summaryOutput");
+const btnMark = $("#btnMark");
+const btnUnMark = $("#btnUnMark");
+const btnClearMark = $("#btnClearMark");
+const btnExtract = $("#btnExtract");
+const btnClearAllOutput = $("#btnClearAllOutput");
+
+const searchText = $("#searchText");
+const btnSearch = $("#btnSearch");
+
+const copyFullText = $("#copyFullText");
+const copySummary = $("#copySummary");
+const exportFull = $("#exportFull");
+const exportSummary = $("#exportSummary");
+const exportMerge = $("#exportMerge");
+
+const historyBox = $("#historyBox");
+const clearAllHistory = $("#clearAllHistory");
+const exportAllHistory = $("#exportAllHistory");
+
+let rawBackup = "";
+let cleanBackup = "";
+let generatingLock = false;
+const MAX_HISTORY = 50;
+let selectedTextStart = 0;
+let selectedTextEnd = 0;
+
+// Toast
+function showToast(text){
+    toast.textContent = text;
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"),1800);
+}
+
+// 兼容剪贴板函数（解决本地file://复制失败）
+async function copyText(text){
+    try {
+        await navigator.clipboard.writeText(text);
+        return true;
+    } catch(err) {
+        fallbackTextarea.value = text;
+        fallbackTextarea.select();
+        const ok = document.execCommand('copy');
+        fallbackTextarea.blur();
+        return ok;
+    }
+}
+
+// 主题
+function initTheme(){
+    try{
+        const t = localStorage.getItem("videoToolTheme");
+        if(t==="dark") document.documentElement.setAttribute("data-theme","dark");
+    }catch(e){}
+}
+toggleTheme.onclick = ()=>{
+    const hasDark = document.documentElement.hasAttribute("data-theme");
+    if(hasDark){
+        document.documentElement.removeAttribute("data-theme");
+        localStorage.setItem("videoToolTheme","light");
+    }else{
+        document.documentElement.setAttribute("data-theme","dark");
+        localStorage.setItem("videoToolTheme","dark");
+    }
+};
+initTheme();
+
+// 说明弹窗
+openTip.onclick = ()=>tipModal.classList.add("show");
+closeModal.onclick = ()=>tipModal.classList.remove("show");
+tipModal.onclick = e=>{
+    if(e.target === tipModal) tipModal.classList.remove("show");
+}
+
+// 语速自定义切换
+speedSelect.onchange = ()=>{
+    if(speedSelect.value === "custom"){
+        customSpeedWrap.style.display = "flex";
+    }else{
+        customSpeedWrap.style.display = "none";
+    }
+    calcTime();
+}
+customSpeed.oninput = calcTime;
+
+// 实时文本统计
+rawInput.oninput = function(){
+    rawBackup = rawInput.value;
+    updateStat();
+    calcTime();
+}
+function updateStat(){
+    const txt = rawInput.value;
+    statAll.innerText = txt.length;
+    const chinese = txt.match(/[\u4e00-\u9fa5]/g) || [];
+    statChinese.innerText = chinese.length;
+    const pure = txt.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g,"");
+    statText.innerText = pure.length;
+    const sentenceArr = txt.split(/[。！？]+/).filter(s=>s.trim());
+    statSentence.innerText = sentenceArr.length;
+}
+
+// 清洗SRT字幕
+btnCleanSrt.onclick = function(){
+    if(generatingLock) return;
+    cleanBackup = rawInput.value;
+    let text = rawInput.value;
+    // 删除序号行、时间轴
+    text = text.replace(/^\d+\s*$/gm,"");
+    text = text.replace(/\d{2}:\d{2}:\d{2}[,\.]\d{3}\s*-->.*$/gm,"");
+    // 清理空行
+    text = text.replace(/\n\s*\n/g,"\n");
+    text = text.trim();
+    rawInput.value = text;
+    updateStat();
+    calcTime();
+    showToast("字幕清洗完成");
+}
+
+// 清理多余空行
+btnTrimLine.onclick = function(){
+    cleanBackup = rawInput.value;
+    let text = rawInput.value;
+    text = text.replace(/\n{2,}/g,"\n\n");
+    rawInput.value = text.trim();
+    updateStat();
+    calcTime();
+    showToast("空行清理完成");
+}
+
+// 统一标点
+btnNormalPunct.onclick = function(){
+    cleanBackup = rawInput.value;
+    let s = rawInput.value;
+    s = s.replace(/，/g,",");
+    s = s.replace(/。/g,".");
+    s = s.replace(/？/g,"?");
+    s = s.replace(/！/g,"!");
+    s = s.replace(/；/g,";");
+    s = s.replace(/：/g,":");
+    s = s.replace(/“|”/g,'"');
+    s = s.replace(/‘|’/g,"'");
+    rawInput.value = s;
+    updateStat();
+    showToast("标点统一完成");
+}
+
+// 撤销清洗
+btnRestoreRaw.onclick = function(){
+    rawInput.value = cleanBackup;
+    updateStat();
+    calcTime();
+    showToast("已撤销清洗操作");
+}
+
+btnClearInput.onclick = function(){
+    if(!confirm("确定清空输入框所有文本？")) return;
+    rawInput.value = "";
+    rawBackup = "";
+    cleanBackup = "";
+    updateStat();
+    calcTime();
+}
+
+// 计算预估时长
+function calcTime(){
+    const txt = rawInput.value.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g,"");
+    let speed;
+    if(speedSelect.value === "custom"){
+        speed = Number(customSpeed.value) || 220;
+    }else{
+        speed = Number(speedSelect.value);
+    }
+    const totalMin = txt.length / speed;
+    const min = Math.floor(totalMin);
+    const sec = Math.round((totalMin - min)*60);
+    timeResult.innerText = `${min}分${sec}秒`;
+}
+
+// 智能分段
+btnSplit.onclick = async function(){
+    const sourceText = rawInput.value.trim();
+    if(!sourceText){
+        showToast("请先粘贴字幕/文稿文本");
+        return;
+    }
+    if(generatingLock) return;
+    generatingLock = true;
+    btnSplit.disabled = true;
+
+    const mode = splitMode.value;
+    const perCount = Number(splitCount.value);
+    let sentences = sourceText.split(/([。！？])/).filter(s=>s.trim());
+    let combineSentence = [];
+    for(let i=0;i<sentences.length;i+=2){
+        const s = (sentences[i] + (sentences[i+1]||"")).trim();
+        if(s) combineSentence.push(s);
+    }
+    let resultText = "";
+    if(mode === "fixed"){
+        for(let i=0;i<combineSentence.length;i++){
+            resultText += combineSentence[i];
+            if((i+1)%perCount === 0){
+                resultText += "\n\n";
+            }
+        }
+    }else{
+        let block = [];
+        for(let s of combineSentence){
+            block.push(s);
+            if(block.length >= perCount){
+                resultText += block.join("") + "\n\n";
+                block = [];
+            }
+        }
+        if(block.length>0) resultText += block.join("");
+    }
+    formattedText.value = resultText.trim();
+    summaryOutput.value = "";
+    saveHistoryItem(resultText);
+    showToast("智能分段完成，已自动存入历史记录");
+    setTimeout(()=>{
+        generatingLock=false;
+        btnSplit.disabled=false;
+    },300);
+}
+
+// 文本选中记录
+formattedText.onmouseup = function(){
+    selectedTextStart = formattedText.selectionStart;
+    selectedTextEnd = formattedText.selectionEnd;
+}
+
+// 标记重点【】
+btnMark.onclick = function(){
+    const start = formattedText.selectionStart;
+    const end = formattedText.selectionEnd;
+    if(start === end){
+        showToast("请先框选一段文字");
+        return;
+    }
+    let content = formattedText.value;
+    const selectStr = content.slice(start, end);
+    const newStr = `【${selectStr}】`;
+    formattedText.value = content.slice(0,start)+newStr+content.slice(end);
+    showToast("标记重点完成");
+}
+btnUnMark.onclick = function(){
+    let start = formattedText.selectionStart;
+    let end = formattedText.selectionEnd;
+    if(start === end){
+        showToast("请先框选带有标记的文字");
+        return;
+    }
+    let content = formattedText.value;
+    let selectStr = content.slice(start, end);
+    selectStr = selectStr.replace(/【|】/g,"");
+    formattedText.value = content.slice(0,start)+selectStr+content.slice(end);
+    showToast("取消标记");
+}
+btnClearMark.onclick = function(){
+    formattedText.value = formattedText.value.replace(/【|】/g,"");
+    showToast("清除全部重点标记");
+}
+
+// 提取全部重点
+btnExtract.onclick = function(){
+    const text = formattedText.value;
+    const reg = /【([^】]+)】/g;
+    let match;
+    let summaryList = [];
+    while((match = reg.exec(text)) !== null){
+        summaryList.push(match[1].trim());
+    }
+    // 关键词自动追加
+    if(autoKeywordRule.checked){
+        const keywordReg = /(重点|核心|注意|但是|所以|建议|结论|误区|技巧|提醒)[^。！？]*[。！？]/g;
+        const autoMatch = text.match(keywordReg) || [];
+        autoMatch.forEach(s=>{
+            if(!summaryList.includes(s.trim())) summaryList.push(s.trim());
+        })
+    }
+    if(summaryList.length === 0){
+        showToast("暂无标记重点，先选中文字标记");
+        return;
+    }
+    summaryOutput.value = summaryList.join("\n");
+    showToast("重点提取完成");
+}
+
+// 搜索文稿
+btnSearch.onclick = function(){
+    const kw = searchText.value.trim();
+    if(!kw){
+        showToast("请输入搜索关键词");
+        return;
+    }
+    const text = formattedText.value;
+    const pos = text.indexOf(kw);
+    if(pos===-1){
+        showToast("未找到关键词");
+        return;
+    }
+    formattedText.focus();
+    formattedText.setSelectionRange(pos,pos+kw.length);
+    showToast("定位成功");
+}
+
+// 清空输出区
+btnClearAllOutput.onclick = function(){
+    if(!confirm("确定清空格式化文稿和摘要内容？")) return;
+    formattedText.value = "";
+    summaryOutput.value = "";
+    showToast("文稿与摘要已清空");
+}
+
+// 复制
+copyFullText.onclick = async ()=>{
+    const ok = await copyText(formattedText.value);
+    ok ? showToast("完整文稿复制成功") : showToast("复制失败，请手动选中");
+}
+copySummary.onclick = async ()=>{
+    const ok = await copyText(summaryOutput.value);
+    ok ? showToast("摘要复制成功") : showToast("复制失败，请手动选中");
+}
+
+// 导出TXT
+function safeFileName(name){
+    return name.replace(/[\/\\:*?"<>|]/g,"_");
+}
+function downloadFile(filename, text){
+    const blob = new Blob([text],{type:"text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = safeFileName(filename);
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(url);
+    a.remove();
+}
+function getFileName(){
+    const d = new Date();
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}_${String(d.getHours()).padStart(2,"0")}${String(d.getMinutes()).padStart(2,"0")}`;
+    return `视频文稿_${dateStr}.txt`;
+}
+exportFull.onclick = ()=>downloadFile(getFileName(), formattedText.value);
+exportSummary.onclick = ()=>downloadFile("重点摘要_"+getFileName(), summaryOutput.value);
+exportMerge.onclick = ()=>{
+    const all = "=====完整格式化文稿=====\n"+formattedText.value+"\n\n=====重点摘要=====\n"+summaryOutput.value;
+    downloadFile("文稿+摘要_"+getFileName(), all);
+}
+
+// 历史记录
+function getHistory(){
+    try{
+        const raw = localStorage.getItem("videoTextHistory");
+        return raw ? JSON.parse(raw) : [];
+    }catch(e){return [];}
+}
+function saveHistoryItem(text){
+    const list = getHistory();
+    const title = text.slice(0,20).replace(/\n/g,"");
+    const d = new Date();
+    const timeStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+    const pureChar = text.replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g,"").length;
+    let speed = speedSelect.value==="custom"?Number(customSpeed.value):Number(speedSelect.value);
+    const totalMin = pureChar/speed;
+    const min = Math.floor(totalMin);
+    const sec = Math.round((totalMin-min)*60);
+    const duration = `${min}分${sec}秒`;
+
+    list.unshift({
+        title:title,
+        fullText:text,
+        time:timeStr,
+        duration:duration
+    });
+    if(list.length>MAX_HISTORY) list.splice(MAX_HISTORY);
+    localStorage.setItem("videoTextHistory",JSON.stringify(list));
+    renderHistory();
+}
+function renderHistory(){
+    const list = getHistory();
+    if(list.length===0){
+        historyBox.innerHTML = `<div class="empty-history">暂无历史文稿记录</div>`;
+        return;
+    }
+    let html = "";
+    list.forEach((item,idx)=>{
+        html += `
+        <div class="history-item">
+            <div class="history-info">
+                <div class="history-title" data-title="${idx}">${item.title||"无标题"}</div>
+                <div class="history-preview">${item.fullText.slice(0,60)}...</div>
+                <div class="history-meta">
+                    <span>${item.time}</span>
+                    <span>预估时长：${item.duration}</span>
+                </div>
+            </div>
+            <div class="history-btn">
+                <button data-load="${idx}">载入文稿</button>
+                <button data-del="${idx}">删除</button>
+            </div>
+        </div>`;
+    });
+    historyBox.innerHTML = html;
+
+    // 载入文稿
+    $$("[data-load]").forEach(btn=>{
+        btn.onclick = (e)=>{
+            const index = Number(e.target.dataset.load);
+            const arr = getHistory();
+            const item = arr[index];
+            formattedText.value = item.fullText;
+            showToast("文稿载入完成");
+        }
+    })
+    // 删除
+    $$("[data-del]").forEach(btn=>{
+        btn.onclick = (e)=>{
+            const idx = Number(e.target.dataset.del);
+            const arr = getHistory();
+            arr.splice(idx,1);
+            localStorage.setItem("videoTextHistory",JSON.stringify(arr));
+            renderHistory();
+            showToast("已删除本条记录");
+        }
+    })
+    // 修改标题
+    $$("[data-title]").forEach(el=>{
+        el.onclick = function(){
+            const idx = Number(this.dataset.title);
+            const arr = getHistory();
+            const newName = prompt("修改文稿标题",arr[idx].title);
+            if(newName===null) return;
+            arr[idx].title = newName.trim() || "无标题";
+            localStorage.setItem("videoTextHistory",JSON.stringify(arr));
+            renderHistory();
+        }
+    })
+}
+
+clearAllHistory.onclick = function(){
+    if(!confirm("确认清空全部历史文稿记录，不可恢复！")) return;
+    localStorage.removeItem("videoTextHistory");
+    renderHistory();
+    showToast("全部记录已清空");
+}
+exportAllHistory.onclick = function(){
+    const list = getHistory();
+    if(list.length===0){
+        showToast("暂无历史记录");
+        return;
+    }
+    let out = "====全部历史文稿记录====\n";
+    list.forEach((item,i)=>{
+        out += `\n【${i+1}】标题：${item.title}\n${item.time}｜预估时长${item.duration}\n文稿内容：\n${item.fullText}\n——————————————————\n`;
+    })
+    downloadFile("全部历史文稿记录.txt", out);
+    showToast("全部记录已导出");
+}
+
+// 初始化
+(function init(){
+    updateStat();
+    calcTime();
+    renderHistory();
+})()
+</script>
+</body>
+</html>
