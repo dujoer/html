@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JSON格式化 & 语法校验工具</title>
+    <style>
+        :root {
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --shadow-light: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+            --bg-color: #f7f8fa;
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+
+            --btn-bg: #ffffff;
+            --btn-hover: #f2f3f6;
+            --btn-primary: #2563eb;
+            --btn-primary-hover: #1d4ed8;
+
+            --success: #10b981;
+            --danger: #ef4444;
+            --editor-bg: #ffffff;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #121214;
+            --card-bg: #1e1e24;
+            --text-primary: #e5e7eb;
+            --text-secondary: #9ca3af;
+            --border-color: #31313a;
+
+            --btn-bg: #272730;
+            --btn-hover: #33333d;
+            --editor-bg: #1e1e24;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 16px;
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 0.4px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        button {
+            padding: 9px 14px;
+            border: 1px solid var(--border-color);
+            background: var(--btn-bg);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: var(--btn-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .layout-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .panel-wrap {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-secondary);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 420px;
+            padding: 14px;
+            font-family: "SF Mono", Menlo, Consolas, Monaco, monospace;
+            font-size: 14px;
+            background: var(--editor-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            outline: none;
+            resize: vertical;
+            transition: border 0.2s;
+        }
+
+        textarea:focus {
+            border-color: var(--btn-primary);
+        }
+
+        #statusBar {
+            margin-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--card-bg);
+        }
+
+        .valid {
+            color: var(--success);
+            font-weight: 500;
+        }
+        .invalid {
+            color: var(--danger);
+            font-weight: 500;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            background: rgba(30, 30, 36, 0.92);
+            color: #fff;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            box-shadow: var(--shadow-card);
+        }
+        .toast.show { opacity: 1; }
+
+        /* 导出弹窗 */
+        .modal-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            padding: 16px;
+        }
+        .modal-box {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            width: 100%;
+            max-width: 420px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-card);
+        }
+        .modal-box h3 {
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+        .modal-row {
+            margin: 14px 0;
+        }
+        .modal-row input[type="text"] {
+            width: 100%;
+            margin-top:6px;
+            padding:8px 10px;
+            border:1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--editor-bg);
+            color: var(--text-primary);
+            outline:none;
+        }
+        .modal-btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* ========== 响应式断点 ========== */
+        @media screen and (max-width: 1023px) {
+            .layout-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media screen and (max-width: 767px) {
+            body {
+                padding: 12px;
+            }
+            .layout-row {
+                grid-template-columns: 1fr;
+            }
+            textarea {
+                min-height: 300px;
+                font-size:13px;
+            }
+            .btn-group {
+                gap: 8px;
+            }
+            button {
+                padding: 10px 12px;
+                font-size:13px;
+                min-height:42px; /* 手机加大触控区域 */
+            }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>JSON格式化 & 语法校验工具</h1>
+            <button id="toggleTheme">切换深色/浅色模式</button>
+        </header>
+
+        <div class="btn-group">
+            <button id="formatBtn">格式化美化</button>
+            <button id="compressBtn">压缩单行</button>
+            <button id="validateBtn">语法校验</button>
+            <button id="trimBtn">清理首尾空白</button>
+            <button id="copySourceBtn">复制原始文本</button>
+            <button id="copyResultBtn">复制结果文本</button>
+            <button id="downloadBtn">导出文件</button>
+            <button id="clearAllBtn">清空全部</button>
+        </div>
+
+        <div class="layout-row">
+            <div class="panel-wrap">
+                <div class="panel-title">
+                    原始输入
+                    <span style="font-size:12px;">粘贴或拖拽 .json 文件</span>
+                </div>
+                <textarea id="sourceEditor" placeholder="粘贴JSON文本，支持拖拽 .json 文件载入..."></textarea>
+            </div>
+            <div class="panel-wrap">
+                <div class="panel-title">处理结果</div>
+                <textarea id="resultEditor" readonly placeholder="格式化/压缩后的内容将展示在这里"></textarea>
+            </div>
+        </div>
+
+        <div id="statusBar">
+            <span id="validTip">等待输入JSON</span>
+            <span id="charCount">原始字符数：0</span>
+        </div>
+    </div>
+
+    <!-- 导出弹窗 -->
+    <div class="modal-mask" id="exportModal">
+        <div class="modal-box">
+            <h3>导出JSON文件</h3>
+            <div class="modal-row">
+                <label>文件名</label>
+                <input id="exportNameInput" type="text">
+            </div>
+            <div class="modal-row">
+                <label>导出内容</label><br>
+                <input type="radio" name="exportMode" value="formatted" checked id="expFmt">
+                <label for="expFmt">格式化文本</label>
+                &nbsp;&nbsp;
+                <input type="radio" name="exportMode" value="compress" id="expCmp">
+                <label for="expCmp">压缩单行文本</label>
+            </div>
+            <div class="modal-row">
+                <input type="checkbox" id="addBom">
+                <label for="addBom">添加UTF-8 BOM（Windows记事本中文不乱码）</label>
+            </div>
+            <div class="modal-btn-row">
+                <button id="cancelExport">取消</button>
+                <button id="confirmExport">确认导出</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const sourceEditor = document.getElementById('sourceEditor');
+        const resultEditor = document.getElementById('resultEditor');
+        const validTip = document.getElementById('validTip');
+        const charCount = document.getElementById('charCount');
+        const themeBtn = document.getElementById('toggleTheme');
+        const toast = document.getElementById('toast');
+        const exportModal = document.getElementById('exportModal');
+        const exportNameInput = document.getElementById('exportNameInput');
+        const confirmExport = document.getElementById('confirmExport');
+        const cancelExport = document.getElementById('cancelExport');
+
+        // 本地缓存
+        function loadCache() {
+            const saved = localStorage.getItem('jsonToolSource');
+            if (saved) sourceEditor.value = saved;
+        }
+        function saveCache() {
+            localStorage.setItem('jsonToolSource', sourceEditor.value);
+        }
+
+        // 主题持久化
+        const savedTheme = localStorage.getItem('jsonToolTheme');
+        if (savedTheme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        themeBtn.onclick = () => {
+            const isDark = document.documentElement.hasAttribute('data-theme');
+            if (isDark) {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('jsonToolTheme', 'light');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('jsonToolTheme', 'dark');
+            }
+        };
+
+        // Toast
+        function showToast(msg) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 1800);
+        }
+
+        // JSON解析 + 自动修复尾部逗号（适配AI输出）
+        function tryParseJSON(text) {
+            let raw = text.trim();
+            try {
+                return { ok: true, data: JSON.parse(raw) };
+            } catch (e) {
+                const fixed = raw.replace(/,\s*([}\]])/g, '$1');
+                try {
+                    return { ok: true, data: JSON.parse(fixed), fixed: true };
+                } catch (err2) {
+                    return { ok: false, msg: e.message };
+                }
+            }
+        }
+
+        function refreshStatus() {
+            const res = tryParseJSON(sourceEditor.value);
+            if (res.ok) {
+                validTip.textContent = res.fixed ? "✅ 格式合法（自动修复尾部逗号）" : "✅ JSON格式合法";
+                validTip.className = "valid";
+            } else {
+                validTip.textContent = `❌ 格式错误：${res.msg}`;
+                validTip.className = "invalid";
+            }
+        }
+
+        function updateStat() {
+            charCount.textContent = `原始字符数：${sourceEditor.value.length}`;
+            saveCache();
+            refreshStatus();
+        }
+        sourceEditor.addEventListener('input', updateStat);
+
+        // 格式化
+        document.getElementById('formatBtn').onclick = () => {
+            const res = tryParseJSON(sourceEditor.value);
+            if (!res.ok) return showToast("格式化失败：" + res.msg);
+            resultEditor.value = JSON.stringify(res.data, null, 2);
+            showToast("✅ 格式化完成");
+        };
+
+        // 压缩
+        document.getElementById('compressBtn').onclick = () => {
+            const res = tryParseJSON(sourceEditor.value);
+            if (!res.ok) return showToast("压缩失败：" + res.msg);
+            resultEditor.value = JSON.stringify(res.data);
+            showToast("✅ 压缩完成");
+        };
+
+        document.getElementById('validateBtn').onclick = () => {
+            refreshStatus();
+            const r = tryParseJSON(sourceEditor.value);
+            r.ok ? showToast("✅ JSON校验通过") : showToast("❌ JSON非法：" + r.msg);
+        };
+
+        document.getElementById('trimBtn').onclick = () => {
+            sourceEditor.value = sourceEditor.value.trim();
+            updateStat();
+            showToast("✅ 清理首尾空白完成");
+        };
+
+        document.getElementById('copySourceBtn').onclick = async () => {
+            if (!sourceEditor.value.trim()) return showToast("内容为空");
+            await navigator.clipboard.writeText(sourceEditor.value);
+            showToast("✅ 原始文本已复制");
+        };
+        document.getElementById('copyResultBtn').onclick = async () => {
+            if (!resultEditor.value.trim()) return showToast("暂无处理结果");
+            await navigator.clipboard.writeText(resultEditor.value);
+            showToast("✅ 结果文本已复制");
+        };
+
+        // 导出弹窗
+        let exportRawContent = "";
+        document.getElementById('downloadBtn').onclick = () => {
+            exportRawContent = sourceEditor.value;
+            const parseRes = tryParseJSON(exportRawContent);
+            let defaultName = "data";
+            if (parseRes.ok && typeof parseRes.data === 'object' && parseRes.data !== null && !Array.isArray(parseRes.data)) {
+                const keys = Object.keys(parseRes.data);
+                if (keys.length > 0) defaultName = String(keys[0]).slice(0, 20);
+            }
+            exportNameInput.value = defaultName;
+            exportModal.style.display = 'flex';
+        };
+        cancelExport.onclick = () => exportModal.style.display = 'none';
+
+        confirmExport.onclick = () => {
+            const rawText = exportRawContent.trim();
+            if (!rawText) return showToast("没有可导出内容");
+            const parseRes = tryParseJSON(rawText);
+            if (!parseRes.ok) return showToast("JSON格式错误，无法导出");
+
+            const mode = document.querySelector('input[name="exportMode"]:checked').value;
+            const content = mode === 'formatted'
+                ? JSON.stringify(parseRes.data, null, 2)
+                : JSON.stringify(parseRes.data);
+
+            let fileName = exportNameInput.value.trim()
+                .replace(/[\\\/:*?"<>|]/g, '_')
+                .slice(0, 50);
+            if (!fileName) fileName = "data";
+            fileName += ".json";
+
+            let fileData = content;
+            if (document.getElementById('addBom').checked) {
+                fileData = "\uFEFF" + content;
+            }
+
+            const blob = new Blob([fileData], { type: "application/json;charset=utf-8" });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = fileName;
+            a.click();
+            URL.revokeObjectURL(a.href);
+            exportModal.style.display = 'none';
+            showToast(`✅ ${fileName} 导出成功`);
+        };
+
+        document.getElementById('clearAllBtn').onclick = () => {
+            if (!confirm("确定清空原始输入和处理结果全部内容？")) return;
+            sourceEditor.value = "";
+            resultEditor.value = "";
+            updateStat();
+            showToast("已清空全部内容");
+        };
+
+        // 拖拽文件载入
+        sourceEditor.addEventListener('dragover', e => {
+            e.preventDefault();
+            sourceEditor.style.borderColor = "var(--btn-primary)";
+        });
+        sourceEditor.addEventListener('dragleave', () => {
+            sourceEditor.style.borderColor = "var(--border-color)";
+        });
+        sourceEditor.addEventListener('drop', (e) => {
+            e.preventDefault();
+            sourceEditor.style.borderColor = "var(--border-color)";
+            const file = e.dataTransfer.files[0];
+            if (!file || !file.name.endsWith('.json')) {
+                return showToast("仅支持拖拽 .json 文件");
+            }
+            const reader = new FileReader();
+            reader.onload = evt => {
+                sourceEditor.value = evt.target.result;
+                updateStat();
+                showToast("✅ 文件载入成功");
+            };
+            reader.readAsText(file);
+        });
+
+        // 全局快捷键
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                document.getElementById('formatBtn').click();
+            }
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'c') {
+                e.preventDefault();
+                document.getElementById('copyResultBtn').click();
+            }
+            if (e.ctrlKey && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                document.getElementById('downloadBtn').click();
+            }
+        });
+
+        loadCache();
+        updateStat();
+    </script>
+</body>
+</html>
