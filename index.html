@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>前端工具总站</title>
+    <style>
+        :root {
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.05);
+            --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.07);
+            --shadow-hover: 0 10px 30px rgba(0, 0, 0, 0.11);
+
+            --bg-color: #f7f8fa;
+            --card-bg: #ffffff;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+
+            --btn-bg: #ffffff;
+            --btn-hover: #f2f3f7;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+
+            --tag-dev: #dbeafe;
+            --tag-dev-text: #1d4ed8;
+            --tag-doc: #dcfce7;
+            --tag-doc-text: #15803d;
+            --tag-eff: #fff3cd;
+            --tag-eff-text: #92400e;
+            --tag-media: #fce7f3;
+            --tag-media-text: #be185d;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #111217;
+            --card-bg: #1c1d26;
+            --text-primary: #e8ebf2;
+            --text-secondary: #9ca3af;
+            --border-color: #30323f;
+
+            --btn-bg: #262834;
+            --btn-hover: #323442;
+
+            --tag-dev: rgba(37, 99, 235, 0.22);
+            --tag-dev-text: #93c5fd;
+            --tag-doc: rgba(16, 185, 129, 0.22);
+            --tag-doc-text: #86efac;
+            --tag-eff: rgba(234, 179, 8, 0.22);
+            --tag-eff-text: #fcd34d;
+            --tag-media: rgba(236, 72, 153, 0.22);
+            --tag-media-text: #f9a8d4;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 28px 18px;
+            min-height: 100vh;
+            transition: background 0.32s ease, color 0.32s ease;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-text h1 {
+            font-size: 28px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .header-text p {
+            margin-top: 6px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .theme-btn {
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            background: var(--btn-bg);
+            color: var(--text-primary);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.24s ease;
+        }
+
+        .theme-btn:hover {
+            background-color: var(--btn-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-light);
+        }
+
+        .filter-area {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 28px;
+        }
+
+        #searchInput,
+        #categoryFilter {
+            padding: 11px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.24s;
+        }
+
+        #searchInput:focus,
+        #categoryFilter:focus {
+            border-color: var(--primary);
+        }
+
+        #searchInput {
+            flex: 1;
+            min-width: 240px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 24px;
+        }
+
+        .tool-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 22px;
+            transition: all 0.28s ease;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .tool-card h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .tool-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.65;
+            min-height: 46px;
+            margin-bottom: 14px;
+        }
+
+        .tag-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+
+        .empty-hint {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 70px 20px;
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+
+        footer {
+            margin-top: 70px;
+            padding-top: 26px;
+            border-top: 1px solid var(--border-color);
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.75;
+        }
+
+        /* 隐藏工具注册锚点区域，用户不可见，用于自动检索文件 */
+        .hidden-link-store {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 响应式自适应规则 */
+        @media screen and (max-width: 1240px) {
+            .grid-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        @media screen and (max-width: 780px) {
+            body {
+                padding: 20px 14px;
+            }
+            .grid-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 18px;
+            }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+        @media screen and (max-width: 480px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="header-text">
+            <h1>前端工具总站</h1>
+            <p>本地运行 · 纯静态HTML工具集合</p>
+        </div>
+        <button class="theme-btn" id="toggleTheme">切换深色/浅色模式</button>
+    </header>
+
+    <div class="filter-area">
+        <input id="searchInput" placeholder="搜索工具名称、简介、分类标签...">
+        <select id="categoryFilter">
+            <option value="">全部分类</option>
+        </select>
+    </div>
+
+    <div class="grid-container" id="cardContainer"></div>
+
+    <footer>
+        <p>安全说明：所有工具运算仅在浏览器本地执行，数据不会上传至外部服务器。</p>
+        <p>新增工具方法：在页面底部隐藏区域添加 &lt;a href="你的工具.html"&gt;&lt;/a&gt;，无需修改JS代码，页面自动识别加载。</p>
+    </footer>
+
+    <!-- ===================== 【工具注册区】=====================
+    新增工具只需要在这里追加 <a href="xxx.html"></a>，不需要修改任何JS！
+    所有a标签会被程序自动检索识别，区域默认隐藏，不影响页面外观
+    ========================================================== -->
+    <div class="hidden-link-store">
+        <a href="json-format.html"></a>
+        <a href="base64.html"></a>
+        <a href="md-preview.html"></a>
+        <a href="time-calc.html"></a>
+        <!-- 新增示例：<a href="new-tool.html"></a> -->
+    </div>
+</div>
+
+<script>
+    const cardContainer = document.getElementById('cardContainer');
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const toggleTheme = document.getElementById('toggleTheme');
+
+    let toolDataset = [];
+    let categorySet = new Set();
+
+    // 主题持久化
+    function initTheme() {
+        const cacheTheme = localStorage.getItem('toolStationTheme');
+        if (cacheTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+    }
+    toggleTheme.onclick = () => {
+        const darkMode = document.documentElement.hasAttribute('data-theme');
+        if (darkMode) {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('toolStationTheme', 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('toolStationTheme', 'dark');
+        }
+    };
+    initTheme();
+
+    // 自动从页面a标签提取所有html链接
+    function extractAllHtmlLinks() {
+        const linkList = Array.from(document.querySelectorAll('a'))
+            .map(link => link.getAttribute('href'))
+            .filter(href => {
+                if (!href) return false;
+                // 筛选html后缀，排除自身index.html
+                return href.endsWith('.html') && href !== 'index.html';
+            });
+        // 数组去重
+        return [...new Set(linkList)];
+    }
+
+    // 获取标签对应样式
+    function getTagClass(categoryName) {
+        const devWords = ["开发", "JSON", "编码", "正则", "转换"];
+        const docWords = ["Markdown", "文档", "PDF"];
+        const effWords = ["效率", "时间", "计算器"];
+        const mediaWords = ["图片", "媒体", "视频"];
+
+        if (devWords.some(w => categoryName.includes(w))) return "tag-dev";
+        if (docWords.some(w => categoryName.includes(w))) return "tag-doc";
+        if (effWords.some(w => categoryName.includes(w))) return "tag-eff";
+        if (mediaWords.some(w => categoryName.includes(w))) return "tag-media";
+        return "tag-dev";
+    }
+
+    // 异步拉取工具页面信息，失败兜底显示文件名
+    async function loadToolInfo(filePath) {
+        try {
+            const response = await fetch(filePath, {cache: "no-cache"});
+            const htmlText = await response.text();
+            const domParser = new DOMParser();
+            const doc = domParser.parseFromString(htmlText, "text/html");
+
+            const title = doc.querySelector("title")?.innerText || filePath;
+            const descMeta = doc.querySelector('meta[name="tool-desc"]');
+            const desc = descMeta?.content || "暂无功能介绍，点击卡片打开工具";
+            const catMeta = doc.querySelector('meta[name="tool-category"]');
+            const categories = catMeta ? catMeta.content.split(',').map(s => s.trim()).filter(Boolean) : ["未分类"];
+
+            return {
+                path: filePath,
+                title,
+                desc,
+                categories,
+                ready: true
+            };
+        } catch (err) {
+            // 请求失败兜底方案：只展示文件名，可正常点击打开
+            console.log(`无法加载 ${filePath} 页面信息`, err);
+            return {
+                path: filePath,
+                title: filePath,
+                desc: "无法读取工具详情，点击卡片直接访问",
+                categories: ["未分类"],
+                ready: false
+            };
+        }
+    }
+
+    // 渲染卡片列表
+    function renderCardList(list) {
+        cardContainer.innerHTML = "";
+        if (list.length === 0) {
+            cardContainer.innerHTML = `<div class="empty-hint">未查询到匹配的工具</div>`;
+            return;
+        }
+
+        list.forEach(item => {
+            const card = document.createElement('div');
+            card.className = "tool-card";
+            card.innerHTML = `
+                <h3>${item.title}</h3>
+                <div class="tool-desc">${item.desc}</div>
+                <div class="tag-wrap">
+                    ${item.categories.map(cat => `<span class="tag ${getTagClass(cat)}">${cat}</span>`).join("")}
+                </div>
+            `;
+            card.onclick = () => window.open(item.path, "_blank");
+            cardContainer.appendChild(card);
+        });
+    }
+
+    // 筛选逻辑
+    function filterTools() {
+        const keyword = searchInput.value.trim().toLowerCase();
+        const selectCat = categoryFilter.value;
+
+        const result = toolDataset.filter(item => {
+            const searchText = (item.title + item.desc + item.categories.join("")).toLowerCase();
+            const matchKeyword = !keyword || searchText.includes(keyword);
+            const matchCategory = !selectCat || item.categories.includes(selectCat);
+            return matchKeyword && matchCategory;
+        });
+        renderCardList(result);
+    }
+
+    // 初始化加载入口
+    async function init() {
+        const htmlFileList = extractAllHtmlLinks();
+        const taskList = htmlFileList.map(path => loadToolInfo(path));
+        toolDataset = await Promise.all(taskList);
+
+        // 收集全部分类
+        toolDataset.forEach(tool => {
+            tool.categories.forEach(c => categorySet.add(c));
+        });
+        // 填充下拉分类选择器
+        categorySet.forEach(cat => {
+            const opt = document.createElement("option");
+            opt.value = cat;
+            opt.textContent = cat;
+            categoryFilter.appendChild(opt);
+        });
+
+        filterTools();
+    }
+
+    // 绑定筛选事件
+    searchInput.addEventListener("input", filterTools);
+    categoryFilter.addEventListener("change", filterTools);
+
+    init();
+</script>
+</body>
+</html>
