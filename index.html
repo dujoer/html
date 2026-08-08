@@ -1,433 +1,394 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>前端工具总站</title>
-    <style>
-        :root {
-            --radius-sm: 6px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.05);
-            --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.07);
-            --shadow-hover: 0 10px 30px rgba(0, 0, 0, 0.11);
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>工具箱 · 本地实用工具集合</title>
+<meta name="description" content="纯前端本地工具集合，零上传、隐私安全，涵盖图片处理、设计、生产力、安全等场景。" />
+<style>
+  :root{
+    --bg:#f5f5f7; --bg-2:#ececf0;
+    --card:#ffffff; --card-2:#fbfbfd;
+    --text:#1d1d1f; --muted:#6e6e73; --faint:#8e8e93;
+    --line:rgba(0,0,0,.08); --line-2:rgba(0,0,0,.05);
+    --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
+    --shadow-lg:0 4px 12px rgba(0,0,0,.08),0 18px 48px rgba(0,0,0,.12);
+    --accent:#0071e3; --accent-2:#5e5ce6;
+    --grad:linear-gradient(135deg,#0a84ff,#5e5ce6);
+    --radius:22px; --radius-sm:13px;
+    --header-bg:rgba(245,245,247,.72);
+  }
+  html[data-theme="dark"]{
+    --bg:#000000; --bg-2:#0a0a0c;
+    --card:#1c1c1e; --card-2:#242426;
+    --text:#f5f5f7; --muted:#a1a1a6; --faint:#6e6e73;
+    --line:rgba(255,255,255,.10); --line-2:rgba(255,255,255,.06);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.5);
+    --shadow-lg:0 6px 16px rgba(0,0,0,.5),0 22px 60px rgba(0,0,0,.6);
+    --header-bg:rgba(0,0,0,.62);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text);
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    line-height:1.5; min-height:100%;
+    background-image:radial-gradient(1200px 600px at 12% -8%,rgba(10,132,255,.10),transparent 60%),
+                     radial-gradient(1000px 560px at 100% 0%,rgba(94,92,230,.10),transparent 55%);
+    background-attachment:fixed;
+    transition:background-color .4s ease,color .4s ease;
+  }
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
 
-            --bg-color: #f7f8fa;
-            --card-bg: #ffffff;
-            --text-primary: #111827;
-            --text-secondary: #6b7280;
-            --border-color: #e5e7eb;
+  /* ===== Header ===== */
+  header{
+    position:sticky; top:0; z-index:50;
+    background:var(--header-bg);
+    backdrop-filter:saturate(180%) blur(20px); -webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid var(--line);
+  }
+  .bar{
+    max-width:1140px; margin:0 auto; padding:14px 24px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .brand{display:flex; align-items:center; gap:11px; min-width:0;}
+  .brand .logo{
+    width:34px; height:34px; border-radius:10px; flex:0 0 auto;
+    background:var(--grad); display:grid; place-items:center;
+    box-shadow:0 4px 14px rgba(10,132,255,.35);
+  }
+  .brand .logo svg{width:19px;height:19px;}
+  .brand h1{font-size:16px; font-weight:600; letter-spacing:.2px; white-space:nowrap;}
+  .brand .sub{font-size:11.5px; color:var(--muted); font-weight:500; white-space:nowrap;}
+  .head-actions{display:flex; align-items:center; gap:10px;}
+  .ghost-btn{
+    display:inline-flex; align-items:center; gap:7px;
+    padding:8px 13px; border-radius:999px; font-size:13px; font-weight:550;
+    background:var(--card); border:1px solid var(--line); color:var(--text);
+    transition:transform .15s ease,box-shadow .2s ease,background .2s ease;
+  }
+  .ghost-btn:hover{transform:translateY(-1px); box-shadow:var(--shadow);}
+  .ghost-btn svg{width:15px;height:15px;}
+  .theme-toggle{width:38px;height:38px;padding:0;justify-content:center;border-radius:999px;}
+  .theme-toggle .sun{display:none;}
+  html[data-theme="dark"] .theme-toggle .sun{display:block;}
+  html[data-theme="dark"] .theme-toggle .moon{display:none;}
 
-            --btn-bg: #ffffff;
-            --btn-hover: #f2f3f7;
-            --primary: #2563eb;
-            --primary-hover: #1d4ed8;
+  /* ===== Hero ===== */
+  .hero{max-width:1140px; margin:0 auto; padding:64px 24px 30px; text-align:center;}
+  .eyebrow{
+    display:inline-block; font-size:12.5px; font-weight:650; letter-spacing:.10em; text-transform:uppercase;
+    color:var(--accent); background:color-mix(in srgb,var(--accent) 12%,transparent);
+    padding:5px 13px; border-radius:999px; margin-bottom:20px;
+  }
+  .hero h2{
+    font-size:clamp(34px,6vw,56px); font-weight:700; letter-spacing:-.02em; line-height:1.05;
+    background:linear-gradient(180deg,var(--text),color-mix(in srgb,var(--text) 62%,var(--muted)));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .hero p.lead{margin:18px auto 0; max-width:560px; font-size:clamp(15px,2.4vw,18px); color:var(--muted);}
+  .stats{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:26px;}
+  .stat{
+    display:inline-flex; align-items:center; gap:8px; padding:8px 15px; border-radius:999px;
+    background:var(--card); border:1px solid var(--line); font-size:13px; color:var(--muted); font-weight:550;
+  }
+  .stat b{color:var(--text); font-weight:700;}
+  .stat svg{width:14px;height:14px;color:var(--accent);}
 
-            --tag-dev: #dbeafe;
-            --tag-dev-text: #1d4ed8;
-            --tag-doc: #dcfce7;
-            --tag-doc-text: #15803d;
-            --tag-eff: #fff3cd;
-            --tag-eff-text: #92400e;
-            --tag-media: #fce7f3;
-            --tag-media-text: #be185d;
-        }
+  /* ===== Search ===== */
+  .search-wrap{max-width:620px; margin:34px auto 0; position:relative;}
+  .search-wrap svg.s-ico{position:absolute; left:18px; top:50%; transform:translateY(-50%); width:18px;height:18px;color:var(--faint);pointer-events:none;}
+  #search{
+    width:100%; padding:15px 18px 15px 50px; font-size:15.5px;
+    border-radius:16px; border:1px solid var(--line); background:var(--card); color:var(--text);
+    box-shadow:var(--shadow); transition:box-shadow .2s ease,border-color .2s ease;
+    outline:none;
+  }
+  #search::placeholder{color:var(--faint);}
+  #search:focus{border-color:color-mix(in srgb,var(--accent) 55%,transparent); box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent),var(--shadow);}
+  #clearSearch{position:absolute; right:12px; top:50%; transform:translateY(-50%); width:26px;height:26px; border-radius:50%; display:none; place-items:center; color:var(--faint); background:var(--bg-2);}
+  #clearSearch.show{display:grid;}
+  #clearSearch:hover{color:var(--text);}
+  #clearSearch svg{width:14px;height:14px;}
 
-        [data-theme="dark"] {
-            --bg-color: #111217;
-            --card-bg: #1c1d26;
-            --text-primary: #e8ebf2;
-            --text-secondary: #9ca3af;
-            --border-color: #30323f;
+  /* ===== Filters ===== */
+  .filters{max-width:1140px; margin:30px auto 0; padding:0 24px; display:flex; gap:9px; flex-wrap:wrap; justify-content:center;}
+  .pill{
+    padding:9px 16px; border-radius:999px; font-size:13.5px; font-weight:600;
+    background:var(--card); border:1px solid var(--line); color:var(--muted);
+    transition:all .18s ease; white-space:nowrap;
+  }
+  .pill:hover{color:var(--text); border-color:color-mix(in srgb,var(--accent) 40%,transparent);}
+  .pill.on{color:#fff; background:var(--grad); border-color:transparent; box-shadow:0 6px 18px rgba(10,132,255,.35);}
 
-            --btn-bg: #262834;
-            --btn-hover: #323442;
+  /* ===== Grid ===== */
+  main{max-width:1140px; margin:30px auto 0; padding:0 24px 60px;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:20px;}
+  .card{
+    position:relative; display:flex; flex-direction:column; gap:14px;
+    padding:22px; border-radius:var(--radius); background:var(--card);
+    border:1px solid var(--line); box-shadow:var(--shadow);
+    transition:transform .22s cubic-bezier(.2,.7,.3,1),box-shadow .22s ease,border-color .22s ease;
+    overflow:hidden;
+  }
+  .card::before{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
+    background:var(--grad); -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor; mask-composite:exclude; opacity:0; transition:opacity .25s ease; pointer-events:none;}
+  .card:hover{transform:translateY(-6px); box-shadow:var(--shadow-lg);}
+  .card:hover::before{opacity:1;}
+  .card .icon{
+    width:54px; height:54px; border-radius:15px; display:grid; place-items:center; flex:0 0 auto;
+    box-shadow:0 8px 20px rgba(0,0,0,.16); transition:transform .25s ease;
+  }
+  .card:hover .icon{transform:scale(1.06) rotate(-2deg);}
+  .card .icon svg{width:27px;height:27px;}
+  .card h3{font-size:17px; font-weight:650; letter-spacing:-.01em;}
+  .card .desc{font-size:13.5px; color:var(--muted); flex:1; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
+  .tags{display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;}
+  .tag{font-size:11.5px; font-weight:600; color:var(--muted); background:var(--bg-2); padding:4px 9px; border-radius:999px; border:1px solid var(--line-2);}
+  .open{display:inline-flex; align-items:center; gap:5px; font-size:13.5px; font-weight:650; color:var(--accent); margin-top:2px;}
+  .open svg{width:15px;height:15px; transition:transform .2s ease;}
+  .card:hover .open svg{transform:translateX(4px);}
 
-            --tag-dev: rgba(37, 99, 235, 0.22);
-            --tag-dev-text: #93c5fd;
-            --tag-doc: rgba(16, 185, 129, 0.22);
-            --tag-doc-text: #86efac;
-            --tag-eff: rgba(234, 179, 8, 0.22);
-            --tag-eff-text: #fcd34d;
-            --tag-media: rgba(236, 72, 153, 0.22);
-            --tag-media-text: #f9a8d4;
-        }
+  /* placeholder card */
+  .card.more{border-style:dashed; background:transparent; box-shadow:none; align-items:center; justify-content:center; text-align:center; color:var(--faint); min-height:210px;}
+  .card.more .plus{width:44px;height:44px;border-radius:13px;background:var(--bg-2);display:grid;place-items:center;margin-bottom:8px;}
+  .card.more .plus svg{width:22px;height:22px;}
+  .card.more h3{color:var(--muted);font-weight:600;}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+  /* empty */
+  .empty{grid-column:1/-1; text-align:center; padding:70px 20px; color:var(--muted);}
+  .empty svg{width:46px;height:46px;opacity:.5;margin-bottom:14px;}
+  .empty p{font-size:15px;}
+  .empty button{margin-top:16px;}
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            padding: 28px 18px;
-            min-height: 100vh;
-            transition: background 0.32s ease, color 0.32s ease;
-        }
+  /* footer */
+  footer{max-width:1140px; margin:0 auto; padding:28px 24px 50px; text-align:center; color:var(--faint); font-size:12.5px; line-height:1.8;}
+  footer .priv{display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:999px; background:var(--card); border:1px solid var(--line); color:var(--muted); font-weight:550;}
+  footer .priv svg{width:14px;height:14px;color:#30d158;}
 
-        .container {
-            max-width: 1440px;
-            margin: 0 auto;
-        }
-
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 28px;
-            flex-wrap: wrap;
-            gap: 16px;
-        }
-
-        .header-text h1 {
-            font-size: 28px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .header-text p {
-            margin-top: 6px;
-            color: var(--text-secondary);
-            font-size: 14px;
-        }
-
-        .theme-btn {
-            padding: 10px 16px;
-            border: 1px solid var(--border-color);
-            background: var(--btn-bg);
-            color: var(--text-primary);
-            border-radius: var(--radius-sm);
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.24s ease;
-        }
-
-        .theme-btn:hover {
-            background-color: var(--btn-hover);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-light);
-        }
-
-        .filter-area {
-            display: flex;
-            gap: 14px;
-            flex-wrap: wrap;
-            margin-bottom: 28px;
-        }
-
-        #searchInput,
-        #categoryFilter {
-            padding: 11px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            background: var(--card-bg);
-            color: var(--text-primary);
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.24s;
-        }
-
-        #searchInput:focus,
-        #categoryFilter:focus {
-            border-color: var(--primary);
-        }
-
-        #searchInput {
-            flex: 1;
-            min-width: 240px;
-        }
-
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 24px;
-        }
-
-        .tool-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-md);
-            padding: 22px;
-            transition: all 0.28s ease;
-        }
-
-        .tool-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow-hover);
-        }
-
-        .tool-card h3 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .tool-desc {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.65;
-            min-height: 46px;
-            margin-bottom: 14px;
-        }
-
-        .tag-wrap {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .tag {
-            font-size: 12px;
-            padding: 4px 10px;
-            border-radius: 999px;
-        }
-
-        .empty-hint {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 70px 20px;
-            color: var(--text-secondary);
-            font-size: 15px;
-        }
-
-        footer {
-            margin-top: 70px;
-            padding-top: 26px;
-            border-top: 1px solid var(--border-color);
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.75;
-        }
-
-        /* 隐藏工具注册锚点区域，用户不可见，用于自动检索文件 */
-        .hidden-link-store {
-            position: absolute;
-            width: 1px;
-            height: 1px;
-            overflow: hidden;
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        /* 响应式自适应规则 */
-        @media screen and (max-width: 1240px) {
-            .grid-container {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-        @media screen and (max-width: 780px) {
-            body {
-                padding: 20px 14px;
-            }
-            .grid-container {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 18px;
-            }
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-        @media screen and (max-width: 480px) {
-            .grid-container {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  @media (max-width:640px){
+    .bar{padding:12px 16px;}
+    .brand .sub{display:none;}
+    .hero{padding:44px 18px 22px;}
+    main{padding:0 16px 50px;}
+    .filters,.hero,.bar{max-width:100%;}
+    .grid{grid-template-columns:1fr; gap:16px;}
+    .ghost-btn span.lbl{display:none;}
+    .ghost-btn{padding:9px;}
+  }
+</style>
 </head>
 <body>
-<div class="container">
-    <header>
-        <div class="header-text">
-            <h1>前端工具总站</h1>
-            <p>本地运行 · 纯静态HTML工具集合</p>
-        </div>
-        <button class="theme-btn" id="toggleTheme">切换深色/浅色模式</button>
-    </header>
 
-    <div class="filter-area">
-        <input id="searchInput" placeholder="搜索工具名称、简介、分类标签...">
-        <select id="categoryFilter">
-            <option value="">全部分类</option>
-        </select>
+<header>
+  <div class="bar">
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h10M4 17h7"/></svg>
+      </div>
+      <div>
+        <h1>工具箱</h1>
+        <div class="sub">本地实用工具集合</div>
+      </div>
     </div>
-
-    <div class="grid-container" id="cardContainer"></div>
-
-    <footer>
-        <p>安全说明：所有工具运算仅在浏览器本地执行，数据不会上传至外部服务器。</p>
-        <p>新增工具方法：在页面底部隐藏区域添加 &lt;a href="你的工具.html"&gt;&lt;/a&gt;，无需修改JS代码，页面自动识别加载。</p>
-    </footer>
-
-    <!-- ===================== 【工具注册区】=====================
-    新增工具只需要在这里追加 <a href="xxx.html"></a>，不需要修改任何JS！
-    所有a标签会被程序自动检索识别，区域默认隐藏，不影响页面外观
-    ========================================================== -->
-    <div class="hidden-link-store">
-        <a href="json-format.html"></a>
-        <a href="base64.html"></a>
-        <a href="md-preview.html"></a>
-        <a href="time-calc.html"></a>
-        <!-- 新增示例：<a href="new-tool.html"></a> -->
+    <div class="head-actions">
+      <a class="ghost-btn" href="https://www.codebuddy.cn" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg>
+        <span class="lbl">关于</span>
+      </a>
+      <button class="ghost-btn theme-toggle" id="themeToggle" aria-label="切换主题">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
     </div>
-</div>
+  </div>
+</header>
+
+<section class="hero">
+  <span class="eyebrow">All-in-One Toolkit</span>
+  <h2>你的本地工具箱</h2>
+  <p class="lead">精选纯前端工具，全部在浏览器本地运行，零上传、不收集数据，隐私安全。</p>
+  <div class="stats">
+    <span class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><b id="statCount">0</b> 个工具</span>
+    <span class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><b id="statCat">0</b> 大分类</span>
+    <span class="stat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l7 3v6c0 5-3 8-7 11-4-3-7-6-7-11V5z"/></svg>100% 本地运行</span>
+  </div>
+
+  <div class="search-wrap">
+    <svg class="s-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+    <input id="search" type="text" placeholder="搜索工具，例如：水印、换算、密码…" autocomplete="off" />
+    <button id="clearSearch" aria-label="清除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+</section>
+
+<nav class="filters" id="filters"></nav>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<footer>
+  <div class="priv">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l7 3v6c0 5-3 8-7 11-4-3-7-6-7-11V5z"/><path d="M9 12l2 2 4-4"/></svg>
+    所有工具均在你的设备本地运行 · 图片与数据不会上传任何服务器
+  </div>
+  <div style="margin-top:12px;">双击任意工具即可在浏览器中打开使用 · 单 HTML 文件，可离线部署</div>
+</footer>
 
 <script>
-    const cardContainer = document.getElementById('cardContainer');
-    const searchInput = document.getElementById('searchInput');
-    const categoryFilter = document.getElementById('categoryFilter');
-    const toggleTheme = document.getElementById('toggleTheme');
+/* ============================================================
+ *  工具集合配置 —— 新增工具只需在 TOOLS 数组追加一项即可
+ *  ----------------------------------------------------------
+ *  id   : 唯一标识（同时用于 GLYPHS 图标查找，可留空用分类图标）
+ *  file : 工具 html 文件名（与本索引页同目录）
+ *  title: 工具名称
+ *  desc : 一句话简介
+ *  tags : 标签数组（用于搜索）
+ *  cat  : 分类键，必须存在于下方 CATEGORIES
+ * ============================================================ */
+const CATEGORIES = {
+  image:    { label:"图片处理", grad:"linear-gradient(135deg,#ff375f,#ff9f0a)" },
+  design:   { label:"设计创意", grad:"linear-gradient(135deg,#bf5af2,#7b5cff)" },
+  prod:     { label:"生产力",   grad:"linear-gradient(135deg,#0a84ff,#5ac8fa)" },
+  security: { label:"安全隐私", grad:"linear-gradient(135deg,#ff453a,#ff7a45)" },
+  ops:      { label:"活动运营", grad:"linear-gradient(135deg,#30d158,#00c7be)" },
+  ai:       { label:"AI 辅助",  grad:"linear-gradient(135deg,#0ad1c8,#3b82f6)" },
+};
 
-    let toolDataset = [];
-    let categorySet = new Set();
+const TOOLS = [
+  { id:"image-editor",  file:"image-editor.html",  title:"图片压缩裁剪编辑器", cat:"image",
+    desc:"压缩 · 裁剪 · 旋转 · 批量导出，纯本地 Canvas 处理，不上传。", tags:["压缩","裁剪","批量","图片"] },
+  { id:"watermark-tool",file:"watermark-tool.html",title:"图片水印工具",       cat:"image",
+    desc:"文字与斜向平铺防盗水印，导出保持原图分辨率。", tags:["水印","防盗","平铺","图片"] },
+  { id:"color-toolkit", file:"color-toolkit.html",  title:"取色器与配色工具箱", cat:"design",
+    desc:"屏幕取色、配色方案生成，HEX/RGB/HSL 互转。", tags:["取色","配色","调色","颜色"] },
+  { id:"unit-converter",file:"unit-converter.html", title:"全能单位换算工具箱", cat:"prod",
+    desc:"长度/时间/存储等 10 类单位双向同步换算，离线可用。", tags:["换算","单位","离线","历史"] },
+  { id:"timer-tool",    file:"timer-tool.html",     title:"多功能计时器",       cat:"prod",
+    desc:"秒表 · 倒计时 · 间隔提醒三合一，支持防抖与提醒。", tags:["计时","倒计时","提醒","秒表"] },
+  { id:"json",          file:"json.html",           title:"JSON 格式化校验",    cat:"prod",
+    desc:"格式化、压缩、语法校验 JSON，本地即时处理。", tags:["JSON","格式化","校验","开发"] },
+  { id:"password",      file:"password.html",       title:"高强度密码生成器",   cat:"security",
+    desc:"可定制规则生成强密码，离线生成不存储。", tags:["密码","安全","生成","随机"] },
+  { id:"lottery-system",file:"lottery-system.html", title:"可配置抽奖系统",     cat:"ops",
+    desc:"公平随机抽奖，支持多奖池、中奖查询与导出。", tags:["抽奖","公平","多池","活动"] },
+  { id:"long",          file:"long.html",           title:"长视频文字摘要辅助", cat:"ai",
+    desc:"辅助提取长视频文字要点并整理成摘要。", tags:["摘要","长视频","整理","AI"] },
+];
 
-    // 主题持久化
-    function initTheme() {
-        const cacheTheme = localStorage.getItem('toolStationTheme');
-        if (cacheTheme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-        }
-    }
-    toggleTheme.onclick = () => {
-        const darkMode = document.documentElement.hasAttribute('data-theme');
-        if (darkMode) {
-            document.documentElement.removeAttribute('data-theme');
-            localStorage.setItem('toolStationTheme', 'light');
-        } else {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            localStorage.setItem('toolStationTheme', 'dark');
-        }
-    };
-    initTheme();
+/* 图标（白色描边，置于分类渐变方块上）。id 命中则用专属图标，否则用分类图标 */
+const GLYPHS = {
+  "image-editor":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10" r="1.6"/><path d="M21 17l-5-5-7 7"/></svg>',
+  "watermark-tool":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.6-3 8-7 10-4-2-7-5.4-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+  "color-toolkit":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 0 0 0 18c1.4 0 2-1 2-2 0-1.4 1-2 2.2-2H18a4 4 0 0 0 4-4c0-4.4-4-8-10-8z"/><circle cx="7.5" cy="11" r="1"/><circle cx="10.5" cy="7.5" r="1"/><circle cx="15" cy="7.5" r="1"/></svg>',
+  "unit-converter":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3"/><path d="M20 16H7l3 3"/></svg>',
+  "timer-tool":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 3h6"/></svg>',
+  "json":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 8l-4 4 4 4"/><path d="M15 8l4 4-4 4"/></svg>',
+  "password":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.2" fill="white" stroke="none"/></svg>',
+  "lottery-system":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="11" rx="1.8"/><path d="M4 13h16M12 9v11"/><path d="M12 9C12 6 10 4 8 4a2.4 2.4 0 0 0 0 5h4zM12 9C12 6 14 4 16 4a2.4 2.4 0 0 1 0 5h-4z"/></svg>',
+  "long":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="16" rx="2.2"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4.5"/></svg>',
+};
+const CAT_GLYPH = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>';
 
-    // 自动从页面a标签提取所有html链接
-    function extractAllHtmlLinks() {
-        const linkList = Array.from(document.querySelectorAll('a'))
-            .map(link => link.getAttribute('href'))
-            .filter(href => {
-                if (!href) return false;
-                // 筛选html后缀，排除自身index.html
-                return href.endsWith('.html') && href !== 'index.html';
-            });
-        // 数组去重
-        return [...new Set(linkList)];
-    }
+/* ===================== 状态 & 渲染 ===================== */
+const state = { q:"", cat:"all" };
+const $ = (s)=>document.querySelector(s);
+const grid = $("#grid");
 
-    // 获取标签对应样式
-    function getTagClass(categoryName) {
-        const devWords = ["开发", "JSON", "编码", "正则", "转换"];
-        const docWords = ["Markdown", "文档", "PDF"];
-        const effWords = ["效率", "时间", "计算器"];
-        const mediaWords = ["图片", "媒体", "视频"];
+function glyphFor(t){ return GLYPHS[t.id] || CAT_GLYPH; }
 
-        if (devWords.some(w => categoryName.includes(w))) return "tag-dev";
-        if (docWords.some(w => categoryName.includes(w))) return "tag-doc";
-        if (effWords.some(w => categoryName.includes(w))) return "tag-eff";
-        if (mediaWords.some(w => categoryName.includes(w))) return "tag-media";
-        return "tag-dev";
-    }
+function renderFilters(){
+  const el = $("#filters");
+  const cats = Object.keys(CATEGORIES);
+  let html = '<button class="pill'+(state.cat==="all"?" on":"")+'" data-cat="all">全部</button>';
+  cats.forEach(c=>{
+    html += '<button class="pill'+(state.cat===c?" on":"")+'" data-cat="'+c+'">'+CATEGORIES[c].label+'</button>';
+  });
+  el.innerHTML = html;
+  el.querySelectorAll(".pill").forEach(b=>{
+    b.addEventListener("click",()=>{ state.cat=b.dataset.cat; render(); });
+  });
+}
 
-    // 异步拉取工具页面信息，失败兜底显示文件名
-    async function loadToolInfo(filePath) {
-        try {
-            const response = await fetch(filePath, {cache: "no-cache"});
-            const htmlText = await response.text();
-            const domParser = new DOMParser();
-            const doc = domParser.parseFromString(htmlText, "text/html");
+function cardHTML(t){
+  const g = CATEGORIES[t.cat] || { label:"工具", grad:"var(--grad)" };
+  const tags = t.tags.map(x=>'<span class="tag">'+esc(x)+'</span>').join("");
+  return '<a class="card" href="'+esc(t.file)+'" target="_blank" rel="noopener">'
+    + '<div class="icon" style="background:'+g.grad+'">'+glyphFor(t)+'</div>'
+    + '<div><h3>'+esc(t.title)+'</h3></div>'
+    + '<div class="desc">'+esc(t.desc)+'</div>'
+    + '<div class="tags">'+tags+'</div>'
+    + '<span class="open">打开工具'
+    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>'
+    + '</a>';
+}
 
-            const title = doc.querySelector("title")?.innerText || filePath;
-            const descMeta = doc.querySelector('meta[name="tool-desc"]');
-            const desc = descMeta?.content || "暂无功能介绍，点击卡片打开工具";
-            const catMeta = doc.querySelector('meta[name="tool-category"]');
-            const categories = catMeta ? catMeta.content.split(',').map(s => s.trim()).filter(Boolean) : ["未分类"];
+function moreCard(){
+  return '<div class="card more">'
+    + '<div class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>'
+    + '<h3>更多工具即将上线</h3>'
+    + '<div class="desc">本索引可随工具增加随时扩展</div>'
+    + '</div>';
+}
 
-            return {
-                path: filePath,
-                title,
-                desc,
-                categories,
-                ready: true
-            };
-        } catch (err) {
-            // 请求失败兜底方案：只展示文件名，可正常点击打开
-            console.log(`无法加载 ${filePath} 页面信息`, err);
-            return {
-                path: filePath,
-                title: filePath,
-                desc: "无法读取工具详情，点击卡片直接访问",
-                categories: ["未分类"],
-                ready: false
-            };
-        }
-    }
+function render(){
+  const q = state.q.trim().toLowerCase();
+  const list = TOOLS.filter(t=>{
+    if(state.cat!=="all" && t.cat!==state.cat) return false;
+    if(!q) return true;
+    const hay = (t.title+" "+t.desc+" "+t.tags.join(" ")).toLowerCase();
+    return hay.indexOf(q)>=0;
+  });
+  let html = list.map(cardHTML).join("");
+  if(state.cat==="all" && !q) html += moreCard();
+  if(!list.length){
+    html = '<div class="empty">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>'
+      + '<p>没有找到匹配「'+esc(state.q)+'」的工具</p>'
+      + '<button class="ghost-btn" id="resetFilter">清除筛选</button></div>';
+  }
+  grid.innerHTML = html;
+  const rf = $("#resetFilter");
+  if(rf) rf.addEventListener("click",()=>{ state.q=""; state.cat="all"; $("#search").value=""; $("#clearSearch").classList.remove("show"); renderFilters(); render(); });
+  renderFilters();
+  $("#statCount").textContent = TOOLS.length;
+  $("#statCat").textContent = Object.keys(CATEGORIES).length;
+}
 
-    // 渲染卡片列表
-    function renderCardList(list) {
-        cardContainer.innerHTML = "";
-        if (list.length === 0) {
-            cardContainer.innerHTML = `<div class="empty-hint">未查询到匹配的工具</div>`;
-            return;
-        }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
 
-        list.forEach(item => {
-            const card = document.createElement('div');
-            card.className = "tool-card";
-            card.innerHTML = `
-                <h3>${item.title}</h3>
-                <div class="tool-desc">${item.desc}</div>
-                <div class="tag-wrap">
-                    ${item.categories.map(cat => `<span class="tag ${getTagClass(cat)}">${cat}</span>`).join("")}
-                </div>
-            `;
-            card.onclick = () => window.open(item.path, "_blank");
-            cardContainer.appendChild(card);
-        });
-    }
+/* ===================== 交互 ===================== */
+const search = $("#search");
+const clearBtn = $("#clearSearch");
+let timer=null;
+search.addEventListener("input",()=>{
+  state.q = search.value;
+  clearBtn.classList.toggle("show", search.value.length>0);
+  clearTimeout(timer);
+  timer = setTimeout(render, 120);
+});
+clearBtn.addEventListener("click",()=>{ search.value=""; state.q=""; clearBtn.classList.remove("show"); render(); search.focus(); });
 
-    // 筛选逻辑
-    function filterTools() {
-        const keyword = searchInput.value.trim().toLowerCase();
-        const selectCat = categoryFilter.value;
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="/" && document.activeElement!==search){ e.preventDefault(); search.focus(); }
+  if(e.key==="Escape" && document.activeElement===search){ search.value=""; state.q=""; clearBtn.classList.remove("show"); render(); search.blur(); }
+});
 
-        const result = toolDataset.filter(item => {
-            const searchText = (item.title + item.desc + item.categories.join("")).toLowerCase();
-            const matchKeyword = !keyword || searchText.includes(keyword);
-            const matchCategory = !selectCat || item.categories.includes(selectCat);
-            return matchKeyword && matchCategory;
-        });
-        renderCardList(result);
-    }
+/* 主题 */
+const root = document.documentElement;
+const saved = (function(){ try{ return localStorage.getItem("idx-theme"); }catch(e){ return null; } })();
+const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+root.setAttribute("data-theme", saved || (prefersDark?"dark":"light"));
+$("#themeToggle").addEventListener("click",()=>{
+  const next = root.getAttribute("data-theme")==="dark"?"light":"dark";
+  root.setAttribute("data-theme",next);
+  try{ localStorage.setItem("idx-theme",next); }catch(e){}
+});
 
-    // 初始化加载入口
-    async function init() {
-        const htmlFileList = extractAllHtmlLinks();
-        const taskList = htmlFileList.map(path => loadToolInfo(path));
-        toolDataset = await Promise.all(taskList);
-
-        // 收集全部分类
-        toolDataset.forEach(tool => {
-            tool.categories.forEach(c => categorySet.add(c));
-        });
-        // 填充下拉分类选择器
-        categorySet.forEach(cat => {
-            const opt = document.createElement("option");
-            opt.value = cat;
-            opt.textContent = cat;
-            categoryFilter.appendChild(opt);
-        });
-
-        filterTools();
-    }
-
-    // 绑定筛选事件
-    searchInput.addEventListener("input", filterTools);
-    categoryFilter.addEventListener("change", filterTools);
-
-    init();
+render();
 </script>
 </body>
 </html>

@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=no">
+<title>在线图片水印工具 · 本地处理</title>
+<style>
+:root{
+  --bg:#eceef5; --panel:#ffffff; --panel2:#f5f6fc; --line:#e6e8f2;
+  --text:#191c28; --muted:#868da3; --primary:#5b5bf0; --primary2:#9b6bff;
+  --danger:#ef4d5a; --ok:#1fb574; --radius:14px;
+  --chk1:#e9ebf3; --chk2:#ffffff; --shadow:0 8px 28px rgba(40,45,90,.10);
+  --glass:rgba(255,255,255,.82); --primary-soft:rgba(91,91,240,.16);
+  --grad:linear-gradient(135deg,var(--primary),var(--primary2));
+}
+[data-theme="dark"]{
+  --bg:#0d0e15; --panel:#171922; --panel2:#1d202c; --line:#2b2f3d;
+  --text:#eceefb; --muted:#949ab2; --primary:#7c7cff; --primary2:#a987ff;
+  --danger:#ff6b76; --ok:#43d6a0; --radius:14px;
+  --chk1:#262a38; --chk2:#20232f; --shadow:0 10px 34px rgba(0,0,0,.45);
+  --glass:rgba(28,30,40,.78); --primary-soft:rgba(124,124,255,.20);
+  --grad:linear-gradient(135deg,var(--primary),var(--primary2));
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{background:
+    radial-gradient(1100px 520px at 88% -8%, rgba(155,107,255,.10), transparent 60%),
+    radial-gradient(900px 480px at 0% 0%, rgba(91,91,240,.08), transparent 55%),
+    var(--bg);
+  color:var(--text);font:14px/1.55 -apple-system,BlinkMacSystemFont,"Microsoft YaHei","Segoe UI",Roboto,sans-serif;
+  display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:14px;color:var(--text)}
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:12px;padding:11px 18px;background:var(--panel);
+  border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;
+  box-shadow:0 1px 0 var(--line),0 10px 30px -18px rgba(20,25,60,.5)}
+.logo{width:34px;height:34px;border-radius:10px;background:var(--grad);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;flex:none;
+  box-shadow:0 5px 14px var(--primary-soft)}
+header h1{font-size:16px;margin:0;font-weight:800;letter-spacing:.2px}
+header .sub{font-size:11px;color:var(--muted);letter-spacing:.3px}
+header .spacer{flex:1}
+.icon-btn{width:40px;height:40px;border-radius:11px;background:var(--panel2);display:flex;align-items:center;
+  justify-content:center;font-size:18px;border:1px solid var(--line);transition:.16s}
+.icon-btn:hover{background:var(--primary-soft);transform:translateY(-1px)}
+.icon-btn:active{transform:scale(.94)}
+/* ---------- layout ---------- */
+main{flex:1;display:flex;min-height:0}
+.left{flex:1;position:relative;display:flex;flex-direction:column;min-width:0}
+.right{width:380px;flex:none;background:var(--panel);border-left:1px solid var(--line);
+  overflow-y:auto;padding:16px 16px 34px}
+.right::-webkit-scrollbar{width:9px}
+.right::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px;border:2px solid var(--panel)}
+.right::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+/* ---------- stage ---------- */
+.stage{flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  background:var(--chk2);
+  background-image:
+    linear-gradient(45deg,var(--chk1) 25%,transparent 25%),
+    linear-gradient(-45deg,var(--chk1) 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,var(--chk1) 75%),
+    linear-gradient(-45deg,transparent 75%,var(--chk1) 75%);
+  background-size:22px 22px;background-position:0 0,0 11px,11px -11px,-11px 0;
+  touch-action:none}
+canvas#preview{position:absolute;box-shadow:0 4px 26px rgba(0,0,0,.22);border-radius:2px}
+.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;color:var(--muted);text-align:center;padding:24px;pointer-events:none}
+.empty .big{width:92px;height:92px;border-radius:26px;background:var(--panel);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:42px;
+  box-shadow:0 16px 38px var(--shadow),0 0 0 7px var(--primary-soft);animation:floaty 3.6s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.empty .et{font-weight:800;color:var(--text);font-size:16px}
+.empty .es{margin-top:2px;font-size:13px;color:var(--muted)}
+.stage.dragover{outline:3px dashed var(--primary);outline-offset:-12px;background:var(--primary-soft)}
+/* infobar */
+.infobar{position:absolute;left:14px;top:14px;background:var(--glass);color:var(--text);font-size:12px;
+  padding:6px 12px;border-radius:10px;border:1px solid var(--line);backdrop-filter:blur(10px);pointer-events:none;display:none;z-index:6;
+  box-shadow:var(--shadow);font-variant-numeric:tabular-nums}
+/* zoom toolbar */
+.zoombar{position:absolute;right:14px;bottom:14px;display:none;align-items:center;gap:5px;
+  background:var(--glass);border:1px solid var(--line);border-radius:13px;padding:5px;box-shadow:var(--shadow);
+  backdrop-filter:blur(10px);z-index:6}
+.zoombar button{width:34px;height:34px;border-radius:9px;font-size:18px;background:var(--panel2);transition:.14s}
+.zoombar button:hover{background:var(--primary-soft);color:var(--primary)}
+.zoombar button:active{transform:scale(.92)}
+.zoombar .zval{min-width:50px;text-align:center;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+/* loader */
+.loader{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(10,12,20,.22);z-index:8;backdrop-filter:blur(2px)}
+.loader.show{display:flex}
+.spinner{width:46px;height:46px;border:4px solid rgba(255,255,255,.55);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ---------- panel sections ---------- */
+details.sec{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;
+  box-shadow:0 2px 10px -6px rgba(40,45,90,.18)}
+details.sec>summary{list-style:none;cursor:pointer;padding:13px 15px;font-weight:800;display:flex;align-items:center;gap:10px;user-select:none;
+  transition:background .15s}
+details.sec>summary:hover{background:var(--panel2)}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary:before{content:"";width:7px;height:7px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);
+  transform:rotate(-45deg);transition:transform .18s;margin-top:-3px;flex:none}
+details.sec[open]>summary:before{transform:rotate(45deg)}
+.sec-ico{width:28px;height:28px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;
+  background:var(--grad);color:#fff;font-size:14px;flex:none;box-shadow:0 3px 9px var(--primary-soft)}
+details.sec>summary .tag{margin-left:auto;font-size:11px;font-weight:600;color:var(--muted);
+  background:var(--panel2);padding:3px 9px;border-radius:20px;border:1px solid var(--line)}
+.sec-body{padding:4px 15px 15px}
+/* fields */
+.field{margin:13px 0 0}
+.field:first-child{margin-top:8px}
+.field>label{display:block;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:700;letter-spacing:.2px}
+.row{display:flex;gap:8px;align-items:center}
+.row.wrap{flex-wrap:wrap}
+input[type=text],input[type=number],textarea,select{width:100%;padding:10px 12px;border:1px solid var(--line);
+  border-radius:10px;background:var(--panel2);outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus,textarea:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft);background:var(--panel)}
+textarea{resize:vertical;min-height:66px;line-height:1.55}
+.inline-num{width:80px;flex:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 15px;border-radius:11px;
+  background:var(--panel2);border:1px solid var(--line);font-weight:700;min-height:44px;transition:transform .15s,box-shadow .15s,filter .15s,background .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0) scale(.98)}
+.btn.primary{background:var(--grad);border:none;color:#fff;box-shadow:0 7px 20px var(--primary-soft)}
+.btn.primary:hover{box-shadow:0 11px 26px var(--primary-soft);filter:brightness(1.05)}
+.btn.primary2{background:var(--primary2);border-color:var(--primary2);color:#fff}
+.btn.block{width:100%}
+.btn.danger{color:var(--danger);border-color:var(--danger);background:transparent}
+.btn.danger:hover{background:var(--danger);color:#fff;box-shadow:0 7px 18px rgba(239,77,90,.3)}
+.btn.ghost{background:var(--panel2)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btnrow{display:flex;gap:9px;margin-top:13px}
+.btnrow .btn{flex:1}
+/* segmented */
+.seg{display:flex;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;padding:10px 6px;border-radius:9px;font-weight:700;color:var(--muted);font-size:13px;transition:.16s}
+.seg button:hover{color:var(--text)}
+.seg button.on{background:var(--grad);color:#fff;box-shadow:0 5px 14px var(--primary-soft)}
+/* sliders */
+.slider-row{display:flex;align-items:center;gap:12px}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:6px;border-radius:6px;cursor:pointer;outline:none;
+  background:linear-gradient(to right,var(--primary) var(--p,50%),var(--line) var(--p,50%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:#fff;border:4px solid var(--primary);box-shadow:0 2px 7px rgba(60,70,160,.4);transition:transform .12s}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.18)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:4px solid var(--primary);box-shadow:0 2px 7px rgba(60,70,160,.4)}
+.slider-val{min-width:54px;text-align:right;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;font-weight:700}
+/* toggle */
+.toggle{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;padding:7px 0}
+.toggle .sw{width:46px;height:26px;border-radius:20px;background:var(--line);position:relative;flex:none;transition:.2s}
+.toggle .sw:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.toggle.on .sw{background:var(--grad);box-shadow:0 0 0 4px var(--primary-soft)}
+.toggle.on .sw:after{left:23px}
+.toggle span{font-weight:600}
+/* color */
+.color-row{display:flex;gap:9px;align-items:center}
+.color-row input[type=color]{width:48px;height:44px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);flex:none;cursor:pointer}
+.color-row input[type=color]::-webkit-color-swatch-wrapper{padding:0}
+.color-row input[type=color]::-webkit-color-swatch{border:none;border-radius:7px}
+/* pos grid */
+.posgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px}
+.posgrid button{padding:13px 4px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);font-size:12px;font-weight:600;transition:.14s}
+.posgrid button:hover{border-color:var(--primary);color:var(--primary)}
+.posgrid button:active{background:var(--grad);color:#fff;border-color:transparent;transform:scale(.96)}
+/* live watermark preview */
+.wm-preview{margin-top:12px;min-height:60px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  padding:10px 12px;text-align:center;word-break:break-all;
+  background-image:
+    linear-gradient(45deg,var(--chk1) 25%,transparent 25%),
+    linear-gradient(-45deg,var(--chk1) 25%,transparent 25%),
+    linear-gradient(45deg,transparent 75%,var(--chk1) 75%),
+    linear-gradient(-45deg,transparent 75%,var(--chk1) 75%);
+  background-size:16px 16px;background-position:0 0,0 8px,8px -8px,-8px 0;
+  border:1px solid var(--line);box-shadow:inset 0 1px 4px rgba(0,0,0,.05)}
+.wm-preview span{display:inline-block;font-size:18px;line-height:1.3;transition:transform .12s,color .12s,opacity .12s}
+/* hint */
+.hint{font-size:11.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+.disabled{opacity:.5;pointer-events:none;filter:grayscale(.35)}
+/* ---------- toast ---------- */
+#toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(22px);background:var(--text);color:var(--bg);
+  padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;opacity:0;transition:.26s cubic-bezier(.2,.9,.3,1);z-index:200;pointer-events:none;max-width:90vw;
+  box-shadow:0 12px 34px rgba(0,0,0,.28)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{background:var(--danger);color:#fff}
+#toast.ok{background:var(--ok);color:#fff}
+/* ---------- modal ---------- */
+#modalWrap{position:fixed;inset:0;background:rgba(16,18,28,.46);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:300;padding:18px}
+#modalWrap.show{display:flex}
+.modal{background:var(--panel);border-radius:18px;max-width:366px;width:100%;padding:22px;box-shadow:0 30px 80px rgba(0,0,0,.4);border:1px solid var(--line);
+  animation:pop .22s cubic-bezier(.2,.9,.3,1)}
+@keyframes pop{from{transform:scale(.94);opacity:.4}to{transform:scale(1);opacity:1}}
+.modal h3{margin:0 0 9px;font-size:18px;font-weight:800}
+.modal p{margin:0 0 20px;color:var(--muted);font-size:13px;line-height:1.65}
+.modal .mactions{display:flex;gap:10px}
+.modal .mactions .btn{flex:1}
+/* footer note */
+.foot{text-align:center;font-size:11px;color:var(--muted);padding:11px;background:var(--panel);border-top:1px solid var(--line);letter-spacing:.2px}
+/* ---------- mobile ---------- */
+@media (max-width:820px){
+  main{flex-direction:column}
+  .left{height:46vh;min-height:300px;flex:none}
+  .right{width:100%;border-left:none;border-top:1px solid var(--line)}
+  header h1{font-size:15px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">W</div>
+  <div>
+    <h1>在线图片水印工具</h1>
+    <div class="sub">本地处理 · 不上传 · 防盗图</div>
+  </div>
+  <div class="spacer"></div>
+  <button class="icon-btn" id="themeBtn" title="切换主题">🌗</button>
+</header>
+
+<main>
+  <div class="left">
+    <div class="stage" id="stage">
+      <div class="empty" id="empty">
+        <div class="big">🖼️</div>
+        <div>
+          <div class="et">点击或拖拽图片到此处</div>
+          <div class="es">支持 JPG / PNG / WebP，全程本地处理</div>
+        </div>
+      </div>
+      <canvas id="preview"></canvas>
+      <div class="infobar" id="infobar"></div>
+      <div class="zoombar" id="zoombar">
+        <button id="zoomOut">－</button>
+        <span class="zval" id="zval">100%</span>
+        <button id="zoomIn">＋</button>
+        <button id="zoomReset" title="复位">⤾</button>
+      </div>
+      <div class="loader" id="loader"><div class="spinner"></div></div>
+    </div>
+    <div class="foot">图片仅在您的浏览器内处理，不会上传任何服务器 · 支持电脑与手机</div>
+  </div>
+
+  <div class="right" id="panel">
+    <!-- 图片操作 -->
+    <details class="sec" open>
+      <summary><span class="sec-ico">📂</span>① 图片操作 <span class="tag" id="imgTag">未导入</span></summary>
+      <div class="sec-body">
+        <label class="btn primary block" for="fileInput">＋ 选择图片</label>
+        <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp,image/*" hidden>
+        <div class="hint">也可直接将图片拖拽到左侧画布；手机点上方按钮从相册选取。</div>
+        <div class="btnrow">
+          <button class="btn ghost" id="btnCompare">👁 原图对比</button>
+          <button class="btn danger" id="btnClear">清空图片</button>
+        </div>
+        <div class="field">
+          <label>原图信息</label>
+          <div class="hint" id="imgInfo">尚未导入图片</div>
+        </div>
+      </div>
+    </details>
+
+    <!-- 水印文字 -->
+    <details class="sec" open>
+      <summary><span class="sec-ico">✍️</span>② 水印文字</summary>
+      <div class="sec-body">
+        <div class="field">
+          <label>水印内容（支持换行）</label>
+          <textarea id="wmText" placeholder="例如：©2026 XX 品牌 / 禁止转载 / 来源 XXX"></textarea>
+          <div class="hint">留空将无法导出，请填写水印文字。</div>
+        </div>
+      </div>
+    </details>
+
+    <!-- 样式设置 -->
+    <details class="sec" open>
+      <summary><span class="sec-ico">🎨</span>③ 样式设置</summary>
+      <div class="sec-body">
+        <div class="field">
+          <label>字体</label>
+          <select id="wmFont"></select>
+        </div>
+        <div class="field">
+          <label>字号（像素，随原图比例自适应显示）</label>
+          <div class="slider-row">
+            <input type="range" id="wmSize" min="8" max="400" step="1">
+            <input type="number" class="inline-num" id="wmSizeN" min="8" max="400">
+          </div>
+        </div>
+        <div class="field">
+          <label class="toggle" id="boldToggle"><span class="sw"></span><span>加粗显示</span></label>
+        </div>
+        <div class="field">
+          <label>文字颜色</label>
+          <div class="color-row">
+            <input type="color" id="wmColor" value="#ff0000">
+            <input type="text" id="wmColorHex" maxlength="7" placeholder="#ff0000">
+          </div>
+        </div>
+        <div class="field">
+          <label>透明度</label>
+          <div class="slider-row">
+            <input type="range" id="wmAlpha" min="0" max="100" step="1">
+            <span class="slider-val" id="wmAlphaV">30%</span>
+          </div>
+          <div class="hint">防盗图建议 20%~35% 低调水印。</div>
+        </div>
+        <div class="field">
+          <label>旋转角度</label>
+          <div class="slider-row">
+            <input type="range" id="wmRot" min="0" max="360" step="1">
+            <input type="number" class="inline-num" id="wmRotN" min="0" max="360">
+          </div>
+          <div class="hint">斜向平铺推荐 45° 或 -45°。</div>
+        </div>
+        <div class="field">
+          <label>实时预览</label>
+          <div class="wm-preview"><span id="wmPreviewText">水印预览</span></div>
+        </div>
+      </div>
+    </details>
+
+    <!-- 布局模式 -->
+    <details class="sec" open>
+      <summary><span class="sec-ico">📐</span>④ 布局模式</summary>
+      <div class="sec-body">
+        <div class="seg" id="modeSeg">
+          <button data-mode="single">单处水印</button>
+          <button data-mode="tile" class="on">平铺水印</button>
+        </div>
+
+        <div id="singlePanel" style="display:none">
+          <div class="hint" style="margin-top:12px">在画布上拖拽即可移动水印，或用下方快捷定位：</div>
+          <div class="posgrid">
+            <button data-pos="tl">左上</button>
+            <button data-pos="tc">居中上</button>
+            <button data-pos="tr">右上</button>
+            <button data-pos="ml">居中左</button>
+            <button data-pos="cc">正中心</button>
+            <button data-pos="mr">居中右</button>
+            <button data-pos="bl">左下</button>
+            <button data-pos="bc">居中下</button>
+            <button data-pos="br">右下</button>
+          </div>
+        </div>
+
+        <div id="tilePanel">
+          <div class="hint" style="margin-top:12px">斜向全覆盖平铺，适合防盗图：</div>
+          <div class="field">
+            <label>水平间距（像素）</label>
+            <input type="number" id="spX" min="20" max="3000" step="5">
+          </div>
+          <div class="field">
+            <label>垂直间距（像素）</label>
+            <input type="number" id="spY" min="20" max="3000" step="5">
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- 导出 -->
+    <details class="sec" open>
+      <summary><span class="sec-ico">📤</span>⑤ 导出</summary>
+      <div class="sec-body">
+        <div class="field">
+          <label>导出格式</label>
+          <div class="seg" id="fmtSeg">
+            <button data-fmt="image/jpeg" class="on">JPG</button>
+            <button data-fmt="image/png">PNG</button>
+            <button data-fmt="image/webp">WebP</button>
+          </div>
+        </div>
+        <div class="field" id="qualityField">
+          <label>画质（仅 JPG / WebP）</label>
+          <div class="slider-row">
+            <input type="range" id="exQ" min="10" max="100" step="1">
+            <span class="slider-val" id="exQV">90%</span>
+          </div>
+        </div>
+        <div class="btnrow">
+          <button class="btn primary block" id="btnExport">⬇ 下载水印图</button>
+        </div>
+        <div class="btnrow">
+          <button class="btn ghost block" id="btnReset">恢复默认水印参数</button>
+        </div>
+      </div>
+    </details>
+  </div>
+</main>
+
+<div id="toast"></div>
+<div id="modalWrap"><div class="modal">
+  <h3 id="mTitle"></h3>
+  <p id="mBody"></p>
+  <div class="mactions" id="mActions"></div>
+</div></div>
+
+<script>
+(function(){
+'use strict';
+function $(s){return document.querySelector(s);}
+function $$(s,p){return Array.prototype.slice.call((p||document).querySelectorAll(s));}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function fmtBytes(n){if(!n||n<0)return '0 B';var u=['B','KB','MB','GB'];var i=Math.floor(Math.log(n)/Math.log(1024));i=Math.min(i,u.length-1);return (n/Math.pow(1024,i)).toFixed(i?1:0)+' '+u[i];}
+
+/* ---------- toast ---------- */
+var toastTimer=null;
+function toast(msg,type){
+  var t=$('#toast');t.textContent=msg;t.className='';if(type)t.className=type;
+  void t.offsetWidth;t.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.classList.remove('show');},2200);
+}
+
+/* ---------- modal ---------- */
+function openModal(opts){
+  $('#mTitle').textContent=opts.title||'';
+  $('#mBody').textContent=opts.body||'';
+  var act=$('#mActions');act.innerHTML='';
+  var cancel=document.createElement('button');cancel.className='btn ghost';
+  cancel.textContent=opts.cancel||'取消';
+  cancel.onclick=function(){$('#modalWrap').classList.remove('show');if(opts.onCancel)opts.onCancel();};
+  var ok=document.createElement('button');ok.className='btn '+(opts.okClass||'primary');
+  ok.textContent=opts.ok||'确定';
+  ok.onclick=function(){$('#modalWrap').classList.remove('show');if(opts.onOk)opts.onOk();};
+  act.appendChild(cancel);act.appendChild(ok);
+  $('#modalWrap').classList.add('show');
+}
+
+/* ---------- debounce ---------- */
+function debounce(fn,ms){var t=null;return function(){var a=arguments,c=this;clearTimeout(t);t=setTimeout(function(){fn.apply(c,a);},ms);};}
+
+/* ---------- fonts ---------- */
+var FONTS=[
+  {v:'"Microsoft YaHei","PingFang SC",sans-serif',t:'微软雅黑 / 无衬线'},
+  {v:'"SimHei",sans-serif',t:'黑体'},
+  {v:'"SimSun",serif',t:'宋体'},
+  {v:'"KaiTi",serif',t:'楷体'},
+  {v:'Arial,Helvetica,sans-serif',t:'Arial'},
+  {v:'Georgia,serif',t:'Georgia 衬线'},
+  {v:'Impact,sans-serif',t:'Impact 粗体'},
+  {v:'"Courier New",monospace',t:'等宽 Courier'}
+];
+function buildFontOptions(){
+  var sel=$('#wmFont');sel.innerHTML='';
+  FONTS.forEach(function(f){
+    var o=document.createElement('option');o.value=f.v;o.textContent=f.t;sel.appendChild(o);
+  });
+}
+
+/* ---------- state ---------- */
+var state={img:null,origW:0,origH:0,origSize:0,origName:'',origType:'image/png'};
+var view={zoom:1,panX:0,panY:0,showEffect:true};
+var prefs=loadPrefs();
+var wm=defaultWm();
+if(prefs.wm)Object.assign(wm,prefs.wm);
+var autoFit=!prefs.wm; // 首次无记忆时按图自适应字号
+var exportFmt=prefs.exportFmt||'image/jpeg';
+var exportQuality=(prefs.quality!=null)?prefs.quality:90;
+var warnedOver=false;
+
+function defaultWm(){
+  return {text:'©2026 我的品牌',fontFamily:FONTS[0].v,fontSize:48,alpha:30,rotation:45,bold:false,
+    mode:'tile',posX:0.5,posY:0.5,spacingX:220,spacingY:140};
+}
+function loadPrefs(){
+  try{var s=localStorage.getItem('wm_prefs');if(!s)return {};return JSON.parse(s)||{};}catch(e){return {};}
+}
+function savePrefs(){
+  prefs.theme=document.documentElement.getAttribute('data-theme');
+  prefs.wm=wm;prefs.exportFmt=exportFmt;prefs.quality=exportQuality;
+  try{localStorage.setItem('wm_prefs',JSON.stringify(prefs));}catch(e){}
+}
+
+/* ---------- apply theme ---------- */
+function applyTheme(th){document.documentElement.setAttribute('data-theme',th||'light');}
+
+/* ---------- core render ---------- */
+function drawTo(ctx,W,H,scale){
+  ctx.clearRect(0,0,W,H);
+  if(state.img)ctx.drawImage(state.img,0,0,W,H);
+  if(!view.showEffect||!wm.text.trim())return;
+  ctx.save();
+  ctx.globalAlpha=clamp(wm.alpha,0,100)/100;
+  ctx.fillStyle=wm.color;
+  ctx.textBaseline='middle';
+  ctx.textAlign='center';
+  var fs=wm.fontSize*scale;
+  ctx.font=(wm.bold?'bold ':'')+fs+'px '+wm.fontFamily;
+  var lh=fs*1.25;
+  if(wm.mode==='single'){
+    ctx.save();
+    ctx.translate(wm.posX*W,wm.posY*H);
+    ctx.rotate(wm.rotation*Math.PI/180);
+    drawMultiline(ctx,wm.text,0,0,lh);
+    ctx.restore();
+  }else{
+    ctx.save();
+    ctx.translate(W/2,H/2);
+    ctx.rotate(wm.rotation*Math.PI/180);
+    var lines=wm.text.split('\n');
+    var maxW=0;lines.forEach(function(l){maxW=Math.max(maxW,ctx.measureText(l).width);});
+    var sx=Math.max(wm.spacingX*scale,maxW*0.5);
+    var sy=Math.max(wm.spacingY*scale,lh*1.2);
+    var diag=Math.sqrt(W*W+H*H);
+    for(var y=-diag;y<=diag;y+=sy){
+      for(var x=-diag;x<=diag;x+=sx){
+        drawMultiline(ctx,wm.text,x,y,lh);
+      }
+    }
+    ctx.restore();
+  }
+  ctx.restore();
+}
+function drawMultiline(ctx,text,x,y,lh){
+  var lines=text.split('\n');
+  var total=(lines.length-1)*lh;
+  var startY=y-total/2;
+  for(var i=0;i<lines.length;i++){ctx.fillText(lines[i],x,startY+i*lh);}
+}
+
+/* ---------- live preview chip ---------- */
+function updateWmPreview(){
+  var el=$('#wmPreviewText');if(!el)return;
+  el.textContent=wm.text.trim()||'水印预览';
+  el.style.color=wm.color;
+  el.style.opacity=clamp(wm.alpha,8,100)/100;
+  el.style.fontFamily=wm.fontFamily;
+  el.style.fontWeight=wm.bold?'800':'600';
+  el.style.fontSize='18px';
+  el.style.transform='rotate('+wm.rotation+'deg)';
+}
+
+/* ---------- preview render ---------- */
+var preview=$('#preview'),stage=$('#stage');
+function render(){
+  updateWmPreview();
+  if(!state.img){
+    preview.style.display='none';$('#empty').style.display='flex';$('#infobar').style.display='none';
+    $('#zoombar').style.display='none';return;
+  }
+  $('#empty').style.display='none';preview.style.display='block';$('#zoombar').style.display='flex';
+  var wrapW=stage.clientWidth,wrapH=stage.clientHeight;
+  var ar=state.origW/state.origH;
+  var dispW=wrapW,dispH=wrapW/ar;
+  if(dispH>wrapH){dispH=wrapH;dispW=wrapH*ar;}
+  dispW=Math.max(1,Math.floor(dispW));dispH=Math.max(1,Math.floor(dispH));
+  var dpr=window.devicePixelRatio||1;
+  var cssW=dispW*view.zoom, cssH=dispH*view.zoom;
+  preview.width=Math.round(cssW*dpr);preview.height=Math.round(cssH*dpr);
+  preview.style.width=cssW+'px';preview.style.height=cssH+'px';
+  var ox=Math.round((wrapW-cssW)/2)+view.panX, oy=Math.round((wrapH-cssH)/2)+view.panY;
+  preview.style.left=ox+'px';preview.style.top=oy+'px';
+  var ctx=preview.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  var drawScale=(dispW*view.zoom)/state.origW; // = cssW/origW
+  drawTo(ctx,cssW,cssH,drawScale);
+}
+
+/* ---------- image load ---------- */
+function handleFile(file){
+  if(!file){return;}
+  var okTypes=['image/jpeg','image/png','image/webp'];
+  var ext=(file.name.split('.').pop()||'').toLowerCase();
+  var isOk=okTypes.indexOf(file.type)>=0||['jpg','jpeg','png','webp'].indexOf(ext)>=0;
+  if(!isOk){toast('不支持的文件类型：'+ext,'err');return;}
+  $('#loader').classList.add('show');
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var img=new Image();
+    img.onload=function(){
+      state.img=img;state.origW=img.naturalWidth;state.origH=img.naturalHeight;
+      state.origSize=file.size;state.origName=file.name;state.origType=file.type||('image/'+ext);
+      if(state.origW*state.origH>9000*9000 && !warnedOver){
+        warnedOver=true;toast('图片较大，预览已优化；导出仍按原图分辨率','ok');
+      }
+      if(autoFit){
+        var base=Math.min(state.origW,state.origH);
+        wm.fontSize=clamp(Math.round(base*0.045),14,300);
+        wm.spacingX=clamp(Math.round(wm.fontSize*4.6),40,4000);
+        wm.spacingY=clamp(Math.round(wm.fontSize*3.0),40,4000);
+      }
+      view.zoom=1;view.panX=0;view.panY=0;
+      $('#loader').classList.remove('show');
+      syncControls();render();updateImageInfo();savePrefs();
+    };
+    img.onerror=function(){$('#loader').classList.remove('show');toast('图片解析失败，请换一张','err');};
+    img.src=ev.target.result;
+  };
+  reader.onerror=function(){$('#loader').classList.remove('show');toast('读取文件失败','err');};
+  reader.readAsDataURL(file);
+}
+function updateImageInfo(){
+  if(!state.img){$('#imgInfo').textContent='尚未导入图片';$('#imgTag').textContent='未导入';return;}
+  var dim=state.origW+' × '+state.origH;
+  var fmt=state.origType.replace('image/','').toUpperCase();
+  $('#imgInfo').textContent=dim+' · '+fmtBytes(state.origSize)+' · '+fmt;
+  $('#imgTag').textContent=fmt+' '+dim;
+}
+
+/* ---------- controls sync ---------- */
+function syncControls(){
+  $('#wmText').value=wm.text;
+  $('#wmFont').value=wm.fontFamily;
+  $('#wmSize').value=wm.fontSize;$('#wmSizeN').value=wm.fontSize;
+  $('#boldToggle').classList.toggle('on',wm.bold);
+  $('#wmColor').value=toHex6(wm.color);$('#wmColorHex').value=toHex6(wm.color);
+  $('#wmAlpha').value=wm.alpha;$('#wmAlphaV').textContent=wm.alpha+'%';
+  $('#wmRot').value=wm.rotation;$('#wmRotN').value=wm.rotation;
+  $$('#modeSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.mode===wm.mode);});
+  $('#singlePanel').style.display=(wm.mode==='single')?'block':'none';
+  $('#tilePanel').style.display=(wm.mode==='tile')?'block':'none';
+  $('#spX').value=wm.spacingX;$('#spY').value=wm.spacingY;
+  $$('#fmtSeg button').forEach(function(b){b.classList.toggle('on',b.dataset.fmt===exportFmt);});
+  $('#qualityField').style.opacity=(exportFmt==='image/png')?0.45:1;
+  $('#exQ').value=exportQuality;$('#exQV').textContent=exportQuality+'%';
+  $('#panel').classList.toggle('disabled',!state.img);
+}
+function toHex6(c){
+  if(/^#[0-9a-fA-F]{6}$/.test(c))return c.toLowerCase();
+  if(/^#[0-9a-fA-F]{3}$/.test(c))return '#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];
+  return '#ff0000';
+}
+
+/* ---------- schedule ---------- */
+var scheduleRender=debounce(function(){render();},60);
+var scheduleSave=debounce(savePrefs,300);
+
+/* ---------- export ---------- */
+function doExport(){
+  if(!state.img){toast('请先导入图片','err');return;}
+  if(!wm.text.trim()){toast('请输入水印内容','err');return;}
+  var cv=document.createElement('canvas');
+  cv.width=state.origW;cv.height=state.origH;
+  var ctx=cv.getContext('2d');
+  if(exportFmt==='image/jpeg'){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,cv.width,cv.height);}
+  drawTo(ctx,cv.width,cv.height,1);
+  var q=(exportFmt==='image/png')?undefined:exportQuality/100;
+  cv.toBlob(function(blob){
+    if(!blob){toast('导出失败，请重试','err');return;}
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    var base=(state.origName||'image').replace(/\.[^.]+$/,'');
+    var ext={ 'image/jpeg':'.jpg','image/png':'.png','image/webp':'.webp' }[exportFmt];
+    a.href=url;a.download=base+'_watermark'+ext;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(function(){URL.revokeObjectURL(url);},1000);
+    toast('已下载：'+fmtBytes(blob.size),'ok');
+    savePrefs();
+  },exportFmt,q);
+}
+
+/* ---------- clear ---------- */
+function clearImage(){
+  if(!state.img){toast('当前没有图片');return;}
+  openModal({title:'清空图片？',body:'将移除当前图片与水印预览，水印参数会被保留。',ok:'清空',okClass:'danger',
+    onOk:function(){
+      state.img=null;state.origW=state.origH=0;state.origSize=0;state.origName='';
+      view.zoom=1;view.panX=0;view.panY=0;
+      syncControls();render();updateImageInfo();
+      toast('已清空图片');
+    }});
+}
+
+/* ---------- reset params ---------- */
+function resetParams(){
+  openModal({title:'恢复默认水印参数？',body:'将水印文字、样式、布局恢复为初始值（不影响已导入的图片）。',
+    ok:'恢复默认',onOk:function(){
+      var keep={text:wm.text,fontFamily:wm.fontFamily};
+      wm=defaultWm();
+      wm.text=keep.text;wm.fontFamily=keep.fontFamily;
+      autoFit=false;
+      syncControls();render();savePrefs();
+      toast('已恢复默认参数');
+    }});
+}
+
+/* ===================== init & bind ===================== */
+function init(){
+  buildFontOptions();
+  applyTheme(prefs.theme||'light');
+  // range fill indicator
+  $$('input[type=range]').forEach(function(r){
+    function upd(){var min=+r.min,max=+r.max;var p=(+r.value-min)/(max-min)*100;r.style.setProperty('--p',p+'%');}
+    r.addEventListener('input',upd);upd();
+  });
+  $('#themeBtn').onclick=function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    applyTheme(cur==='dark'?'light':'dark');savePrefs();
+  };
+  $('#fileInput').addEventListener('change',function(e){if(e.target.files[0])handleFile(e.target.files[0]);e.target.value='';});
+  ['dragenter','dragover'].forEach(function(ev){stage.addEventListener(ev,function(e){e.preventDefault();stage.classList.add('dragover');});});
+  ['dragleave','drop'].forEach(function(ev){stage.addEventListener(ev,function(e){e.preventDefault();stage.classList.remove('dragover');});});
+  stage.addEventListener('drop',function(e){
+    e.preventDefault();
+    var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+    if(f)handleFile(f);
+  });
+  $('#btnCompare').onclick=function(){
+    view.showEffect=!view.showEffect;
+    $('#btnCompare').classList.toggle('primary',!view.showEffect);
+    $('#btnCompare').textContent=view.showEffect?'👁 原图对比':'👁 显示水印';
+    render();
+  };
+  $('#btnClear').onclick=clearImage;
+  $('#wmText').addEventListener('input',function(){wm.text=this.value;scheduleRender();scheduleSave();});
+  $('#wmFont').addEventListener('change',function(){wm.fontFamily=this.value;render();savePrefs();});
+  function setSize(v){v=clamp(Math.round(v||wm.fontSize),8,400);wm.fontSize=v;autoFit=false;$('#wmSize').value=v;$('#wmSizeN').value=v;scheduleRender();scheduleSave();}
+  $('#wmSize').addEventListener('input',function(){setSize(+this.value);});
+  $('#wmSizeN').addEventListener('change',function(){setSize(+this.value);});
+  $('#boldToggle').onclick=function(){wm.bold=!wm.bold;this.classList.toggle('on',wm.bold);render();savePrefs();};
+  $('#wmColor').addEventListener('input',function(){wm.color=this.value;$('#wmColorHex').value=this.value;render();scheduleSave();});
+  $('#wmColorHex').addEventListener('change',function(){
+    var h=toHex6(this.value);wm.color=h;$('#wmColor').value=h;$('#wmColorHex').value=h;render();savePrefs();
+  });
+  $('#wmAlpha').addEventListener('input',function(){wm.alpha=clamp(+this.value,0,100);$('#wmAlphaV').textContent=wm.alpha+'%';scheduleRender();scheduleSave();});
+  function setRot(v){v=((Math.round(v)||0)%360+360)%360;wm.rotation=v;$('#wmRot').value=v;$('#wmRotN').value=v;scheduleRender();scheduleSave();}
+  $('#wmRot').addEventListener('input',function(){setRot(+this.value);});
+  $('#wmRotN').addEventListener('change',function(){setRot(+this.value);});
+  $$('#modeSeg button').forEach(function(b){b.onclick=function(){wm.mode=b.dataset.mode;syncControls();render();savePrefs();};});
+  var POS={tl:[0.07,0.12],tc:[0.5,0.12],tr:[0.93,0.12],ml:[0.07,0.5],cc:[0.5,0.5],mr:[0.93,0.5],bl:[0.07,0.88],bc:[0.5,0.88],br:[0.93,0.88]};
+  $$('#singlePanel .posgrid button').forEach(function(b){
+    b.onclick=function(){var p=POS[b.dataset.pos];wm.posX=p[0];wm.posY=p[1];render();savePrefs();};
+  });
+  function setSp(which,val){val=clamp(Math.round(val||0),20,3000);wm[which]=val;$('#'+(which==='spacingX'?'spX':'spY')).value=val;scheduleRender();scheduleSave();}
+  $('#spX').addEventListener('change',function(){setSp('spacingX',+this.value);});
+  $('#spY').addEventListener('change',function(){setSp('spacingY',+this.value);});
+  $$('#fmtSeg button').forEach(function(b){b.onclick=function(){exportFmt=b.dataset.fmt;syncControls();savePrefs();};});
+  $('#exQ').addEventListener('input',function(){exportQuality=clamp(+this.value,10,100);$('#exQV').textContent=exportQuality+'%';scheduleSave();});
+  $('#btnExport').onclick=doExport;
+  $('#btnReset').onclick=resetParams;
+  function setZoom(z){view.zoom=clamp(z,1,5);if(view.zoom<=1.001){view.zoom=1;view.panX=0;view.panY=0;}$('#zval').textContent=Math.round(view.zoom*100)+'%';render();}
+  $('#zoomIn').onclick=function(){setZoom(view.zoom+0.25);};
+  $('#zoomOut').onclick=function(){setZoom(view.zoom-0.25);};
+  $('#zoomReset').onclick=function(){setZoom(1);};
+  stage.addEventListener('wheel',function(e){
+    if(!state.img)return;e.preventDefault();
+    var f=e.deltaY<0?1.12:0.89;setZoom(view.zoom*f);
+  },{passive:false});
+  bindStagePointer();
+  var onResize=debounce(function(){render();},120);
+  window.addEventListener('resize',onResize);
+  syncControls();render();updateImageInfo();
+}
+function bindStagePointer(){
+  var drag=null;
+  function getRel(e){
+    var r=preview.getBoundingClientRect();
+    return {x:clamp((e.clientX-r.left)/r.width,0,1),y:clamp((e.clientY-r.top)/r.height,0,1)};
+  }
+  stage.addEventListener('pointerdown',function(e){
+    if(!state.img)return;
+    if(view.zoom>1.05){
+      drag={mode:'pan',sx:e.clientX,sy:e.clientY,px:view.panX,py:view.panY};
+    }else if(wm.mode==='single'){
+      drag={mode:'move'};var p=getRel(e);wm.posX=p.x;wm.posY=p.y;render();
+    }else{return;}
+    try{stage.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  stage.addEventListener('pointermove',function(e){
+    if(!drag)return;
+    if(drag.mode==='pan'){
+      view.panX=drag.px+(e.clientX-drag.sx);view.panY=drag.py+(e.clientY-drag.sy);
+      render();
+    }else if(drag.mode==='move'){
+      var p=getRel(e);wm.posX=p.x;wm.posY=p.y;render();
+    }
+  });
+  function endDrag(e){if(drag){if(drag.mode==='move')savePrefs();drag=null;}}
+  stage.addEventListener('pointerup',endDrag);
+  stage.addEventListener('pointercancel',endDrag);
+}
+
+/* test hook */
+try{if(window.__TEST__||self.__TEST__){window.__t={drawTo:drawTo,getState:function(){return state;},
+  setWM:function(o){Object.assign(wm,o);},getWM:function(){return wm;},
+  fmtBytes:fmtBytes,clamp:clamp,defaultWm:defaultWm,setImg:function(w,h){state.img={};state.origW=w;state.origH=h;}};}}catch(e){}
+
+if(document.readyState!=='loading')init();
+else document.addEventListener('DOMContentLoaded',init);
+})();
+</script>
+</body>
+</html>
