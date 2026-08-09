@@ -3,97 +3,95 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>玲娜贝儿幸运大抽奖</title>
+<title>幸运大抽奖</title>
 <style>
   html{overflow-x:hidden;-webkit-text-size-adjust:100%}
   :root{
     --font:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-    --pink:#FF7EB3; --pink-d:#FF5C9D; --purple:#B388FF; --mint:#5FD6C2; --gold:#FFC857; --peach:#FF9E7A; --berry:#3a1b3d;
-    --bg1:#2a1430; --bg2:#4a1f4d; --bg3:#6a2a5e;
-    --panel:#3a1d42; --panel2:#471f50; --line:#5e2e63;
-    --text:#ffe6f2; --muted:#e0a8cb; --primary:#FF7EB3; --primary-d:#ff5c9d;
-    --danger:#ff5c7a; --ok:#3ec9a7; --warn:#ffb24d; --radius:20px;
-    --shadow:0 14px 38px rgba(0,0,0,.42); --shadow-soft:0 6px 18px rgba(255,120,170,.22);
+    --bg1:#0a0e1a; --bg2:#0f1424; --bg3:#161d33;
+    --panel:#121a2e; --panel2:#19223a; --line:#28324f;
+    --text:#e9edf6; --muted:#97a3c0;
+    --gold:#d4b46a; --gold-d:#b8923f; --gold-l:#ecd9a6;
+    --accent:#6c8cff;
+    --danger:#e5484d; --ok:#3ecf8e; --warn:#f5a623;
+    --radius:16px;
+    --shadow:0 16px 44px rgba(0,0,0,.5); --shadow-soft:0 6px 18px rgba(0,0,0,.28);
     --big-size:clamp(40px,9vw,120px);
   }
   [data-theme="light"]{
-    --bg1:#fff0f7; --bg2:#ffe3f2; --bg3:#ffd6ec;
-    --panel:#ffffff; --panel2:#fff5fb; --line:#ffd0e6;
-    --text:#5a2b46; --muted:#b06b8e; --primary:#FF6FA5; --primary-d:#ff4f92;
-    --shadow:0 14px 38px rgba(255,120,170,.28); --shadow-soft:0 6px 18px rgba(255,120,170,.2);
+    --bg1:#eef1f7; --bg2:#f5f7fb; --bg3:#ffffff;
+    --panel:#ffffff; --panel2:#f4f6fb; --line:#e1e7f2;
+    --text:#1a2238; --muted:#5b6480;
+    --gold:#a9842f; --gold-d:#8c6c22; --gold-l:#caa64f;
+    --shadow:0 16px 44px rgba(20,30,60,.16); --shadow-soft:0 6px 18px rgba(20,30,60,.1);
+    --line:#e1e7f2;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0;}
   body{
     color:var(--text); font-family:var(--font);
-    min-height:100vh; line-height:1.55; transition:color .3s;
+    min-height:100vh; line-height:1.55; transition:color .3s, background .3s;
     background:
-      radial-gradient(circle at 12% 16%, rgba(255,126,179,.22), transparent 38%),
-      radial-gradient(circle at 88% 10%, rgba(179,136,255,.20), transparent 42%),
-      radial-gradient(circle at 72% 90%, rgba(95,214,194,.16), transparent 44%),
+      radial-gradient(1200px 600px at 12% -8%, rgba(108,140,255,.10), transparent 55%),
+      radial-gradient(1000px 600px at 100% 0%, rgba(212,180,106,.10), transparent 50%),
       linear-gradient(160deg, var(--bg1), var(--bg2) 55%, var(--bg3));
     background-attachment:fixed;
-  }
-  /* 漂浮可爱装饰 */
-  .deco{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0;}
-  .deco span{position:absolute; bottom:-40px; font-size:22px; opacity:.0; animation:floaty linear infinite; will-change:transform;}
-  @keyframes floaty{
-    0%{transform:translateY(0) rotate(0); opacity:0;}
-    12%{opacity:.22;}
-    88%{opacity:.22;}
-    100%{transform:translateY(-112vh) rotate(360deg); opacity:0;}
   }
   button{font-family:inherit; cursor:pointer;}
   .wrap{max-width:1180px; margin:0 auto; padding:14px clamp(10px,3vw,24px) 60px; position:relative; z-index:1;}
   header.top{
     display:flex; align-items:center; gap:14px; flex-wrap:wrap;
-    padding:16px 22px; border-radius:var(--radius); margin-bottom:16px;
-    background:linear-gradient(135deg, rgba(255,126,179,.22), rgba(179,136,255,.18));
-    border:2px solid var(--line); box-shadow:var(--shadow-soft);
+    padding:14px 20px; border-radius:var(--radius); margin-bottom:16px;
+    background:linear-gradient(180deg, rgba(212,180,106,.08), rgba(255,255,255,.02));
+    border:1px solid var(--line); box-shadow:var(--shadow-soft);
+    position:relative; overflow:hidden;
   }
-  header.top h1{font-size:clamp(18px,2.6vw,26px); margin:0; flex:1 1 auto; min-width:160px; font-weight:800; letter-spacing:.5px; display:flex; align-items:center; gap:10px;}
-  .mascot{width:46px; height:46px; flex:0 0 auto; filter:drop-shadow(0 4px 8px rgba(0,0,0,.22)); animation:bob 3s ease-in-out infinite;}
-  @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg);}50%{transform:translateY(-5px) rotate(3deg);}}
+  header.top::after{content:""; position:absolute; left:0; right:0; top:0; height:2px;
+    background:linear-gradient(90deg, transparent, var(--gold), transparent); opacity:.6;}
+  .brand{display:flex; align-items:center; gap:12px; flex:1 1 auto; min-width:160px;}
+  .brand .gem{width:34px; height:34px; color:var(--gold); flex:0 0 auto; filter:drop-shadow(0 2px 6px rgba(212,180,106,.4));}
+  header.top h1{font-size:clamp(18px,2.6vw,24px); margin:0; font-weight:800; letter-spacing:.5px;}
   .top-actions{display:flex; gap:8px; flex-wrap:wrap;}
-  .tabs{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;}
+  .tabs{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;}
   .tab{
-    padding:11px 20px; border-radius:999px; border:2px solid var(--line);
+    padding:11px 20px; border-radius:999px; border:1px solid var(--line);
     background:var(--panel); color:var(--muted); font-size:15px; font-weight:600; transition:.2s; white-space:nowrap;
     box-shadow:var(--shadow-soft);
   }
-  .tab:hover{color:var(--text); transform:translateY(-2px);}
-  .tab.active{background:linear-gradient(135deg,var(--pink),var(--purple)); border-color:transparent; color:#fff; box-shadow:0 8px 20px rgba(255,126,179,.45);}
+  .tab:hover{color:var(--text); transform:translateY(-2px); border-color:var(--gold);}
+  .tab.active{background:linear-gradient(135deg,var(--gold-l),var(--gold)); border-color:transparent; color:#241c00; box-shadow:0 8px 20px rgba(212,180,106,.35);}
   .view{display:none; animation:fade .25s ease;}
   .view.active{display:block;}
   @keyframes fade{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
 
   /* buttons */
   .btn{
-    border:2px solid var(--line); background:var(--panel); color:var(--text);
-    padding:10px 18px; border-radius:14px; font-size:14px; font-weight:600; transition:.18s;
+    border:1px solid var(--line); background:var(--panel); color:var(--text);
+    padding:10px 18px; border-radius:12px; font-size:14px; font-weight:600; transition:.18s;
     box-shadow:var(--shadow-soft);
   }
-  .btn:hover{transform:translateY(-2px); border-color:var(--primary);}
+  .btn:hover{transform:translateY(-2px); border-color:var(--gold);}
   .btn:active{transform:translateY(0) scale(.97);}
-  .btn.primary{background:linear-gradient(135deg,var(--pink),var(--pink-d)); border-color:transparent; color:#fff; box-shadow:0 8px 20px rgba(255,126,179,.4);}
-  .btn.primary:hover{background:linear-gradient(135deg,var(--pink-d),#ff3d86);}
-  .btn.danger{background:linear-gradient(135deg,#ff7a90,#ff5c7a); border-color:transparent; color:#fff;}
-  .btn.ok{background:linear-gradient(135deg,#5fe0c0,#3ec9a7); border-color:transparent; color:#063d35; font-weight:700;}
-  .btn.ghost{background:transparent; box-shadow:none;}
-  .btn.sm{padding:7px 13px; font-size:13px; border-radius:12px;}
-  #poolSelect{padding:7px 10px; font-size:13px; border-radius:12px; width:auto; min-width:120px; max-width:200px; cursor:pointer;}
+  .btn.primary{background:linear-gradient(135deg,var(--gold-l),var(--gold)); border-color:transparent; color:#241c00; box-shadow:0 8px 20px rgba(212,180,106,.35);}
+  .btn.primary:hover{background:linear-gradient(135deg,var(--gold),var(--gold-d));}
+  .btn.danger{background:linear-gradient(135deg,#f0656b,#e5484d); border-color:transparent; color:#fff;}
+  .btn.ok{background:linear-gradient(135deg,#54d6a0,#3ecf8e); border-color:transparent; color:#04321f; font-weight:700;}
+  .btn.ghost{background:transparent; box-shadow:none; color:var(--muted);}
+  .btn.ghost:hover{color:var(--text); border-color:var(--line);}
+  .btn.sm{padding:7px 13px; font-size:13px; border-radius:10px;}
+  #poolSelect{padding:7px 10px; font-size:13px; border-radius:10px; width:auto; min-width:120px; max-width:200px; cursor:pointer;}
   .btn:disabled{opacity:.45; cursor:not-allowed; transform:none;}
 
   .grid{display:grid; gap:16px;}
-  .card{background:var(--panel); border:2px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow-soft);}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow-soft);}
   .card h3{margin:0 0 14px; font-size:17px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-weight:700;}
   .card h3 .spacer{flex:1;}
   label.fld{display:block; font-size:13px; color:var(--muted); margin:12px 0 5px; font-weight:600;}
   .inp{
-    width:100%; padding:11px 14px; border-radius:14px; border:2px solid var(--line);
+    width:100%; padding:11px 14px; border-radius:12px; border:1px solid var(--line);
     background:var(--panel2); color:var(--text); font-size:14px; font-family:inherit; transition:.18s;
   }
-  .inp:focus{outline:none; border-color:var(--primary); box-shadow:0 0 0 4px rgba(255,126,179,.18);}
+  .inp:focus{outline:none; border-color:var(--gold); box-shadow:0 0 0 4px rgba(212,180,106,.16);}
   textarea.inp{resize:vertical; min-height:120px; line-height:1.7;}
   .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
   .row > *{flex:0 0 auto;}
@@ -101,19 +99,19 @@
 
   /* participants */
   .stat{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px;}
-  .pill{background:var(--panel2); border:2px solid var(--line); border-radius:999px; padding:7px 15px; font-size:13px; font-weight:600;}
-  .pill b{color:var(--primary);}
-  .plist{max-height:340px; overflow:auto; border:2px solid var(--line); border-radius:14px;}
+  .pill{background:var(--panel2); border:1px solid var(--line); border-radius:999px; padding:7px 15px; font-size:13px; font-weight:600;}
+  .pill b{color:var(--gold);}
+  .plist{max-height:340px; overflow:auto; border:1px solid var(--line); border-radius:12px;}
   .prow{display:flex; align-items:center; gap:8px; padding:9px 12px; border-bottom:1px solid var(--line); font-size:14px;}
   .prow:last-child{border-bottom:none;}
   .prow .nm{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .prow .tag{font-size:11px; padding:3px 8px; border-radius:8px; background:var(--panel2); color:var(--muted); font-weight:600;}
-  .prow .tag.bl{background:rgba(255,92,122,.18); color:#ff9db0;}
-  .prow .tag.ex{background:rgba(255,178,77,.18); color:#ffc878;}
-  .prow input[type=checkbox]{width:18px; height:18px; accent-color:var(--primary);}
+  .prow .tag.bl{background:rgba(229,72,77,.16); color:#ff9aa0;}
+  .prow .tag.ex{background:rgba(245,166,35,.16); color:#ffcf8a;}
+  .prow input[type=checkbox]{width:18px; height:18px; accent-color:var(--gold);}
 
   /* awards */
-  .achip{display:flex; align-items:center; gap:10px; padding:11px 13px; border-radius:14px; border:2px solid var(--line); margin-bottom:8px; background:var(--panel2);}
+  .achip{display:flex; align-items:center; gap:10px; padding:11px 13px; border-radius:12px; border:1px solid var(--line); margin-bottom:8px; background:var(--panel2);}
   .achip .sw{width:20px; height:20px; border-radius:7px; flex:0 0 auto; box-shadow:0 2px 6px rgba(0,0,0,.2);}
   .achip .info{flex:1; min-width:0;}
   .achip .info .t{font-weight:700;}
@@ -122,24 +120,30 @@
 
   /* big screen */
   .bigscreen{
-    min-height:62vh; border-radius:26px; border:3px solid rgba(255,255,255,.25);
-    background:var(--bgColor,#3a1b3d); background-size:cover; background-position:center;
+    min-height:62vh; border-radius:22px; border:1px solid rgba(212,180,106,.28);
+    background:var(--bgColor,#0a0e1a); background-size:cover; background-position:center;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     padding:30px clamp(12px,4vw,40px); position:relative; overflow:hidden;
-    box-shadow:0 18px 50px rgba(0,0,0,.4), inset 0 0 70px rgba(255,255,255,.06);
+    box-shadow:0 18px 50px rgba(0,0,0,.45), inset 0 0 70px rgba(212,180,106,.05);
   }
   .bs-top{position:absolute; top:18px; left:0; right:0; display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none;}
-  .bs-logo{font-size:clamp(34px,6vw,64px); line-height:1; animation:bob 3s ease-in-out infinite; filter:drop-shadow(0 4px 10px rgba(0,0,0,.3));}
+  .bs-logo{font-size:clamp(34px,6vw,64px); line-height:1; filter:drop-shadow(0 4px 10px rgba(0,0,0,.3));}
   .bs-title{font-size:clamp(20px,3.6vw,38px); font-weight:800; text-shadow:0 2px 14px rgba(0,0,0,.45); letter-spacing:1px;}
+  .bs-overall{position:absolute; top:14px; right:18px; width:min(280px,46vw); display:flex; flex-direction:column; gap:4px; z-index:5;}
+  .bs-overall .lbl{font-size:12px; color:rgba(255,255,255,.85); text-shadow:0 1px 4px rgba(0,0,0,.5); text-align:right;}
+  .bar{height:7px; border-radius:999px; background:rgba(255,255,255,.16); overflow:hidden;}
+  .bar > i{display:block; height:100%; width:0; border-radius:999px; background:linear-gradient(90deg,var(--gold-l),var(--gold)); transition:width .5s ease; box-shadow:0 0 10px rgba(212,180,106,.5);}
   .award-chips{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:14px 0; z-index:2;}
-  .achip2{padding:9px 18px; border-radius:999px; border:2px solid rgba(255,255,255,.35); font-size:14px; font-weight:600; transition:.2s; cursor:pointer; user-select:none; backdrop-filter:blur(3px);}
+  .achip2{padding:9px 18px; border-radius:999px; border:1px solid rgba(255,255,255,.35); font-size:14px; font-weight:600; transition:.2s; cursor:pointer; user-select:none; backdrop-filter:blur(3px); color:#fff;}
   .achip2:hover{transform:translateY(-2px);}
   .achip2.sel{outline:3px solid #fff; outline-offset:2px; transform:scale(1.06); box-shadow:0 6px 16px rgba(0,0,0,.3);}
   .achip2.done{opacity:.4; filter:grayscale(.6);}
-  .bs-award-name{font-size:clamp(20px,3.6vw,32px); font-weight:700; margin:6px 0; z-index:2; text-shadow:0 2px 10px rgba(0,0,0,.4);}
+  .bs-award-name{font-size:clamp(20px,3.6vw,32px); font-weight:700; margin:6px 0; z-index:2; text-shadow:0 2px 10px rgba(0,0,0,.4); text-align:center;}
+  .award-progress{width:min(420px,80%); margin:2px 0 4px; z-index:2;}
+  .award-progress .lbl{font-size:12px; color:rgba(255,255,255,.85); text-shadow:0 1px 4px rgba(0,0,0,.5); text-align:center; display:block; margin-top:3px;}
   .roll-slots{display:grid; gap:14px; width:100%; max-width:1100px; justify-content:center; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); margin:10px 0; z-index:2;}
   .slot{
-    background:rgba(255,255,255,.12); backdrop-filter:blur(6px); border:2px solid rgba(255,255,255,.2); border-radius:18px;
+    background:rgba(255,255,255,.10); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,.2); border-radius:18px;
     padding:clamp(14px,3vw,28px); text-align:center; font-weight:800;
     font-size:clamp(20px,4.5vw,var(--big-size)); color:#fff; text-shadow:0 3px 14px rgba(0,0,0,.5);
     min-height:1.4em; display:flex; align-items:center; justify-content:center; word-break:break-all;
@@ -147,15 +151,15 @@
   .slot.win{animation:pop .5s ease;}
   @keyframes pop{0%{transform:scale(.6); opacity:.2;}60%{transform:scale(1.12);}100%{transform:scale(1); opacity:1;}}
   .bs-actions{display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:18px; z-index:2;}
-  .btn.big{padding:15px 38px; font-size:18px; border-radius:16px;}
+  .btn.big{padding:15px 38px; font-size:18px; border-radius:14px;}
   .empty{color:var(--muted); text-align:center; padding:40px 10px;}
+  .drawn-label{font-size:13px; color:rgba(255,255,255,.8); text-shadow:0 1px 4px rgba(0,0,0,.5); margin:8px 0 2px; z-index:2;}
 
   /* 抽取模式分段控件 */
   .drawmode{display:inline-flex; gap:4px; padding:4px; border-radius:999px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); z-index:2; margin:4px 0 2px;}
   .dmopt{border:none; background:transparent; color:#fff; padding:8px 18px; border-radius:999px; font-size:14px; cursor:pointer; transition:.18s; font-family:inherit; opacity:.8;}
   .dmopt:hover{opacity:1;}
-  .dmopt.active{background:linear-gradient(135deg,#FF7EB3,#FF5C9D); color:#fff; opacity:1; box-shadow:0 4px 14px rgba(255,92,157,.5); font-weight:700;}
-  /* 本奖项已抽名单 */
+  .dmopt.active{background:linear-gradient(135deg,var(--gold-l),var(--gold)); color:#241c00; opacity:1; box-shadow:0 4px 14px rgba(212,180,106,.5); font-weight:700;}
   .drawn-list{max-width:900px; width:100%; z-index:2; margin:6px 0 2px; display:flex; flex-wrap:wrap; gap:6px; justify-content:center;}
   .drawn-list:empty{display:none;}
   .drawn-chip{display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px; font-size:13px; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.28); color:#fff; animation:pop .4s ease;}
@@ -174,14 +178,14 @@
   .qhead .qt{font-size:clamp(22px,4.4vw,32px); font-weight:800; letter-spacing:.5px;}
   .qstat{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:12px 0 6px;}
   .qstat .pill{background:var(--panel2); border:1px solid var(--line); border-radius:999px; padding:6px 14px; font-size:13px;}
-  .qstat .pill b{color:var(--primary);}
+  .qstat .pill b{color:var(--gold);}
   .legend{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:8px 0 2px; align-items:center;}
   .legend .lbl{font-size:13px; color:var(--muted);}
   .legend .lb{display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:4px 10px; border-radius:999px; border:1px solid var(--line);}
   .qsearch{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin:16px 0 6px;}
   .qsearch .inp{max-width:380px;}
   .qresult{margin-top:14px; padding:22px; border-radius:16px; border:1px solid var(--line); min-height:64px; background:var(--panel2); transition:.2s;}
-  .qresult.win{border-color:var(--ok); box-shadow:0 0 0 3px rgba(34,197,94,.16); animation:popin .4s ease;}
+  .qresult.win{border-color:var(--ok); box-shadow:0 0 0 3px rgba(62,207,142,.16); animation:popin .4s ease;}
   .qresult.lose{border-color:var(--line);}
   @keyframes popin{0%{transform:scale(.96); opacity:.4;}100%{transform:scale(1); opacity:1;}}
   .qhero{font-size:clamp(21px,4.4vw,30px); font-weight:800; margin-bottom:8px;}
@@ -192,7 +196,7 @@
   .qhintline{font-size:13px; color:var(--muted); margin-top:8px; line-height:1.7;}
   .board{margin-top:20px; border-top:1px dashed var(--line); padding-top:14px;}
   .board summary{cursor:pointer; font-weight:600; font-size:15px; outline:none; padding:6px 0; user-select:none;}
-  .board summary:hover{color:var(--primary);}
+  .board summary:hover{color:var(--gold);}
   .bgroup{margin:14px 0;}
   .bgroup .bt{font-weight:700; margin-bottom:8px; display:flex; align-items:center; gap:8px;}
   .bnames{display:flex; gap:8px; flex-wrap:wrap;}
@@ -200,30 +204,34 @@
   .board .empty{color:var(--muted); font-size:14px; padding:12px 0;}
 
   /* modal */
-  .modal-bg{position:fixed; inset:0; background:rgba(40,12,40,.55); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; z-index:100; padding:14px;}
+  .modal-bg{position:fixed; inset:0; background:rgba(6,9,18,.6); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; z-index:100; padding:14px;}
   .modal-bg.show{display:flex;}
-  .modal{background:var(--panel); border:2px solid var(--line); border-radius:22px; padding:22px; max-width:min(94vw,520px); width:100%; box-shadow:var(--shadow); animation:popin .25s ease;}
+  .modal{background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:22px; max-width:min(94vw,520px); width:100%; box-shadow:var(--shadow); animation:popin .25s ease;}
   .modal h3{margin:0 0 12px; font-size:19px; font-weight:800; display:flex; align-items:center; gap:8px;}
-  .modal h3::before{content:"🦊"; font-size:22px;}
+  .modal h3::before{content:""; width:8px; height:18px; border-radius:3px; background:linear-gradient(180deg,var(--gold-l),var(--gold)); display:inline-block;}
   .modal .mbody{font-size:14px; color:var(--text); margin-bottom:18px; line-height:1.7;}
   .modal .mactions{display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;}
-  .swatch{width:46px; height:34px; border-radius:10px; border:2px solid var(--line); padding:0; background:none; cursor:pointer;}
+  .swatch{width:46px; height:34px; border-radius:10px; border:1px solid var(--line); padding:0; background:none; cursor:pointer;}
 
   /* toast */
-  #toast{position:fixed; left:50%; bottom:30px; transform:translateX(-50%) translateY(20px); background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; border:none; padding:12px 22px; border-radius:999px; box-shadow:0 10px 26px rgba(255,126,179,.5); opacity:0; transition:.25s; z-index:200; font-size:14px; font-weight:600; pointer-events:none; max-width:90vw; text-align:center;}
+  #toast{position:fixed; left:50%; bottom:30px; transform:translateX(-50%) translateY(20px); background:linear-gradient(135deg,var(--gold-l),var(--gold)); color:#241c00; border:none; padding:12px 22px; border-radius:999px; box-shadow:0 10px 26px rgba(212,180,106,.45); opacity:0; transition:.25s; z-index:200; font-size:14px; font-weight:700; pointer-events:none; max-width:90vw; text-align:center;}
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
 
   /* sub tabs */
   .subtabs{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px;}
-  .subtab{padding:9px 16px; border-radius:12px; border:2px solid var(--line); background:var(--panel); color:var(--muted); font-size:14px; font-weight:600; transition:.18s; box-shadow:var(--shadow-soft);}
+  .subtab{padding:9px 16px; border-radius:12px; border:1px solid var(--line); background:var(--panel); color:var(--muted); font-size:14px; font-weight:600; transition:.18s; box-shadow:var(--shadow-soft);}
   .subtab:hover{transform:translateY(-2px); color:var(--text);}
-  .subtab.active{background:linear-gradient(135deg,var(--pink),var(--purple)); color:#fff; border-color:transparent; box-shadow:0 8px 20px rgba(255,126,179,.4);}
+  .subtab.active{background:linear-gradient(135deg,var(--gold-l),var(--gold)); color:#241c00; border-color:transparent; box-shadow:0 8px 20px rgba(212,180,106,.35);}
 
   .checkrow{display:flex; align-items:center; gap:8px; font-size:14px; margin:8px 0;}
   .hint{font-size:12px; color:var(--muted); margin-top:6px;}
   ::-webkit-scrollbar{width:10px; height:10px;}
   ::-webkit-scrollbar-thumb{background:var(--line); border-radius:8px;}
   ::-webkit-scrollbar-track{background:transparent;}
+
+  /* confetti */
+  .confetti{position:absolute; border-radius:2px; opacity:.95; z-index:30; pointer-events:none; animation:fall linear forwards;}
+  @keyframes fall{0%{transform:translateY(0) rotate(0);}100%{transform:translateY(120vh) rotate(540deg); opacity:.15;}}
 
   @media (max-width:680px){
     .wrap{padding:10px 10px 50px;}
@@ -232,6 +240,8 @@
     .tab{padding:9px 14px; font-size:14px;}
     .btn.big{padding:12px 26px; font-size:16px;}
     .row .grow{min-width:140px;}
+    .bs-overall{position:static; width:100%; margin:8px auto 0;}
+    .bs-overall .lbl{text-align:center;}
   }
   @media (min-width:900px){
     .admin-cols{display:grid; grid-template-columns:1.1fr .9fr; gap:16px; align-items:start;}
@@ -239,58 +249,70 @@
 </style>
 </head>
 <body>
-<div class="deco" id="deco"></div>
 <div class="wrap">
   <header class="top">
-    <h1 id="appTitle"><span id="headerMascot"></span><span id="appTitleText">玲娜贝儿幸运大抽奖</span></h1>
+    <div class="brand">
+      <svg class="gem" viewBox="0 0 24 24" aria-label="抽奖"><path d="M6 3h12l4 6-10 12L2 9z" fill="currentColor"/><path d="M6 3l-4 6h20l-4-6M2 9l10 12 10-12" fill="none" stroke="rgba(255,255,255,.25)" stroke-width="1"/></svg>
+      <h1 id="appTitle"><span id="appTitleText">幸运大抽奖</span></h1>
+    </div>
     <div class="top-actions">
       <select id="poolSelect" class="inp sm" style="max-width:200px;" title="切换抽奖池"></select>
-      <button class="btn sm" id="newPoolBtn">➕ 新建池</button>
-      <button class="btn sm" id="poolMgrBtn">⚙ 管理</button>
-      <button class="btn sm" id="copyQueryLink">🔗 复制查询链接</button>
-      <button class="btn sm" id="themeBtn">🌙 主题</button>
-      <button class="btn sm" id="modeBtn">🚪 访客模式</button>
+      <button class="btn sm" id="newPoolBtn">新建</button>
+      <button class="btn sm" id="poolMgrBtn">管理</button>
+      <button class="btn sm" id="copyQueryLink">查询链接</button>
+      <button class="btn sm" id="themeBtn">主题</button>
+      <button class="btn sm" id="modeBtn">访客模式</button>
     </div>
   </header>
 
   <nav class="tabs" id="mainTabs">
-    <button class="tab active" data-view="viewBig">🎰 抽奖大屏</button>
-    <button class="tab" data-view="viewAdmin">⚙️ 后台管理</button>
-    <button class="tab" data-view="viewQuery">🔍 中奖查询</button>
+    <button class="tab active" data-view="viewBig">抽奖大屏</button>
+    <button class="tab" data-view="viewAdmin">后台管理</button>
+    <button class="tab" data-view="viewQuery">中奖查询</button>
   </nav>
 
   <!-- 视图A：抽奖大屏 -->
   <section class="view active" id="viewBig">
     <div class="bigscreen" id="bigScreen">
       <div class="bs-top">
-        <div class="bs-logo" id="bsLogo">🦊</div>
+        <div class="bs-logo" id="bsLogo">🏆</div>
         <div class="bs-title" id="bsTitle">幸运大抽奖</div>
+      </div>
+      <div class="bs-overall" id="bsOverall">
+        <div class="bar"><i></i></div>
+        <span class="lbl"></span>
       </div>
       <div class="award-chips" id="awardChips"></div>
       <div class="bs-award-name" id="bsAwardName">请选择奖项</div>
+      <div class="award-progress" id="awardProgress">
+        <div class="bar"><i></i></div>
+        <span class="lbl"></span>
+      </div>
       <div class="drawmode" id="drawModeCtl" title="整批一次性抽出全部名额；逐个每次只抽 1 名，可反复抽直到名额抽完">
-        <button class="dmopt active" data-mode="batch">🎁 整批抽</button>
-        <button class="dmopt" data-mode="one">🍬 逐个抽</button>
+        <button class="dmopt active" data-mode="batch">整批抽</button>
+        <button class="dmopt" data-mode="one">逐个抽</button>
       </div>
       <div class="roll-slots" id="rollSlots">
         <div class="slot">点击下方「开始抽奖」</div>
       </div>
+      <div class="drawn-label" id="drawnLabel"></div>
       <div class="drawn-list" id="drawnList"></div>
       <div class="bs-actions">
         <button class="btn primary big" id="startBtn">开始抽奖</button>
-        <button class="btn" id="fullBtn">⛶ 全屏</button>
+        <button class="btn ghost" id="undoBtn" style="display:none;">撤销本轮</button>
+        <button class="btn" id="fullBtn">全屏</button>
       </div>
     </div>
-    <p class="hint">提示：大屏支持按 <b>空格键</b> 开始 / 停止；投屏时点击「全屏」获得最佳效果。抽取模式可在上方切换：<b>整批抽</b> 一次抽出全部名额，<b>逐个抽</b> 每次只抽 1 名、可反复抽直到名额抽完。</p>
+    <p class="hint">提示：大屏支持按 <b>空格键</b> 开始 / 停止；投屏时点击「全屏」获得最佳效果。抽取模式可在上方切换：<b>整批抽</b> 一次抽出全部名额，<b>逐个抽</b> 每次只抽 1 名、可反复抽直到名额抽完。抽错可点「撤销本轮」归还名额。</p>
   </section>
 
   <!-- 视图B：后台管理 -->
   <section class="view" id="viewAdmin">
     <div class="subtabs" id="adminSub">
-      <button class="subtab active" data-sub="subPeople">👥 参与名单</button>
-      <button class="subtab" data-sub="subAwards">🏆 奖项配置</button>
-      <button class="subtab" data-sub="subWins">📋 中奖记录</button>
-      <button class="subtab" data-sub="subAdvanced">🛠️ 高级设置</button>
+      <button class="subtab active" data-sub="subPeople">参与名单</button>
+      <button class="subtab" data-sub="subAwards">奖项配置</button>
+      <button class="subtab" data-sub="subWins">中奖记录</button>
+      <button class="subtab" data-sub="subAdvanced">高级设置</button>
     </div>
 
     <div class="subview active" id="subPeople">
@@ -301,7 +323,7 @@
           <textarea class="inp" id="pasteArea" placeholder="张三&#10;李四&#10;王五"></textarea>
           <div class="row" style="margin-top:10px;">
             <button class="btn primary" id="addPaste">导入粘贴名单</button>
-            <button class="btn" id="fileBtn">📂 导入 TXT / CSV 文件</button>
+            <button class="btn" id="fileBtn">导入 TXT / CSV 文件</button>
             <input type="file" id="fileInput" accept=".txt,.csv" style="display:none;">
           </div>
           <label class="fld">方式二：手动新增单个参与者</label>
@@ -330,11 +352,11 @@
     <div class="subview" id="subAwards" style="display:none;">
       <div class="card">
         <h3>奖项配置 <span class="spacer"></span>
-          <button class="btn sm" id="presetAwards">⚡ 加载预设模板</button>
+          <button class="btn sm" id="presetAwards">加载预设模板</button>
           <button class="btn sm primary" id="addAward">＋ 新增奖项</button>
         </h3>
         <div id="awardList"></div>
-        <p class="hint">每个奖项独立设置名额、是否允许重复中奖、配色与顺序；「防重复中奖」关闭后同一人可被本奖项多次抽中（全局防重复总开关见高级设置）。</p>
+        <p class="hint">每个奖项独立设置名额、是否允许重复中奖、配色与顺序（可用 ↑ / ↓ 调整展示顺序）；「防重复中奖」关闭后同一人可被本奖项多次抽中（全局防重复总开关见高级设置）。</p>
       </div>
     </div>
 
@@ -360,7 +382,7 @@
           <label class="fld">活动标题（显示在大屏顶部）</label>
           <input class="inp" id="setTitle" placeholder="幸运大抽奖">
           <label class="fld">Logo / 图标文字（大屏左上角）</label>
-          <input class="inp" id="setLogo" placeholder="🎉">
+          <input class="inp" id="setLogo" placeholder="🏆">
           <div class="checkrow"><input type="checkbox" id="setShowTitle"> 显示活动标题</div>
           <div class="checkrow"><input type="checkbox" id="setShowLogo"> 显示 Logo</div>
           <label class="fld">抽奖动画速度（数值越小越快，毫秒/帧）</label>
@@ -374,7 +396,7 @@
           <label class="fld">大屏背景</label>
           <div class="row">
             <input class="inp grow" type="color" id="setBg" style="max-width:80px; padding:4px; height:42px;">
-            <button class="btn" id="bgImgBtn">🖼️ 上传背景图</button>
+            <button class="btn" id="bgImgBtn">上传背景图</button>
             <input type="file" id="bgImgInput" accept="image/*" style="display:none;">
             <button class="btn ghost" id="bgClear">清除图片</button>
           </div>
@@ -385,11 +407,11 @@
           <input class="inp" id="setPw" type="password" placeholder="设置后访客仅能查询">
           <p class="hint">设置密码后，页面默认进入「访客查询模式」，需输入密码才能进入后台；活动结束把查询链接发群里，参与者自行核验。</p>
           <div class="row" style="margin-top:8px;">
-            <button class="btn" id="exportCfg">💾 导出全部配置备份</button>
-            <button class="btn" id="importCfg">📥 恢复配置备份</button>
+            <button class="btn" id="exportCfg">导出全部配置备份</button>
+            <button class="btn" id="importCfg">恢复配置备份</button>
             <input type="file" id="cfgInput" accept=".json" style="display:none;">
           </div>
-          <button class="btn danger" id="resetAll" style="margin-top:14px; width:100%;">⚠️ 清空当前抽奖池数据</button>
+          <button class="btn danger" id="resetAll" style="margin-top:14px; width:100%;">清空当前抽奖池数据</button>
         </div>
       </div>
     </div>
@@ -398,7 +420,7 @@
   <!-- 视图C：中奖查询 -->
   <section class="view" id="viewQuery">
     <div class="card qbox">
-      <div class="qhead"><div class="qt" id="qTitle">🦊 玲娜贝儿幸运大抽奖</div></div>
+      <div class="qhead"><div class="qt" id="qTitle">幸运大抽奖</div></div>
       <div class="qstat" id="qStat"></div>
       <div class="legend" id="qLegend"></div>
       <p class="hint">输入姓名即可查询是否中奖；也可直接展开下方「完整中奖榜」自行核对。所有数据仅存于本机，不上传任何服务器。</p>
@@ -410,9 +432,9 @@
 
       <div class="board">
         <details id="boardDetails">
-          <summary>📜 完整中奖榜（公开 · 点击展开）</summary>
+          <summary>完整中奖榜（公开 · 点击展开）</summary>
           <div class="row" style="justify-content:flex-end; margin:12px 0 4px;">
-            <button class="btn sm" id="copyBoard">📋 复制中奖榜</button>
+            <button class="btn sm" id="copyBoard">复制中奖榜</button>
           </div>
           <div id="winBoard"></div>
         </details>
@@ -461,11 +483,11 @@ function shuffle(arr){
 /* ===================== 状态 ===================== */
 function presetAwards(){
   return [
-    {id:uid(), name:"特等奖", quota:1,  allowDup:false, bg:"#FFC857", text:"#5a3b00", order:1},
-    {id:uid(), name:"一等奖", quota:3,  allowDup:false, bg:"#FF6FA5", text:"#fff",     order:2},
-    {id:uid(), name:"二等奖", quota:5,  allowDup:false, bg:"#B388FF", text:"#fff",     order:3},
-    {id:uid(), name:"三等奖", quota:10, allowDup:false, bg:"#5FD6C2", text:"#063d35", order:4},
-    {id:uid(), name:"幸运奖", quota:20, allowDup:false, bg:"#FF9E7A", text:"#fff",     order:5}
+    {id:uid(), name:"特等奖", quota:1,  allowDup:false, bg:"#d4b46a", text:"#241c00", order:1},
+    {id:uid(), name:"一等奖", quota:3,  allowDup:false, bg:"#6c8cff", text:"#fff",     order:2},
+    {id:uid(), name:"二等奖", quota:5,  allowDup:false, bg:"#3ecf8e", text:"#04321f", order:3},
+    {id:uid(), name:"三等奖", quota:10, allowDup:false, bg:"#f5a623", text:"#3a2600", order:4},
+    {id:uid(), name:"幸运奖", quota:20, allowDup:false, bg:"#e5484d", text:"#fff",     order:5}
   ];
 }
 function defaultState(){
@@ -474,8 +496,8 @@ function defaultState(){
     awards: presetAwards(),
     wins: [],
     settings: {
-      title:"玲娜贝儿幸运大抽奖", theme:"dark", sound:true, animSpeed:60, bigSize:84,
-      bgColor:"#3a1b3d", bgImage:"", showLogo:true, logoText:"🦊", showTitle:true,
+      title:"幸运大抽奖", theme:"dark", sound:true, animSpeed:60, bigSize:84,
+      bgColor:"#0a0e1a", bgImage:"", showLogo:true, logoText:"🏆", showTitle:true,
       dedupeGlobal:true, adminPassword:"", drawMode:"batch"
     }
   };
@@ -485,7 +507,7 @@ var state = app.pools[app.activeId];   // state 始终指向当前激活的抽�
 var visitorMode = false;      // 会话内访客模式
 var adminUnlocked = false;    // 会话内是否已解锁管理
 var currentAwardId = null;
-var rolling = false, rollTimer = null, rollCount = 0;
+var rolling = false, rollTimer = null;
 
 /* 规范化单个抽奖池：补全缺省字段与 id */
 function normalizePool(p){
@@ -499,14 +521,14 @@ function normalizePool(p){
   else p.settings = Object.assign(defaultState().settings, p.settings || {});
   p.participants.forEach(function(x){ if(!x.id) x.id = uid(); });
   p.awards.forEach(function(x){ if(!x.id) x.id = uid(); });
-  p.wins.forEach(function(x){ if(!x.id) x.id = uid(); });
+  p.wins.forEach(function(x){ if(!x.id) x.id = uid(); if(!x.batchId) x.batchId = uid(); });
   if(!p.settings.title) p.settings.title = p.name;
   return p;
 }
 function seedApp(){
   var d = defaultState();
   var p = normalizePool(d);
-  p.name = d.settings.title || "我的抽奖池";
+  p.name = d.settings.title || "默认抽奖池";
   p.settings.title = p.name;
   var id = p.id, pools = {}; pools[id] = p;
   return { pools:pools, order:[id], activeId:id };
@@ -571,7 +593,7 @@ function poolManager(){
       var nm = (($("#pmName") && $("#pmName").value) || "").trim();
       if(nm){ state.name = nm; if(!state.settings.title) state.settings.title = nm; saveState(); renderPoolSelect(); if($("#appTitleText")) $("#appTitleText").textContent = state.settings.title || state.name; }
     },
-    extraActions:[ { label:"🗑 删除此池", cls:"danger", onClick:function(){ deletePool(); } } ]
+    extraActions:[ { label:"删除此池", cls:"danger", onClick:function(){ deletePool(); } } ]
   });
 }
 function deletePool(){
@@ -589,7 +611,6 @@ function deletePool(){
 
 /* ===================== 抽奖核心逻辑 ===================== */
 function countWins(awardId){ return state.wins.filter(function(w){ return !w.voided && w.awardId===awardId; }).length; }
-
 function getEligible(award){
   var any = {}, thisA = {};
   state.wins.forEach(function(w){
@@ -603,8 +624,9 @@ function getEligible(award){
   });
 }
 function getAward(id){ for(var i=0;i<state.awards.length;i++){ if(state.awards[i].id===id) return state.awards[i]; } return null; }
-
 function sortedAwards(){ return state.awards.slice().sort(function(a,b){ return (a.order||0)-(b.order||0); }); }
+function totalQuota(){ return state.awards.reduce(function(s,a){ return s + (a.quota||0); }, 0); }
+function totalDrawn(){ return state.wins.filter(function(w){ return !w.voided; }).length; }
 
 /* ===================== 渲染：大屏 ===================== */
 function renderBigScreen(){
@@ -614,13 +636,14 @@ function renderBigScreen(){
   if(st.bgImage){ bs.style.backgroundImage = "url(" + st.bgImage + ")"; }
   else { bs.style.backgroundImage = "none"; bs.style.backgroundColor = st.bgColor; }
   $("#bsLogo").style.display = st.showLogo ? "" : "none";
-  $("#bsLogo").textContent = st.logoText || "🎉";
+  $("#bsLogo").textContent = st.logoText || "🏆";
   $("#bsTitle").style.display = st.showTitle ? "" : "none";
   $("#bsTitle").textContent = st.title || "幸运大抽奖";
   bs.style.setProperty("--big-size", st.bigSize + "px");
   renderDrawMode();
   renderAwardChips();
   renderDrawnList();
+  renderProgress();
 }
 function renderDrawMode(){
   $all("#drawModeCtl .dmopt").forEach(function(b){
@@ -629,11 +652,13 @@ function renderDrawMode(){
 }
 function renderDrawnList(){
   var box = $("#drawnList"); if(!box) return;
+  var lbl = $("#drawnLabel"); if(lbl) lbl.textContent = "";
   var a = getAward(currentAwardId);
   if(!a){ box.innerHTML = ""; return; }
   var wins = state.wins.filter(function(w){ return !w.voided && w.awardId === a.id; })
                        .sort(function(x,y){ return x.time - y.time; });
   if(!wins.length){ box.innerHTML = ""; return; }
+  if(lbl) lbl.textContent = "本奖项已抽出 " + wins.length + " 名";
   var html = "";
   wins.forEach(function(w){
     html += '<span class="drawn-chip"><span class="n">' + esc(w.name) + '</span><span style="opacity:.7;font-size:11px;">' +
@@ -652,15 +677,36 @@ function renderAwardChips(){
     el.className = "achip2" + (a.id===currentAwardId?" sel":"") + (rem<=0?" done":"");
     el.style.background = a.bg; el.style.color = a.text;
     el.textContent = a.name + "（剩 " + rem + "）";
-    el.onclick = function(){ if(rolling) return; currentAwardId = a.id; renderAwardChips(); updateBigAwardName(); };
+    el.onclick = function(){ if(rolling) return; currentAwardId = a.id; renderAwardChips(); renderDrawnList(); renderProgress(); };
     box.appendChild(el);
   });
   updateBigAwardName();
   refreshStartBtn();
+  renderProgress();
 }
 function updateBigAwardName(){
   var a = getAward(currentAwardId);
   $("#bsAwardName").textContent = a ? ("🎯 " + a.name) : "请选择奖项";
+}
+function renderProgress(){
+  var op = $("#bsOverall");
+  if(op){
+    var tq = totalQuota(), td = totalDrawn();
+    var pct = tq ? Math.round(td / tq * 100) : 0;
+    var bar = op.querySelector(".bar > i"); if(bar) bar.style.width = pct + "%";
+    var lbl = op.querySelector(".lbl"); if(lbl) lbl.textContent = "全场进度 " + td + " / " + tq + "（" + pct + "%）";
+  }
+  var ap = $("#awardProgress");
+  if(ap){
+    var a = getAward(currentAwardId);
+    var abar = ap.querySelector(".bar > i"); var albl = ap.querySelector(".lbl");
+    if(a && abar && albl){
+      var c = countWins(a.id);
+      var apct = a.quota ? Math.round(c / a.quota * 100) : 0;
+      abar.style.width = apct + "%";
+      albl.textContent = "本奖项 " + c + " / " + a.quota + "（剩 " + (a.quota - c) + "）";
+    } else if(albl){ albl.textContent = ""; }
+  }
 }
 function buildSlots(n){
   var box = $("#rollSlots"); box.innerHTML = "";
@@ -699,13 +745,12 @@ function startRoll(){
   $("#startBtn").textContent = "停止";
   $("#startBtn").classList.remove("primary");
   $("#startBtn").disabled = false;
-  rollCount = need;
   buildSlots(need);
   rollTimer = setInterval(function(){
     var slots = $all(".slot");
     for(var i=0;i<slots.length;i++){
       slots[i].textContent = pool[randInt(pool.length)];
-      slots[i].style.background = "rgba(255,255,255,.12)";
+      slots[i].style.background = "rgba(255,255,255,.10)";
       slots[i].style.color = "#fff";
     }
     if(state.settings.sound) playTick();
@@ -714,24 +759,56 @@ function startRoll(){
 function stopRoll(){
   if(!rolling) return;
   clearInterval(rollTimer); rolling = false;
-  var a = getAward(currentAwardId);
-  if(!a) return;
+  var a = getAward(currentAwardId); if(!a) return;
   var oneByOne = (state.settings.drawMode === "one");
   var rem = a.quota - countWins(a.id);
   var take = oneByOne ? 1 : rem;
   if(take > rem) take = rem;
   var pool = getEligible(a).map(function(p){ return p.name; });
   if(pool.length < take) take = pool.length;
+  if(take <= 0){ refreshStartBtn(); return; }
   var winners = shuffle(pool).slice(0, take);
+  animateReveal(a, winners, pool);
+}
+/* 停止时的缓动揭晓：先快后慢地滚动，最后定格到真实中奖者 */
+function animateReveal(a, winners, pool){
+  var slots = $all("#rollSlots .slot");
+  if(!pool.length) pool = winners.slice();
+  var delays = [45, 70, 100, 140, 190, 250, 320, 400, 520];
+  var i = 0;
+  $("#startBtn").textContent = "开奖中…";
+  $("#startBtn").disabled = true;
+  function step(){
+    if(i < delays.length){
+      for(var k=0;k<slots.length;k++){
+        var nm = pool[randInt(pool.length)];
+        slots[k].textContent = nm;
+        slots[k].style.background = "rgba(255,255,255,.10)";
+        slots[k].style.color = "#fff";
+        slots[k].classList.remove("win");
+      }
+      if(state.settings.sound) playTick();
+      i++;
+      setTimeout(step, delays[i-1]);
+    } else {
+      revealWinners(a, winners);
+    }
+  }
+  step();
+}
+function revealWinners(a, winners){
+  var batchId = uid();
   winners.forEach(function(n){
-    state.wins.push({ id:uid(), awardId:a.id, awardName:a.name, name:n, time:Date.now(), voided:false });
+    state.wins.push({ id:uid(), awardId:a.id, awardName:a.name, name:n, time:Date.now(), voided:false, batchId:batchId });
   });
   saveState();
   fillWinners(winners, a);
-  renderAwardChips(); renderWins(); renderDrawnList();
+  renderAwardChips(); renderWins(); renderDrawnList(); renderProgress();
   playWin();
+  confettiBurst();
   refreshStartBtn();
-  toast(oneByOne
+  refreshUndoBtn();
+  toast((state.settings.drawMode === "one")
     ? ("🎉 抽出 1 名「" + a.name + "」｜剩 " + (a.quota - countWins(a.id)) + " 名")
     : ("🎉 已抽出 " + winners.length + " 名「" + a.name + "」"));
 }
@@ -740,11 +817,34 @@ function refreshStartBtn(){
   var a = getAward(currentAwardId);
   if(!a){ sb.textContent = "开始抽奖"; sb.classList.add("primary"); sb.disabled = false; return; }
   var rem = a.quota - countWins(a.id);
-  if(rem <= 0){ sb.textContent = "✅ 已抽完"; sb.classList.remove("primary"); sb.disabled = true; }
+  if(rem <= 0){ sb.textContent = "已抽完"; sb.classList.remove("primary"); sb.disabled = true; }
   else {
     sb.textContent = (state.settings.drawMode === "one") ? ("开始抽奖（剩 " + rem + "）") : "开始抽奖";
     sb.classList.add("primary"); sb.disabled = false;
   }
+}
+/* 撤销最近一轮抽奖（按 batchId 整批作废，名额自动归还） */
+function refreshUndoBtn(){
+  var b = $("#undoBtn"); if(!b) return;
+  b.style.display = state.wins.some(function(w){ return !w.voided; }) ? "" : "none";
+}
+function undoLastBatch(){
+  var byBatch = {};
+  state.wins.forEach(function(w){ if(!w.voided && w.batchId){ (byBatch[w.batchId] = byBatch[w.batchId] || []).push(w); } });
+  var bids = Object.keys(byBatch);
+  if(!bids.length){ toast("没有可撤销的抽奖"); return; }
+  var latest = null, latestT = -1;
+  bids.forEach(function(bid){
+    var t = byBatch[bid].reduce(function(m,w){ return Math.max(m, w.time); }, -1);
+    if(t > latestT){ latestT = t; latest = bid; }
+  });
+  if(!latest) return;
+  var cnt = byBatch[latest].length;
+  openModal({ title:"撤销本轮抽奖", bodyHTML:"确定撤销最近一次抽出的 <b>"+cnt+"</b> 名中奖记录？名额将自动归还。", confirmText:"撤销", okClass:"danger", onConfirm:function(){
+    state.wins.forEach(function(w){ if(w.batchId === latest) w.voided = true; });
+    saveState(); renderAwardChips(); renderWins(); renderDrawnList(); renderProgress(); refreshStartBtn(); refreshUndoBtn();
+    toast("已撤销本轮抽奖");
+  }});
 }
 
 /* ===================== 音效 ===================== */
@@ -779,7 +879,6 @@ function addNames(arr){
   arr.forEach(function(raw){
     var n = String(raw).replace(/^["']|["']$/g,"").trim();
     if(!n) return;
-    // 取首列（CSV 场景）
     if(n.indexOf(",") >= 0) n = n.split(",")[0].trim();
     if(!n) return;
     state.participants.push({ id:uid(), name:n, blacklisted:false, excluded:false });
@@ -821,7 +920,8 @@ function renderPeople(){
 function renderAwards(){
   var box = $("#awardList"); box.innerHTML = "";
   if(!state.awards.length){ box.innerHTML = '<div class="empty">暂无奖项，点击「新增奖项」或「加载预设模板」</div>'; return; }
-  sortedAwards().forEach(function(a){
+  var list = sortedAwards();
+  list.forEach(function(a, idx){
     var rem = a.quota - countWins(a.id);
     var el = document.createElement("div"); el.className = "achip";
     el.innerHTML =
@@ -829,11 +929,23 @@ function renderAwards(){
       '<div class="info"><div class="t">'+esc(a.name)+'</div>' +
       '<div class="s">名额 '+a.quota+' ｜ 已中 '+countWins(a.id)+' ｜ 剩 '+rem+' ｜ '+(a.allowDup?'允许重复':'防重复')+' ｜ 顺序 '+(a.order||0)+'</div></div>' +
       '<div class="acts">' +
+      '<button class="btn sm" data-act="up" data-id="'+a.id+'"'+(idx===0?' disabled':'')+'>↑</button>' +
+      '<button class="btn sm" data-act="down" data-id="'+a.id+'"'+(idx===list.length-1?' disabled':'')+'>↓</button>' +
       '<button class="btn sm" data-act="edit" data-id="'+a.id+'">编辑</button>' +
       '<button class="btn sm danger" data-act="delA" data-id="'+a.id+'">删除</button>' +
       '</div>';
     box.appendChild(el);
   });
+}
+function moveAward(id, dir){
+  var list = sortedAwards();
+  var idx = -1;
+  for(var i=0;i<list.length;i++){ if(list[i].id === id){ idx = i; break; } }
+  var ni = idx + dir;
+  if(idx < 0 || ni < 0 || ni >= list.length) return;
+  var t = list[idx]; list[idx] = list[ni]; list[ni] = t;
+  list.forEach(function(a, i){ a.order = i + 1; });
+  saveState(); renderAwards(); renderAwardChips(); renderWinFilter(); renderProgress();
 }
 function renderWins(){
   var body = $("#winBody"); body.innerHTML = "";
@@ -850,7 +962,7 @@ function renderWins(){
       '<td>'+esc(w.awardName)+'</td>' +
       '<td>'+esc(w.name)+'</td>' +
       '<td>'+ts+'</td>' +
-      '<td>'+(w.voided?'<span class="tag bl">已作废</span>':'<span class="tag" style="background:#13351f;color:#86efac;">有效</span>')+'</td>' +
+      '<td>'+(w.voided?'<span class="tag bl">已作废</span>':'<span class="tag" style="background:#0f3324;color:#86efac;">有效</span>')+'</td>' +
       '<td><button class="btn sm" data-act="void" data-id="'+w.id+'">'+(w.voided?'恢复':'作废')+'</button></td>';
     body.appendChild(tr);
   });
@@ -928,17 +1040,38 @@ function csvCell(s){
   return s;
 }
 
+/* ===================== 金箔特效 ===================== */
+function confettiBurst(){
+  var box = $("#bigScreen"); if(!box) return;
+  var colors = ["#d4b46a","#ecd9a6","#6c8cff","#3ecf8e","#ffffff","#f5a623"];
+  for(var i=0;i<90;i++){
+    var s = document.createElement("span");
+    s.className = "confetti";
+    var size = 6 + Math.random()*8;
+    s.style.width = size + "px";
+    s.style.height = (size*0.6) + "px";
+    s.style.left = (Math.random()*100) + "%";
+    s.style.top = (-10 - Math.random()*20) + "%";
+    s.style.background = colors[i % colors.length];
+    s.style.animationDelay = (Math.random()*0.25) + "s";
+    s.style.animationDuration = (1.1 + Math.random()*0.9) + "s";
+    s.style.transform = "rotate(" + (Math.random()*360) + "deg)";
+    box.appendChild(s);
+    (function(el){ setTimeout(function(){ if(el && el.parentNode) el.parentNode.removeChild(el); }, 2400); })(s);
+  }
+}
+
 /* ===================== 权限 / 模式 ===================== */
 function refreshModeUI(){
   var tabs = $("#mainTabs");
   if(visitorMode){
     tabs.querySelectorAll('[data-view="viewBig"],[data-view="viewAdmin"]').forEach(function(b){ b.style.display="none"; });
     tabs.querySelector('[data-view="viewQuery"]').style.display="";
-    $("#modeBtn").textContent = "🔓 管理员登录";
+    $("#modeBtn").textContent = "管理登录";
     switchView("viewQuery");
   } else {
     tabs.querySelectorAll(".tab").forEach(function(b){ b.style.display=""; });
-    $("#modeBtn").textContent = "🚪 访客模式";
+    $("#modeBtn").textContent = "访客模式";
   }
   if($("#newPoolBtn")) $("#newPoolBtn").style.display = visitorMode ? "none" : "";
   if($("#poolMgrBtn")) $("#poolMgrBtn").style.display = visitorMode ? "none" : "";
@@ -974,14 +1107,14 @@ function switchView(v){
 /* ===================== 奖项编辑弹窗 ===================== */
 function openAwardModal(award){
   var isNew = !award;
-  var a = award || { name:"", quota:1, allowDup:false, bg:"#6366f1", text:"#ffffff", order: state.awards.length+1 };
+  var a = award || { name:"", quota:1, allowDup:false, bg:"#d4b46a", text:"#241c00", order: state.awards.length+1 };
   openModal({
     title: isNew ? "新增奖项" : "编辑奖项",
     bodyHTML:
       '<label class="fld">奖项名称</label><input class="inp" id="amName" value="'+esc(a.name)+'">' +
       '<label class="fld">抽取名额（每人次）</label><input class="inp" id="amQuota" type="number" min="1" value="'+a.quota+'">' +
       '<div class="checkrow"><input type="checkbox" id="amDup" '+(a.allowDup?"checked":"")+'> 允许同一人重复中此奖项</div>' +
-      '<label class="fld">展示顺序（越小越靠前）</label><input class="inp" id="amOrder" type="number" value="'+a.order+'">' +
+      '<label class="fld">展示顺序（越小越靠前，也可用列表中的 ↑ / ↓ 调整）</label><input class="inp" id="amOrder" type="number" value="'+a.order+'">' +
       '<div class="row" style="margin-top:10px;">' +
       '<div><label class="fld">背景色</label><input type="color" id="amBg" value="'+a.bg+'" class="swatch"></div>' +
       '<div><label class="fld">文字色</label><input type="color" id="amText" value="'+a.text+'" class="swatch"></div>' +
@@ -997,7 +1130,7 @@ function openAwardModal(award){
       a.bg = $("#amBg").value; a.text = $("#amText").value;
       a.order = parseInt($("#amOrder").value,10) || 0;
       if(isNew){ a.id = uid(); state.awards.push(a); }
-      saveState(); renderAwards(); renderAwardChips(); renderWinFilter();
+      saveState(); renderAwards(); renderAwardChips(); renderWinFilter(); renderProgress();
       closeModal(); toast(isNew?"已新增奖项":"已保存");
     }
   });
@@ -1036,6 +1169,7 @@ function bindEvents(){
 
   // 大屏
   $("#startBtn").onclick = function(){ if(rolling) stopRoll(); else startRoll(); };
+  $("#undoBtn").onclick = undoLastBatch;
   // 抽奖池切换与管理
   $("#poolSelect").onchange = function(){ switchPool(this.value); };
   $("#newPoolBtn").onclick = newPool;
@@ -1093,7 +1227,7 @@ function bindEvents(){
     toast("名单已导出");
   };
   $("#clearPeople").onclick = function(){
-    openModal({ title:"清空名单", bodyHTML:"确定清空全部 <b>"+state.participants.length+"</b> 名参与者？此操作不可撤销（中奖记录保留）。", confirmText:"清空", okClass:"danger", onConfirm:function(){ state.participants=[]; saveState(); renderPeople(); renderAwardChips(); toast("名单已清空"); } });
+    openModal({ title:"清空名单", bodyHTML:"确定清空全部 <b>"+state.participants.length+"</b> 名参与者？此操作不可撤销（中奖记录保留）。", confirmText:"清空", okClass:"danger", onConfirm:function(){ state.participants=[]; saveState(); renderPeople(); renderAwardChips(); renderProgress(); toast("名单已清空"); } });
   };
   $("#fltAvail").onchange = renderPeople;
   $("#fltBlack").onchange = renderPeople;
@@ -1102,7 +1236,7 @@ function bindEvents(){
     var b = e.target.closest("button[data-act='del']"); if(!b) return;
     var id = b.dataset.id;
     state.participants = state.participants.filter(function(p){ return p.id!==id; });
-    saveState(); renderPeople(); renderAwardChips();
+    saveState(); renderPeople(); renderAwardChips(); renderProgress();
   });
   $("#peopleList").addEventListener("change", function(e){
     var c = e.target.closest("input[data-act]"); if(!c) return;
@@ -1111,24 +1245,26 @@ function bindEvents(){
     if(!p) return;
     if(act==="bl") p.blacklisted = c.checked;
     if(act==="ex") p.excluded = c.checked;
-    saveState(); renderPeople(); renderAwardChips();
+    saveState(); renderPeople(); renderAwardChips(); renderProgress();
   });
 
   // 奖项
   $("#addAward").onclick = function(){ openAwardModal(null); };
   $("#presetAwards").onclick = function(){
     if(state.awards.length){
-      openModal({ title:"加载预设", bodyHTML:"将用标准 5 档奖项（特/一/二/三/幸运奖）覆盖当前奖项配置，已存在的中奖记录保留。继续？", confirmText:"覆盖加载", onConfirm:function(){ state.awards = presetAwards(); saveState(); renderAwards(); renderAwardChips(); renderWinFilter(); toast("已加载预设奖项"); } });
-    } else { state.awards = presetAwards(); saveState(); renderAwards(); renderAwardChips(); renderWinFilter(); toast("已加载预设奖项"); }
+      openModal({ title:"加载预设", bodyHTML:"将用标准 5 档奖项（特/一/二/三/幸运奖）覆盖当前奖项配置，已存在的中奖记录保留。继续？", confirmText:"覆盖加载", onConfirm:function(){ state.awards = presetAwards(); saveState(); renderAwards(); renderAwardChips(); renderWinFilter(); renderProgress(); toast("已加载预设奖项"); } });
+    } else { state.awards = presetAwards(); saveState(); renderAwards(); renderAwardChips(); renderWinFilter(); renderProgress(); toast("已加载预设奖项"); }
   };
   $("#awardList").addEventListener("click", function(e){
     var b = e.target.closest("button[data-act]"); if(!b) return;
     var id = b.dataset.id, act = b.dataset.act;
     var a = getAward(id);
     if(act==="edit"){ openAwardModal(a); }
-    if(act==="delA"){
+    else if(act==="up"){ moveAward(id, -1); }
+    else if(act==="down"){ moveAward(id, 1); }
+    else if(act==="delA"){
       var w = countWins(id);
-      openModal({ title:"删除奖项", bodyHTML:"确定删除「"+esc(a.name)+"」？"+(w>0?"<br><span class='hint'>该奖项已有 "+w+" 条中奖记录，删除奖项不影响记录但将无法按此奖项筛选。</span>":""), confirmText:"删除", okClass:"danger", onConfirm:function(){ state.awards = state.awards.filter(function(x){ return x.id!==id; }); saveState(); renderAwards(); renderAwardChips(); renderWinFilter(); toast("已删除"); } });
+      openModal({ title:"删除奖项", bodyHTML:"确定删除「"+esc(a.name)+"」？"+(w>0?"<br><span class='hint'>该奖项已有 "+w+" 条中奖记录，删除奖项不影响记录但将无法按此奖项筛选。</span>":""), confirmText:"删除", okClass:"danger", onConfirm:function(){ state.awards = state.awards.filter(function(x){ return x.id!==id; }); saveState(); renderAwards(); renderAwardChips(); renderWinFilter(); renderProgress(); toast("已删除"); } });
     }
   });
 
@@ -1139,7 +1275,7 @@ function bindEvents(){
     var id = b.dataset.id;
     var w = state.wins.find(function(x){ return x.id===id; }); if(!w) return;
     w.voided = !w.voided;
-    saveState(); renderWins(); renderAwardChips();
+    saveState(); renderWins(); renderAwardChips(); renderProgress();
     toast(w.voided ? "已作废，名额已归还" : "已恢复中奖");
   });
   $("#exportWins").onclick = function(){
@@ -1163,12 +1299,12 @@ function bindEvents(){
   };
   $("#clearWins").onclick = function(){
     if(!state.wins.length){ toast("暂无记录"); return; }
-    openModal({ title:"清空中奖记录", bodyHTML:"确定清空全部 <b>"+state.wins.length+"</b> 条中奖记录？此操作不可撤销。", confirmText:"清空", okClass:"danger", onConfirm:function(){ state.wins=[]; saveState(); renderWins(); renderAwardChips(); toast("记录已清空"); } });
+    openModal({ title:"清空中奖记录", bodyHTML:"确定清空全部 <b>"+state.wins.length+"</b> 条中奖记录？此操作不可撤销。", confirmText:"清空", okClass:"danger", onConfirm:function(){ state.wins=[]; saveState(); renderWins(); renderAwardChips(); renderProgress(); refreshUndoBtn(); toast("记录已清空"); } });
   };
 
   // 高级设置
-  $("#setTitle").oninput = function(){ state.settings.title = this.value; saveState(); $("#bsTitle").textContent = this.value || "幸运大抽奖"; var t = this.value || "玲娜贝儿幸运大抽奖"; if($("#appTitleText")) $("#appTitleText").textContent = t; if($("#qTitle")) $("#qTitle").textContent = "🦊 " + t; };
-  $("#setLogo").oninput = function(){ state.settings.logoText = this.value; saveState(); $("#bsLogo").textContent = this.value || "🎉"; };
+  $("#setTitle").oninput = function(){ state.settings.title = this.value; saveState(); $("#bsTitle").textContent = this.value || "幸运大抽奖"; var t = this.value || "幸运大抽奖"; if($("#appTitleText")) $("#appTitleText").textContent = t; if($("#qTitle")) $("#qTitle").textContent = t; };
+  $("#setLogo").oninput = function(){ state.settings.logoText = this.value; saveState(); $("#bsLogo").textContent = this.value || "🏆"; };
   $("#setShowTitle").onchange = function(){ state.settings.showTitle = this.checked; saveState(); $("#bsTitle").style.display = this.checked?"":"none"; };
   $("#setShowLogo").onchange = function(){ state.settings.showLogo = this.checked; saveState(); $("#bsLogo").style.display = this.checked?"":"none"; };
   $("#setSpeed").oninput = function(){ state.settings.animSpeed = parseInt(this.value,10); $("#speedVal").textContent = this.value + " ms/帧"; saveState(); };
@@ -1259,7 +1395,7 @@ function renderPersonWins(name){
   var html = '<div class="qhero win">🎊 恭喜「'+esc(name)+'」中奖！</div>';
   Object.keys(groups).forEach(function(k){
     var aw = state.awards.find(function(x){ return x.name===k; }) || {};
-    var bg = aw.bg || "#6366f1", tx = aw.text || "#fff";
+    var bg = aw.bg || "#d4b46a", tx = aw.text || "#241c00";
     html += '<div class="qwin"><span class="qbadge" style="background:'+bg+';color:'+tx+'">'+esc(k)+'</span></div>';
     groups[k].forEach(function(w){
       var d = new Date(w.time);
@@ -1274,7 +1410,6 @@ function doQuery(){
   if(!raw){ toast("请输入姓名"); return; }
   var n = norm(raw);
   var box = $("#queryResult");
-  // 1) 精确匹配
   var exact = state.wins.some(function(w){ return !w.voided && norm(w.name)===n; });
   if(exact){
     var matched = state.wins.filter(function(w){ return !w.voided && norm(w.name)===n; })[0];
@@ -1282,7 +1417,6 @@ function doQuery(){
     box.innerHTML = renderPersonWins(matched.name);
     return;
   }
-  // 2) 包含匹配（模糊提示，避免拼写/空格差异导致查不到）
   var contains = {};
   state.wins.forEach(function(w){ if(!w.voided && norm(w.name).indexOf(n)>=0) contains[w.name]=1; });
   var names = Object.keys(contains);
@@ -1296,14 +1430,13 @@ function doQuery(){
     box.innerHTML = h;
     return;
   }
-  // 3) 确实未中奖
   box.className = "qresult lose";
   box.innerHTML = '<div class="qhero lose">😶 很遗憾，「'+esc(raw)+'」暂未中奖</div>' +
     '<div class="qhintline">请确认姓名 / 工号是否输入正确（已支持模糊匹配）。也可展开下方「完整中奖榜」自行核对，或联系活动管理员。</div>';
 }
 
 function renderQueryHeader(){
-  var q = $("#qTitle"); if(q) q.textContent = "🦊 " + (state.settings.title || "玲娜贝儿幸运大抽奖");
+  var q = $("#qTitle"); if(q) q.textContent = state.settings.title || "幸运大抽奖";
   var total = state.participants.length;
   var won = {}; state.wins.forEach(function(w){ if(!w.voided) won[w.name]=1; });
   var wonCount = Object.keys(won).length;
@@ -1341,7 +1474,7 @@ function renderWinBoard(){
 /* ===================== 应用设置 ===================== */
 function applyTheme(){
   document.documentElement.setAttribute("data-theme", state.settings.theme);
-  $("#themeBtn").textContent = state.settings.theme==="dark" ? "🌙 主题" : "☀️ 主题";
+  $("#themeBtn").textContent = state.settings.theme==="dark" ? "主题" : "主题";
 }
 function applySettingsInputs(){
   var s = state.settings;
@@ -1353,57 +1486,18 @@ function applySettingsInputs(){
   $("#setBig").value = s.bigSize; $("#bigVal").textContent = s.bigSize + " px";
   $("#setSound").checked = !!s.sound;
   $("#setDedupe").checked = s.dedupeGlobal !== false;
-  $("#setBg").value = s.bgColor || "#0f172a";
+  $("#setBg").value = s.bgColor || "#0a0e1a";
   $("#setPw").value = s.adminPassword || "";
-  if($("#appTitleText")) $("#appTitleText").textContent = s.title || "玲娜贝儿幸运大抽奖";
+  if($("#appTitleText")) $("#appTitleText").textContent = s.title || "幸运大抽奖";
 }
 function applyAll(){
-  applyTheme(); applySettingsInputs(); renderBigScreen(); renderPeople(); renderAwards(); renderWinFilter(); renderWins(); renderQueryHeader(); renderWinBoard();
-}
-
-/* ===================== 玲娜贝儿装饰 ===================== */
-var FOX_SVG =
-  '<svg class="mascot" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" aria-label="玲娜贝儿">' +
-  '<path d="M34 40 L20 8 L52 30 Z" fill="#FF9EC4"/>' +
-  '<path d="M86 40 L100 8 L68 30 Z" fill="#FF9EC4"/>' +
-  '<path d="M36 36 L28 18 L48 31 Z" fill="#C9A0FF"/>' +
-  '<path d="M84 36 L92 18 L72 31 Z" fill="#C9A0FF"/>' +
-  '<path d="M60 22 C30 22 18 46 18 66 C18 92 38 104 60 104 C82 104 102 92 102 66 C102 46 90 22 60 22 Z" fill="#FFC2DC"/>' +
-  '<ellipse cx="60" cy="80" rx="26" ry="22" fill="#FFF4FA"/>' +
-  '<circle cx="34" cy="74" r="10" fill="#FF9EC4" opacity=".55"/>' +
-  '<circle cx="86" cy="74" r="10" fill="#FF9EC4" opacity=".55"/>' +
-  '<ellipse cx="44" cy="60" rx="9" ry="11" fill="#4A3358"/>' +
-  '<ellipse cx="76" cy="60" rx="9" ry="11" fill="#4A3358"/>' +
-  '<circle cx="47" cy="56" r="3.4" fill="#fff"/>' +
-  '<circle cx="79" cy="56" r="3.4" fill="#fff"/>' +
-  '<path d="M53 74 L67 74 L60 83 Z" fill="#8A5A6E"/>' +
-  '<path d="M60 83 Q60 90 53 91 M60 83 Q60 90 67 91" stroke="#8A5A6E" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
-  '<g transform="rotate(18 102 102)">' +
-  '<circle cx="102" cy="102" r="15" fill="rgba(179,136,255,.28)" stroke="#B388FF" stroke-width="4.5"/>' +
-  '<line x1="112" y1="112" x2="122" y2="122" stroke="#B388FF" stroke-width="5" stroke-linecap="round"/>' +
-  '</g></svg>';
-
-function setupDecor(){
-  var m = $("#headerMascot"); if(m) m.innerHTML = FOX_SVG;
-  var deco = $("#deco");
-  if(deco){
-    var emojis = ["💖","🦊","✨","🌸","🍑","💕","⭐"];
-    for(var i=0;i<14;i++){
-      var s = document.createElement("span");
-      s.textContent = emojis[i % emojis.length];
-      s.style.left = (Math.random()*100) + "%";
-      s.style.fontSize = (16 + Math.random()*18) + "px";
-      s.style.animationDuration = (14 + Math.random()*16) + "s";
-      s.style.animationDelay = (-Math.random()*20) + "s";
-      deco.appendChild(s);
-    }
-  }
+  applyTheme(); applySettingsInputs(); renderBigScreen(); renderPeople(); renderAwards(); renderWinFilter(); renderWins(); renderQueryHeader(); renderWinBoard(); refreshUndoBtn();
 }
 
 /* ===================== 启动 ===================== */
 function init(){
   if(location.hash === "#query" || state.settings.adminPassword){ visitorMode = true; }
-  applyTheme(); applySettingsInputs(); bindEvents(); refreshModeUI(); applyAll(); renderPoolSelect(); setupDecor();
+  applyTheme(); applySettingsInputs(); bindEvents(); refreshModeUI(); applyAll(); renderPoolSelect();
   if(location.hash === "#query"){ switchView("viewQuery"); }
 }
 init();
