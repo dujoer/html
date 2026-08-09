@@ -6,6 +6,7 @@
 <title>工具箱 · 本地实用工具集合</title>
 <meta name="description" content="纯前端本地工具集合，零上传、隐私安全，涵盖图片处理、设计、生产力、安全等场景。" />
 <style>
+  html{overflow-x:hidden;-webkit-text-size-adjust:100%}
   :root{
     --bg:#f5f5f7; --bg-2:#ececf0;
     --card:#ffffff; --card-2:#fbfbfd;
@@ -256,6 +257,8 @@ const CATEGORIES = {
   security: { label:"安全隐私", grad:"linear-gradient(135deg,#ff453a,#ff7a45)" },
   ops:      { label:"活动运营", grad:"linear-gradient(135deg,#30d158,#00c7be)" },
   ai:       { label:"AI 辅助",  grad:"linear-gradient(135deg,#0ad1c8,#3b82f6)" },
+  finance:  { label:"财务工具", grad:"linear-gradient(135deg,#0e9d72,#15b8a6)" },
+  tooling:  { label:"实用工具", grad:"linear-gradient(135deg,#ff9f0a,#ff5e3a)" },
 };
 
 const TOOLS = [
@@ -277,6 +280,10 @@ const TOOLS = [
     desc:"公平随机抽奖，支持多奖池、中奖查询与导出。", tags:["抽奖","公平","多池","活动"] },
   { id:"long",          file:"long.html",           title:"长视频文字摘要辅助", cat:"ai",
     desc:"辅助提取长视频文字要点并整理成摘要。", tags:["摘要","长视频","整理","AI"] },
+  { id:"rmb",           file:"rmb-converter.html",   title:"人民币大小写转换",   cat:"finance",
+    desc:"财务规范金额大写双向转换、批量处理与不规范写法提醒。", tags:["人民币","大写","财务","批量"] },
+  { id:"html2exe",      file:"html2exe.html",        title:"HTML 转 EXE 打包",   cat:"tooling",
+    desc:"把网页工具打包成独立 .exe。零插件、不向磁盘释放任何 DLL、纯本地离线生成；可自定义标题/图标/尺寸/无边框/置顶/单实例/缩放/UA/禁用右键与调试等。", tags:["打包","EXE","部署","离线","自定义"] },
 ];
 
 /* 图标（白色描边，置于分类渐变方块上）。id 命中则用专属图标，否则用分类图标 */
@@ -290,6 +297,8 @@ const GLYPHS = {
   "password":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.2" fill="white" stroke="none"/></svg>',
   "lottery-system":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="11" rx="1.8"/><path d="M4 13h16M12 9v11"/><path d="M12 9C12 6 10 4 8 4a2.4 2.4 0 0 0 0 5h4zM12 9C12 6 14 4 16 4a2.4 2.4 0 0 1 0 5h-4z"/></svg>',
   "long":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="16" rx="2.2"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4.5"/></svg>',
+  "rmb":'<svg viewBox="0 0 24 24"><text x="12" y="18" font-size="16" text-anchor="middle" fill="white" font-weight="700" font-family="-apple-system,Segoe UI,sans-serif">¥</text></svg>',
+  "html2exe":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>',
 };
 const CAT_GLYPH = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>';
 

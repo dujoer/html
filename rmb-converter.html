@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>人民币大小写转换工具 · 财务专用</title>
+<meta name="description" content="严格遵循财务规范的人民币大小写双向转换、批量多行处理、不规范写法提醒，纯本地离线运行。" />
+<style>
+  html{overflow-x:hidden;-webkit-text-size-adjust:100%}
+  :root{
+    --bg:#f4f7f6; --bg-2:#eef3f1;
+    --card:#ffffff; --card-2:#f7faf9;
+    --text:#102a23; --muted:#5b7068; --faint:#8aa199;
+    --line:rgba(13,80,60,.10); --line-2:rgba(13,80,60,.06);
+    --primary:#0e9d72; --primary2:#13b8a6; --gold:#c79a3a;
+    --grad:linear-gradient(135deg,#0e9d72,#15b8a6);
+    --shadow:0 1px 2px rgba(8,50,38,.05),0 10px 30px rgba(8,50,38,.07);
+    --shadow-lg:0 6px 18px rgba(8,50,38,.12),0 20px 50px rgba(8,50,38,.14);
+    --radius:22px; --radius-sm:13px;
+    --header-bg:rgba(244,247,246,.72);
+  }
+  html[data-theme="dark"]{
+    --bg:#08110d; --bg-2:#0c1813;
+    --card:#122019; --card-2:#16241d;
+    --text:#e8f3ee; --muted:#9bb3a9; --faint:#6b857b;
+    --line:rgba(255,255,255,.10); --line-2:rgba(255,255,255,.06);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.5);
+    --shadow-lg:0 6px 18px rgba(0,0,0,.5),0 22px 55px rgba(0,0,0,.6);
+    --header-bg:rgba(8,17,13,.62);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--text); -webkit-font-smoothing:antialiased;
+    line-height:1.5; min-height:100%;
+    background-image:radial-gradient(1100px 560px at 10% -6%,rgba(14,157,114,.12),transparent 60%),
+                     radial-gradient(1000px 520px at 100% 0%,rgba(21,184,166,.10),transparent 55%);
+    background-attachment:fixed; transition:background-color .4s ease,color .4s ease;
+  }
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+  input,textarea{font-family:inherit;}
+
+  header{position:sticky;top:0;z-index:50;background:var(--header-bg);
+    backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid var(--line);}
+  .bar{max-width:1180px;margin:0 auto;padding:13px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;}
+  .brand{display:flex;align-items:center;gap:11px;min-width:0;}
+  .brand .logo{width:34px;height:34px;border-radius:10px;flex:0 0 auto;background:var(--grad);display:grid;place-items:center;
+    box-shadow:0 4px 14px rgba(14,157,114,.35);font-weight:800;color:#fff;font-size:18px;}
+  .brand h1{font-size:16px;font-weight:600;white-space:nowrap;}
+  .brand .sub{font-size:11.5px;color:var(--muted);font-weight:500;white-space:nowrap;}
+  .head-actions{display:flex;align-items:center;gap:10px;}
+  .ghost-btn{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:999px;font-size:13px;font-weight:550;
+    background:var(--card);border:1px solid var(--line);color:var(--text);transition:transform .15s ease,box-shadow .2s ease;}
+  .ghost-btn:hover{transform:translateY(-1px);box-shadow:var(--shadow);}
+  .ghost-btn svg{width:15px;height:15px;}
+  .theme-toggle{width:38px;height:38px;padding:0;justify-content:center;border-radius:999px;}
+  .theme-toggle .sun{display:none;}
+  html[data-theme="dark"] .theme-toggle .sun{display:block;}
+  html[data-theme="dark"] .theme-toggle .moon{display:none;}
+
+  .hero{max-width:1180px;margin:0 auto;padding:46px 24px 10px;text-align:center;}
+  .eyebrow{display:inline-block;font-size:12px;font-weight:650;letter-spacing:.10em;text-transform:uppercase;
+    color:var(--primary);background:color-mix(in srgb,var(--primary) 13%,transparent);padding:5px 13px;border-radius:999px;margin-bottom:16px;}
+  .hero h2{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:-.02em;line-height:1.08;
+    background:linear-gradient(180deg,var(--text),color-mix(in srgb,var(--text) 60%,var(--muted)));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+  .hero p.lead{margin:14px auto 0;max-width:600px;font-size:clamp(14px,2.2vw,17px);color:var(--muted);}
+
+  main{max-width:1180px;margin:26px auto 0;padding:0 24px 60px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;}
+  .panel h3{font-size:16.5px;font-weight:680;display:flex;align-items:center;gap:9px;margin-bottom:4px;}
+  .panel h3 .badge{width:26px;height:26px;border-radius:8px;background:var(--grad);display:grid;place-items:center;color:#fff;font-size:14px;box-shadow:0 4px 12px rgba(14,157,114,.3);}
+  .panel .hint{font-size:12.5px;color:var(--faint);margin-bottom:14px;}
+
+  /* segmented */
+  .seg{display:inline-flex;background:var(--bg-2);border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px;margin-bottom:14px;}
+  .seg button{padding:7px 14px;border-radius:999px;font-size:13px;font-weight:600;color:var(--muted);transition:all .18s ease;}
+  .seg button.on{color:#fff;background:var(--grad);box-shadow:0 4px 12px rgba(14,157,114,.3);}
+
+  .field-label{font-size:12.5px;font-weight:600;color:var(--muted);margin:0 0 7px 2px;display:block;}
+  textarea.inp,input.inp{width:100%;border:1px solid var(--line);background:var(--card-2);color:var(--text);
+    border-radius:var(--radius-sm);padding:13px 15px;font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s;resize:vertical;}
+  input.inp{font-size:17px;}
+  textarea.inp{min-height:120px;line-height:1.6;}
+  .inp:focus{border-color:color-mix(in srgb,var(--primary) 55%,transparent);box-shadow:0 0 0 4px color-mix(in srgb,var(--primary) 15%,transparent);}
+  input.inp.big{font-size:20px;font-weight:600;letter-spacing:.3px;}
+
+  .toggle-row{display:flex;align-items:center;gap:10px;margin:14px 0;flex-wrap:wrap;}
+  .toggle{display:inline-flex;align-items:center;gap:9px;font-size:13.5px;font-weight:550;cursor:pointer;user-select:none;}
+  .switch{width:42px;height:24px;border-radius:999px;background:var(--line);position:relative;transition:background .2s;flex:0 0 auto;}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+  .toggle.on .switch{background:var(--grad);}
+  .toggle.on .switch::after{transform:translateX(18px);}
+
+  .result{margin-top:16px;background:var(--card-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:16px;position:relative;}
+  .result .rlabel{font-size:11.5px;font-weight:600;color:var(--faint);margin-bottom:6px;}
+  .result .upper{font-size:clamp(18px,3.4vw,23px);font-weight:700;letter-spacing:.4px;line-height:1.4;word-break:break-word;color:var(--text);}
+  .result .lower{font-size:14px;color:var(--muted);margin-top:8px;font-variant-numeric:tabular-nums;}
+  .result .lower b{color:var(--primary);font-weight:700;}
+
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+  .btn{padding:10px 16px;border-radius:12px;font-size:13.5px;font-weight:620;background:var(--card);border:1px solid var(--line);color:var(--text);transition:transform .15s,box-shadow .2s;}
+  .btn:hover{transform:translateY(-1px);box-shadow:var(--shadow);}
+  .btn.primary{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 6px 16px rgba(14,157,114,.32);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;}
+
+  .msg{font-size:13px;margin-top:12px;min-height:18px;font-weight:550;}
+  .msg.err{color:#e0563f;}
+  .msg.warn{color:var(--gold);}
+  .msg.ok{color:var(--primary);}
+  .warn-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .warn-chips span{font-size:11.5px;font-weight:600;color:var(--gold);background:color-mix(in srgb,var(--gold) 14%,transparent);padding:4px 9px;border-radius:999px;}
+
+  /* batch */
+  .batch-out{margin-top:14px;}
+  .batch-out textarea{min-height:170px;font-size:13.5px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  .stats-line{font-size:12.5px;color:var(--faint);margin-top:8px;}
+
+  .actions{max-width:1180px;margin:18px auto 0;padding:0 24px;display:flex;gap:10px;flex-wrap:wrap;}
+  .actions .btn{display:inline-flex;align-items:center;gap:7px;}
+  .actions .btn svg{width:15px;height:15px;}
+
+  /* modal */
+  .mask{position:fixed;inset:0;background:rgba(6,20,15,.45);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;z-index:100;padding:20px;}
+  .mask.show{display:flex;}
+  .modal{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow-lg);
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px;animation:pop .22s ease;}
+  @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal h3{font-size:18px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:9px;}
+  .modal h4{font-size:14px;font-weight:680;margin:16px 0 6px;color:var(--primary);}
+  .modal p,.modal li{font-size:13.5px;color:var(--muted);line-height:1.7;}
+  .modal ul{padding-left:20px;margin:4px 0;}
+  .modal code{background:var(--bg-2);padding:1px 6px;border-radius:6px;font-size:12.5px;color:var(--text);font-family:ui-monospace,monospace;}
+  .modal .close-row{display:flex;justify-content:flex-end;margin-top:20px;}
+  .modal .close-row .btn.primary{padding:9px 22px;}
+
+  /* toast */
+  .toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--bg);
+    padding:11px 20px;border-radius:999px;font-size:13.5px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;
+    transition:opacity .25s,transform .25s;z-index:200;}
+  .toast.show{opacity:.96;transform:translateX(-50%) translateY(0);}
+
+  footer{max-width:1180px;margin:0 auto;padding:24px 24px 50px;text-align:center;color:var(--faint);font-size:12.5px;line-height:1.8;}
+  footer .priv{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--muted);font-weight:550;}
+  footer .priv svg{width:14px;height:14px;color:var(--primary);}
+
+  @media (max-width:820px){
+    .grid{grid-template-columns:1fr;}
+    .bar{padding:12px 16px;}
+    .brand .sub{display:none;}
+    .hero{padding:34px 16px 8px;}
+    main,.actions{padding-left:16px;padding-right:16px;}
+    .ghost-btn span.lbl{display:none;}
+    .ghost-btn{padding:9px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="brand">
+      <div class="logo">￥</div>
+      <div>
+        <h1>人民币大小写转换</h1>
+        <div class="sub">财务专用 · 本地离线</div>
+      </div>
+    </div>
+    <div class="head-actions">
+      <button class="ghost-btn" id="helpBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 .9-1 1.7"/><circle cx="12" cy="16.5" r=".6" fill="currentColor"/></svg>
+        <span class="lbl">书写说明</span>
+      </button>
+      <button class="ghost-btn theme-toggle" id="themeToggle" aria-label="切换主题">
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <span class="eyebrow">Finance · RMB Converter</span>
+  <h2>人民币大小写转换</h2>
+  <p class="lead">严格遵循财务规范的金额大写转换，支持双向核对、批量处理与不规范写法提醒，数据全程本地运算。</p>
+</section>
+
+<main>
+  <div class="grid">
+    <!-- 单条转换 -->
+    <section class="panel">
+      <h3><span class="badge">¥</span>单条快速转换</h3>
+      <div class="hint">实时转换，支持小写↔大写双向、粘贴 Excel 数字</div>
+
+      <div class="seg" id="modeSeg">
+        <button data-mode="to" class="on">小写 → 大写</button>
+        <button data-mode="from">大写 → 小写</button>
+      </div>
+
+      <label class="field-label" id="inLabel">输入金额（如 1234.56）</label>
+      <input class="inp big" id="singleIn" placeholder="1234.56" autocomplete="off" inputmode="decimal" />
+
+      <div class="toggle-row">
+        <div class="toggle on" id="prefixToggle"><span class="switch"></span><span>自动添加「人民币」前缀</span></div>
+      </div>
+
+      <div class="result" id="singleOut">
+        <div class="rlabel" id="outLabel">人民币大写</div>
+        <div class="upper" id="upperText">—</div>
+        <div class="lower" id="lowerText"></div>
+      </div>
+
+      <div class="btn-row" id="singleBtns">
+        <button class="btn primary" id="copyUpper">复制大写</button>
+        <button class="btn" id="copyLower">复制小写</button>
+      </div>
+
+      <div class="msg" id="singleMsg"></div>
+      <div class="warn-chips" id="singleWarn"></div>
+    </section>
+
+    <!-- 批量转换 -->
+    <section class="panel">
+      <h3><span class="badge">≣</span>批量多行转换</h3>
+      <div class="hint">每行一条金额，自动清理空行，异常行单独标记</div>
+
+      <label class="field-label">粘贴多行金额（可直接从 Excel 复制）</label>
+      <textarea class="inp" id="batchIn" placeholder="1234.56&#10;10086.5&#10;10.05&#10;1,234.00"></textarea>
+
+      <div class="toggle-row">
+        <div class="seg" id="batchSeg">
+          <button data-fmt="upper" class="on">仅大写</button>
+          <button data-fmt="table">对照格式</button>
+        </div>
+      </div>
+
+      <div class="batch-out">
+        <label class="field-label">转换结果</label>
+        <textarea class="inp" id="batchOut" readonly placeholder="转换结果将显示在这里…"></textarea>
+        <div class="stats-line" id="batchStats"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn primary" id="copyBatch">一键复制全部结果</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="actions">
+  <button class="btn" id="exampleBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+    填充示例
+  </button>
+  <button class="btn" id="clearBtn">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>
+    清空全部
+  </button>
+</div>
+
+<footer>
+  <div class="priv">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l7 3v6c0 5-3 8-7 11-4-3-7-6-7-11V5z"/><path d="M9 12l2 2 4-4"/></svg>
+    所有计算均在你的设备本地完成 · 金额数据不会上传任何服务器
+  </div>
+  <div style="margin-top:10px;">报销 · 合同 · 开票金额随时转换 ｜ 单 HTML 文件，可离线部署</div>
+</footer>
+
+<!-- 帮助弹窗 -->
+<div class="mask" id="helpMask">
+  <div class="modal">
+    <h3><span class="badge" style="width:24px;height:24px;border-radius:7px;background:var(--grad);color:#fff;display:grid;place-items:center;font-size:13px;">规</span>财务书写规范说明</h3>
+    <p>人民币大写用于票据、合同、记账凭证，须严格使用正楷或行书书写，不得使用简体或错字。</p>
+    <h4>标准用字</h4>
+    <p>数字：零、壹、贰、叁、肆、伍、陆、柒、捌、玖<br>数位：拾、佰、仟、万、亿<br>单位：元（不可写「圆/园」）、角、分、整（或正）</p>
+    <h4>关键规则</h4>
+    <ul>
+      <li>整数金额末尾加「整」，如 <code>100</code> → 壹佰元整</li>
+      <li>有角无分可加「整」，有分不加「整」，如 <code>123.45</code> → 壹佰贰拾叁元肆角伍分</li>
+      <li>角位为 0 而分位不为 0 时补「零」，如 <code>10.05</code> → 壹拾元零伍分</li>
+      <li>连续零合并为单个「零」，杜绝「零零」等不规范写法</li>
+      <li>禁止简体：一、二、三、十 等须写作 壹、贰、叁、拾</li>
+    </ul>
+    <h4>示例对照</h4>
+    <ul>
+      <li><code>10086.5</code> → 人民币壹万零捌拾陆元伍角整</li>
+      <li><code>0</code> → 人民币零元整</li>
+      <li><code>2000000</code> → 人民币贰佰万元整</li>
+    </ul>
+    <div class="close-row"><button class="btn primary" id="helpClose">我知道了</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 偏好设置 ============ */
+var PREFS_KEY="rmb-prefs";
+var prefs = loadPrefs();
+function loadPrefs(){
+  var d={prefix:true, batchFmt:"upper", roundPolicy:"round", theme:"light"};
+  try{ var s=JSON.parse(localStorage.getItem(PREFS_KEY)||"{}"); for(var k in d){ if(s[k]!==undefined) d[k]=s[k]; } }catch(e){}
+  return d;
+}
+function savePrefs(){ try{ localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)); }catch(e){} }
+
+/* ============ 核心算法：小写 → 大写 ============ */
+var CN_DIGIT=["零","壹","贰","叁","肆","伍","陆","柒","捌","玖"];
+var CN_UNIT=["","拾","佰","仟"];
+var CN_GROUP=["","万","亿","兆","京"];
+
+function intToCN(intStr){
+  if(intStr==="0"||intStr==="") return "零";
+  var pad=(4-(intStr.length%4))%4;
+  var s="0".repeat(pad)+intStr;
+  var groups=s.match(/.{4}/g)||[];
+  var res="", pendingZero=false;
+  for(var g=0; g<groups.length; g++){
+    var chunk=groups[g];
+    var gi=groups.length-1-g;
+    var part="", zero=false;
+    for(var i=0;i<chunk.length;i++){
+      var d=+chunk[i];
+      var p=chunk.length-1-i;
+      if(d===0){ zero=true; }
+      else{
+        if(zero && part!=="") part+="零";
+        else if(zero && part==="" && g>0) part+="零";
+        part+=CN_DIGIT[d]+CN_UNIT[p];
+        zero=false;
+      }
+    }
+    if(part!==""){ if(pendingZero) part="零"+part; res+=part+CN_GROUP[gi]; pendingZero=false; }
+    else if(res!=="") pendingZero=true;
+  }
+  res=res.replace(/零{2,}/g,"零").replace(/零$/,"");
+  return res===""?"零":res;
+}
+
+function toRMB(raw){
+  var warn=[], error=null;
+  if(raw==null) raw="";
+  var s=String(raw).trim();
+  if(s==="") return {ok:false, empty:true, upper:"", lower:"", warn:[], error:null};
+  // 清理
+  s=s.replace(/[　\s]+/g,"").replace(/[，、。]/g,"").replace(/[．]/g,".")
+     .replace(/,/g,"").replace(/[¥￥$€]/g,"")
+     .replace(/[０-９]/g,function(m){return "０１２３４５６７８９".indexOf(m);});
+  // 负数
+  if(s.indexOf("-")>=0||s.indexOf("－")>=0||s.indexOf("负")>=0){
+    warn.push("财务金额一般不支持负数，已按绝对值转换");
+    s=s.replace(/[-－负]/g,"");
+  }
+  if(/[a-zA-Z]/.test(s)) return {ok:false,error:"包含非法字母，请输入数字金额",upper:"",lower:"",warn:[]};
+  if(/[^0-9.]/.test(s)) return {ok:false,error:"包含非法字符，仅支持数字与小数点",upper:"",lower:"",warn:[]};
+  if((s.match(/\./g)||[]).length>1) return {ok:false,error:"小数点多于一个",upper:"",lower:"",warn:[]};
+  var num=parseFloat(s);
+  if(isNaN(num)) return {ok:false,error:"无法识别的金额",upper:"",lower:"",warn:[]};
+  if(num<0) num=-num;
+  var decPart=s.split(".")[1]||"";
+  if(decPart.length>2){
+    if(prefs.roundPolicy==="truncate"){ num=Math.floor(num*100)/100; warn.push("小数超过 2 位，已按「截断」保留到分"); }
+    else{ num=Math.round(num*100)/100; warn.push("小数超过 2 位，已按「四舍五入」保留到分"); }
+  }
+  if(num>=1e17) return {ok:false,error:"金额过大，超出可转换范围（上限 1 京）",upper:"",lower:"",warn:[]};
+  var parts=num.toFixed(2).split(".");
+  var intStr=parts[0], decStr=parts[1];
+  var jiao=+decStr[0], fen=+decStr[1];
+  var yuan=intToCN(intStr);
+  var dec="";
+  if(jiao===0&&fen===0) dec="整";
+  else{
+    if(jiao>0) dec+=CN_DIGIT[jiao]+"角";
+    if(jiao===0&&fen>0) dec="零"+dec;
+    if(fen>0) dec+=CN_DIGIT[fen]+"分";
+    if(jiao>0&&fen===0) dec+="整"; // 有角无分可写整
+  }
+  var upper=yuan+"元"+dec;
+  if(prefs.prefix) upper="人民币"+upper;
+  if(yuan==="零"&&jiao===0&&fen===0&&prefs.prefix) upper="人民币零元整";
+  return {ok:true, upper:upper, lower:String(num), warn:warn, error:null};
+}
+
+/* ============ 核心算法：大写 → 小写（核对） ============ */
+function checkNorm(s){
+  var issues=[];
+  var pairs=[["一","壹"],["二","贰"],["两","贰"],["三","叁"],["四","肆"],["五","伍"],["六","陆"],["七","柒"],["八","捌"],["九","玖"],["十","拾"],["百","佰"],["千","仟"]];
+  pairs.forEach(function(p){ if(s.indexOf(p[0])>=0) issues.push("检测到简体「"+p[0]+"」，规范应为「"+p[1]+"」"); });
+  if(/[园圆块]/.test(s)) issues.push("金额单位应使用「元」，发现「园/圆/块」");
+  if(s.indexOf("零零")>=0) issues.push("存在连续「零零」，不符合规范书写");
+  return issues;
+}
+
+function fromRMB(raw){
+  var warn=[];
+  var s=String(raw).trim();
+  if(s==="") return {ok:false, empty:true, num:null, warn:[]};
+  var normIssues=checkNorm(s);
+  warn=warn.concat(normIssues);
+  var norm=s.replace(/[一]/g,"壹").replace(/[二]/g,"贰").replace(/[两]/g,"贰").replace(/[三]/g,"叁")
+    .replace(/[四]/g,"肆").replace(/[五]/g,"伍").replace(/[六]/g,"陆").replace(/[七]/g,"柒")
+    .replace(/[八]/g,"捌").replace(/[九]/g,"玖").replace(/[十]/g,"拾").replace(/[百]/g,"佰")
+    .replace(/[千]/g,"仟").replace(/[园圆块]/g,"元");
+  var map={"零":0,"〇":0,"壹":1,"贰":2,"叁":3,"肆":4,"伍":5,"陆":6,"柒":7,"捌":8,"玖":9};
+  var unit={"拾":10,"佰":100,"仟":1000,"万":1e4,"亿":1e8};
+  var yuanIdx=norm.indexOf("元");
+  var intPart= yuanIdx>=0?norm.slice(0,yuanIdx):norm;
+  var decPart= yuanIdx>=0?norm.slice(yuanIdx+1):"";
+  var total=0, section=0, num=0;
+  for(var i=0;i<intPart.length;i++){
+    var ch=intPart[i];
+    if(ch in map){ num=map[ch]; }
+    else if(ch in unit){
+      var u=unit[ch];
+      if(u<10000){ section+=(num||1)*u; num=0; }
+      else{ total+=(section+num)*u; section=0; num=0; }
+    }
+  }
+  total+=section+num;
+  var fens=0;
+  var jiaoIdx=decPart.indexOf("角"), fenIdx=decPart.indexOf("分");
+  if(jiaoIdx>=0 && decPart[jiaoIdx-1] in map) fens+=map[decPart[jiaoIdx-1]]*10;
+  if(fenIdx>=0 && decPart[fenIdx-1] in map) fens+=map[decPart[fenIdx-1]];
+  var result=total+fens/100;
+  if(isNaN(result)) return {ok:false,error:"无法解析该大写金额",num:null,warn:warn};
+  return {ok:true, num:result, lower:String(result), warn:warn};
+}
+
+/* ============ DOM 引用 ============ */
+var $=function(s){return document.querySelector(s);};
+var mode="to"; // to | from
+var singleIn=$("#singleIn"), upperText=$("#upperText"), lowerText=$("#lowerText"),
+    singleMsg=$("#singleMsg"), singleWarn=$("#singleWarn"), singleBtns=$("#singleBtns");
+var batchIn=$("#batchIn"), batchOut=$("#batchOut"), batchStats=$("#batchStats"),
+    inLabel=$("#inLabel"), outLabel=$("#outLabel"), copyLowerBtn=$("#copyLower"), copyUpperBtn=$("#copyUpper");
+
+/* ============ 单条渲染 ============ */
+function renderSingle(){
+  var raw=singleIn.value;
+  if(!raw.trim()){ upperText.textContent="—"; lowerText.textContent=""; singleMsg.textContent=""; singleMsg.className="msg"; singleWarn.innerHTML=""; return; }
+  if(mode==="to"){
+    var r=toRMB(raw);
+    if(r.empty) return;
+    if(!r.ok){ upperText.textContent="—"; lowerText.textContent=""; singleMsg.textContent=r.error; singleMsg.className="msg err"; singleWarn.innerHTML=""; return; }
+    upperText.textContent=r.upper;
+    lowerText.innerHTML="小写：<b>"+r.lower+"</b>";
+    singleMsg.textContent=""; singleMsg.className="msg";
+    renderWarn(singleWarn, r.warn);
+    copyUpperBtn.disabled=false; copyLowerBtn.disabled=false;
+  } else {
+    var fr=fromRMB(raw);
+    if(fr.empty) return;
+    if(!fr.ok){ upperText.textContent="—"; lowerText.textContent=""; singleMsg.textContent=fr.error; singleMsg.className="msg err"; singleWarn.innerHTML=""; return; }
+    upperText.textContent=fr.lower;
+    lowerText.innerHTML="大写原文：<b>"+raw.trim()+"</b>";
+    singleMsg.textContent="已解析为小写金额（用于核对）"; singleMsg.className="msg ok";
+    renderWarn(singleWarn, fr.warn);
+    copyUpperBtn.disabled=true; copyLowerBtn.disabled=false;
+  }
+}
+function renderWarn(box, arr){
+  box.innerHTML="";
+  (arr||[]).forEach(function(t){ var s=document.createElement("span"); s.textContent=t; box.appendChild(s); });
+}
+
+/* ============ 批量渲染 ============ */
+function renderBatch(){
+  var raw=batchIn.value;
+  var lines=raw.split(/\r?\n/);
+  var out=[], ok=0, bad=0;
+  lines.forEach(function(line){
+    var t=line.trim();
+    if(t==="") return;
+    var r=toRMB(t);
+    if(!r.ok){ out.push("【错误】"+t+"："+(r.error||"无法转换")); bad++; return; }
+    if(prefs.batchFmt==="upper") out.push(r.upper);
+    else out.push(t+" | "+r.upper);
+    ok++;
+  });
+  batchOut.value=out.join("\n");
+  batchStats.textContent="成功 "+ok+" 行"+(bad?("，失败 "+bad+" 行（已单独标记）"):"");
+}
+
+/* ============ 复制 ============ */
+function copyText(txt){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){toast("已复制到剪贴板");},function(){fallbackCopy(txt);});
+  } else fallbackCopy(txt);
+}
+function fallbackCopy(txt){
+  try{
+    var ta=document.createElement("textarea"); ta.value=txt; ta.style.position="fixed"; ta.style.top="-9999px"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+    toast("已复制到剪贴板");
+  }catch(e){ toast("复制失败，请手动复制"); }
+}
+
+/* ============ Toast ============ */
+var toastTimer=null;
+function toast(msg){
+  var t=$("#toast"); t.textContent=msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.classList.remove("show"); },1800);
+}
+
+/* ============ 事件绑定 ============ */
+singleIn.addEventListener("input", renderSingle);
+$("#modeSeg").querySelectorAll("button").forEach(function(b){
+  b.addEventListener("click",function(){
+    mode=b.dataset.mode;
+    $("#modeSeg").querySelectorAll("button").forEach(function(x){x.classList.toggle("on",x===b);});
+    if(mode==="to"){ inLabel.textContent="输入金额（如 1234.56）"; outLabel.textContent=prefs.prefix?"人民币大写":"金额大写"; }
+    else{ inLabel.textContent="输入大写金额（如 人民币壹万零捌拾陆元伍角整）"; outLabel.textContent="解析出的小写金额"; }
+    singleIn.value=""; renderSingle(); singleIn.focus();
+  });
+});
+$("#prefixToggle").addEventListener("click",function(){
+  prefs.prefix=!prefs.prefix; this.classList.toggle("on",prefs.prefix); savePrefs(); renderSingle();
+});
+copyUpperBtn.addEventListener("click",function(){ if(upperText.textContent&&upperText.textContent!=="—") copyText(upperText.textContent); });
+copyLowerBtn.addEventListener("click",function(){ if(lowerText.textContent){ var m=lowerText.textContent.match(/[\d.]+/); if(m) copyText(m[0]); } });
+
+batchIn.addEventListener("input", renderBatch);
+$("#batchSeg").querySelectorAll("button").forEach(function(b){
+  b.addEventListener("click",function(){
+    prefs.batchFmt=b.dataset.fmt;
+    $("#batchSeg").querySelectorAll("button").forEach(function(x){x.classList.toggle("on",x===b);});
+    savePrefs(); renderBatch();
+  });
+});
+$("#copyBatch").addEventListener("click",function(){ if(batchOut.value) copyText(batchOut.value); else toast("暂无结果可复制"); });
+
+$("#exampleBtn").addEventListener("click",function(){
+  singleIn.value="10086.5"; renderSingle();
+  batchIn.value="1234.56\n10086.5\n10.05\n0\n2000000\n1,234.00\n680.123";
+  renderBatch();
+  toast("已填充示例");
+});
+$("#clearBtn").addEventListener("click",function(){
+  openConfirm("确认清空全部输入与结果？","此操作不可撤销",function(){
+    singleIn.value=""; batchIn.value=""; renderSingle(); renderBatch(); toast("已清空");
+  });
+});
+
+/* 帮助弹窗 */
+function openModal(){ $("#helpMask").classList.add("show"); }
+function closeModal(){ $("#helpMask").classList.remove("show"); }
+$("#helpBtn").addEventListener("click",openModal);
+$("#helpClose").addEventListener("click",closeModal);
+$("#helpMask").addEventListener("click",function(e){ if(e.target===this) closeModal(); });
+
+/* 二次确认弹窗 */
+function openConfirm(title,desc,onOk){
+  var mask=document.createElement("div"); mask.className="mask show";
+  mask.innerHTML='<div class="modal"><h3>'+title+'</h3><p>'+desc+'</p><div class="close-row"><button class="btn" data-x="cancel">取消</button><button class="btn primary" data-x="ok">确认清空</button></div></div>';
+  document.body.appendChild(mask);
+  mask.addEventListener("click",function(e){ if(e.target===mask||e.target.dataset.x==="cancel") document.body.removeChild(mask); if(e.target.dataset.x==="ok"){ document.body.removeChild(mask); onOk(); } });
+}
+
+/* 主题 */
+var root=document.documentElement;
+(function(){ var saved=localStorage.getItem("rmb-theme"); if(!saved){ saved=(window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light"; } if(saved) root.setAttribute("data-theme",saved); })();
+$("#themeToggle").addEventListener("click",function(){ var next=root.getAttribute("data-theme")==="dark"?"light":"dark"; root.setAttribute("data-theme",next); localStorage.setItem("rmb-theme",next); });
+
+/* 初始化 UI 状态 */
+$("#prefixToggle").classList.toggle("on",prefs.prefix);
+if(prefs.batchFmt==="table"){ $("#batchSeg").querySelectorAll("button").forEach(function(x){x.classList.toggle("on",x.dataset.fmt==="table");}); }
+renderSingle(); renderBatch();
+</script>
+</body>
+</html>
