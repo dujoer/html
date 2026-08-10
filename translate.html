@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>极速翻译 · 多语种在线翻译</title>
+<style>
+:root{
+  --bg:#0f1424; --bg2:#161d33; --panel:rgba(255,255,255,.045); --panel2:rgba(255,255,255,.07);
+  --line:rgba(255,255,255,.10); --text:#eef1fb; --muted:#9aa6c8;
+  --accent:#5b8cff; --accent2:#9b6cff; --grad:linear-gradient(135deg,#5b8cff,#9b6cff);
+  --ok:#3ecf8e; --err:#ff6b6b; --radius:18px; --shadow:0 22px 54px rgba(0,0,0,.42); --shadow-soft:0 10px 28px rgba(0,0,0,.22);
+}
+[data-theme="light"]{
+  --bg:#eef1f8; --bg2:#e2e7f3; --panel:rgba(255,255,255,.72); --panel2:rgba(255,255,255,.92);
+  --line:rgba(20,30,60,.12); --text:#1a2238; --muted:#5b6480;
+  --accent:#3a6df0; --accent2:#7a4dff; --grad:linear-gradient(135deg,#3a6df0,#7a4dff);
+  --shadow:0 22px 54px rgba(20,30,60,.14); --shadow-soft:0 10px 28px rgba(20,30,60,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"PingFang SC","Microsoft YaHei",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:radial-gradient(1200px 620px at 82% -12%, rgba(91,140,255,.20), transparent), linear-gradient(160deg,var(--bg),var(--bg2));
+  color:var(--text);min-height:100vh;-webkit-text-size-adjust:100%;overflow-x:hidden;}
+.container{max-width:1080px;margin:0 auto;padding:16px 18px 48px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding-top:12px;}
+.brand{display:flex;align-items:center;gap:12px;}
+.logo{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;font-size:22px;background:var(--grad);box-shadow:0 10px 24px rgba(91,140,255,.38);}
+.brand h1{margin:0;font-size:20px;letter-spacing:.5px;}
+.sub{margin:2px 0 0;font-size:12px;color:var(--muted);}
+.icon-btn{background:var(--panel);border:1px solid var(--line);color:var(--text);width:42px;height:42px;border-radius:12px;font-size:18px;cursor:pointer;flex:0 0 auto;}
+.icon-btn:hover{border-color:var(--accent);}
+.bar{display:flex;align-items:center;gap:10px;margin:18px 0;flex-wrap:wrap;}
+.lang-select{position:relative;flex:1;min-width:150px;}
+.ls-trigger{width:100%;display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:12px 14px;border-radius:14px;cursor:pointer;font-size:15px;backdrop-filter:blur(8px);}
+.ls-trigger:hover{border-color:var(--accent);}
+.ls-flag{font-size:18px;line-height:1;}
+.ls-name{flex:1;text-align:left;}
+.caret{color:var(--muted);font-size:12px;}
+.ls-menu{position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:30;background:var(--panel2);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:8px;backdrop-filter:blur(16px);max-height:330px;overflow:auto;}
+.ls-menu[hidden]{display:none;}
+.ls-search{width:100%;padding:9px 11px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);margin-bottom:6px;font-size:14px;}
+.ls-search:focus{outline:none;border-color:var(--accent);}
+.ls-list{display:flex;flex-direction:column;gap:2px;}
+.ls-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border:none;background:transparent;color:var(--text);border-radius:10px;cursor:pointer;font-size:14px;text-align:left;}
+.ls-item:hover,.ls-item.active{background:var(--grad);color:#fff;}
+.ls-item .ls-name{flex:1;}
+.swap-btn{width:46px;height:46px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--accent);font-size:20px;cursor:pointer;flex:0 0 auto;transition:.2s;}
+.swap-btn:hover{background:var(--grad);color:#fff;border-color:transparent;transform:rotate(180deg);}
+.workspace{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.pane{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;backdrop-filter:blur(8px);box-shadow:var(--shadow-soft);}
+.pane-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;min-height:30px;}
+.pane-title{font-weight:600;font-size:14px;color:var(--muted);}
+.pane-ops{display:flex;align-items:center;gap:6px;}
+.op-btn{background:transparent;border:1px solid var(--line);color:var(--muted);padding:6px 10px;border-radius:9px;font-size:12px;cursor:pointer;white-space:nowrap;}
+.op-btn:hover{color:var(--text);border-color:var(--accent);}
+.src-badge{font-size:11px;color:var(--muted);}
+textarea#input,.output{flex:1;min-height:210px;width:100%;resize:vertical;background:var(--bg);border:1px solid var(--line);border-radius:12px;color:var(--text);padding:14px;font-size:15px;line-height:1.75;font-family:inherit;}
+.output{padding:14px;line-height:1.85;white-space:pre-wrap;word-break:break-word;overflow:auto;}
+.pane-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px;font-size:12px;color:var(--muted);}
+.auto-wrap{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
+.translate-btn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--grad);color:#fff;font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 10px 24px rgba(91,140,255,.35);transition:.15s;}
+.translate-btn:hover{filter:brightness(1.07);}
+.translate-btn.loading{opacity:.65;pointer-events:none;}
+.phrases{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:16px 0;}
+.ph-label{font-size:13px;color:var(--muted);}
+.chip{background:var(--panel);border:1px solid var(--line);color:var(--text);padding:7px 13px;border-radius:20px;font-size:13px;cursor:pointer;}
+.chip:hover{border-color:var(--accent);color:var(--accent);}
+.history{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-top:8px;backdrop-filter:blur(8px);}
+.history-head{display:flex;align-items:center;gap:10px;}
+.history-head>span{font-weight:600;flex:1;font-size:15px;}
+.hist-list{margin-top:10px;display:flex;flex-direction:column;gap:8px;max-height:300px;overflow:auto;}
+.hist-list[hidden]{display:none;}
+.hist-item{text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;color:var(--text);}
+.hist-item:hover{border-color:var(--accent);}
+.hist-q{font-size:14px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-a{font-size:13px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-meta{font-size:11px;color:var(--muted);margin-top:4px;}
+.hist-empty{color:var(--muted);font-size:13px;padding:12px;text-align:center;}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:var(--panel2);border:1px solid var(--line);color:var(--text);padding:11px 18px;border-radius:12px;box-shadow:var(--shadow);opacity:0;transition:.25s;z-index:99;backdrop-filter:blur(10px);font-size:14px;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.foot{text-align:center;color:var(--muted);font-size:12px;margin-top:26px;line-height:1.7;}
+.foot a{color:var(--accent);text-decoration:none;}
+@media(max-width:760px){
+  .workspace{grid-template-columns:1fr;}
+  .output{min-height:150px;}
+  textarea#input{min-height:130px;}
+  .bar{gap:8px;}
+}
+</style>
+</head>
+<body>
+<header class="topbar container">
+  <div class="brand">
+    <span class="logo">🌐</span>
+    <div><h1>极速翻译</h1><p class="sub">免费多语种 · 实时在线翻译</p></div>
+  </div>
+  <div class="top-actions">
+    <button id="themeBtn" class="icon-btn" title="切换明暗主题">🌓</button>
+  </div>
+</header>
+
+<main class="container">
+  <section class="bar">
+    <div class="lang-select">
+      <button class="ls-trigger" id="srcTrigger"><span class="ls-flag" id="srcFlag">🌐</span><span class="ls-name" id="srcName">自动检测</span><span class="caret">▾</span></button>
+      <div class="ls-menu" id="srcMenu" hidden></div>
+    </div>
+    <button id="swapBtn" class="swap-btn" title="交换语言">⇄</button>
+    <div class="lang-select">
+      <button class="ls-trigger" id="dstTrigger"><span class="ls-flag" id="dstFlag">🇨🇳</span><span class="ls-name" id="dstName">简体中文</span><span class="caret">▾</span></button>
+      <div class="ls-menu" id="dstMenu" hidden></div>
+    </div>
+  </section>
+
+  <section class="workspace">
+    <div class="pane">
+      <div class="pane-head">
+        <span class="pane-title" id="srcTitle">自动检测</span>
+        <div class="pane-ops">
+          <button class="op-btn" id="pasteBtn" title="粘贴剪贴板">粘贴</button>
+          <button class="op-btn" id="clearBtn" title="清空输入">清空</button>
+          <button class="op-btn" id="speakSrcBtn" title="朗读原文">🔊</button>
+        </div>
+      </div>
+      <textarea id="input" placeholder="输入要翻译的文字…（Ctrl / ⌘ + Enter 直接翻译）" maxlength="5000"></textarea>
+      <div class="pane-foot">
+        <span id="charCount">0 / 5000</span>
+        <label class="auto-wrap"><input type="checkbox" id="autoChk" checked> 自动翻译</label>
+      </div>
+    </div>
+
+    <div class="pane">
+      <div class="pane-head">
+        <span class="pane-title" id="dstTitle">简体中文</span>
+        <div class="pane-ops">
+          <span id="srcBadge" class="src-badge"></span>
+          <button class="op-btn" id="copyBtn" title="复制译文">复制</button>
+          <button class="op-btn" id="speakDstBtn" title="朗读译文">🔊</button>
+        </div>
+      </div>
+      <div id="output" class="output" aria-live="polite"></div>
+      <div class="pane-foot">
+        <span></span>
+        <button id="translateBtn" class="translate-btn">翻译</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="phrases">
+    <span class="ph-label">常用短语：</span>
+    <button class="chip" data-ph="你好，很高兴认识你。">你好，很高兴认识你。</button>
+    <button class="chip" data-ph="请问洗手间在哪里？">请问洗手间在哪里？</button>
+    <button class="chip" data-ph="谢谢你的帮助！">谢谢你的帮助！</button>
+    <button class="chip" data-ph="这个多少钱？">这个多少钱？</button>
+    <button class="chip" data-ph="我需要帮助。">我需要帮助。</button>
+    <button class="chip" data-ph="今天天气真好。">今天天气真好。</button>
+  </section>
+
+  <section class="history">
+    <div class="history-head">
+      <span>历史记录</span>
+      <button id="histToggle" class="op-btn">展开</button>
+      <button id="histClear" class="op-btn">清空</button>
+    </div>
+    <div id="histList" class="hist-list" hidden></div>
+  </section>
+
+  <p class="foot">翻译接口：MyMemory（免费）优先，Google / LibreTranslate 自动兜底 · 全程本地处理，不上传任何内容到第三方存储 · 朗读由浏览器自带语音合成提供</p>
+</main>
+
+<div id="toast" class="toast" hidden></div>
+
+<script>
+"use strict";
+const LS_THEME='translate-theme', LS_HIST='translate-history-v1', LS_PREFS='translate-prefs-v1';
+
+const LANGS=[
+  {code:'zh-CN',name:'简体中文',flag:'🇨🇳',speech:'zh-CN'},
+  {code:'zh-TW',name:'繁體中文',flag:'🇹🇼',speech:'zh-TW'},
+  {code:'en',name:'English',flag:'🇬🇧',speech:'en-US'},
+  {code:'ja',name:'日本語',flag:'🇯🇵',speech:'ja-JP'},
+  {code:'ko',name:'한국어',flag:'🇰🇷',speech:'ko-KR'},
+  {code:'fr',name:'Français',flag:'🇫🇷',speech:'fr-FR'},
+  {code:'de',name:'Deutsch',flag:'🇩🇪',speech:'de-DE'},
+  {code:'es',name:'Español',flag:'🇪🇸',speech:'es-ES'},
+  {code:'ru',name:'Русский',flag:'🇷🇺',speech:'ru-RU'},
+  {code:'pt',name:'Português',flag:'🇵🇹',speech:'pt-PT'},
+  {code:'it',name:'Italiano',flag:'🇮🇹',speech:'it-IT'},
+  {code:'ar',name:'العربية',flag:'🇸🇦',speech:'ar-SA'},
+  {code:'th',name:'ไทย',flag:'🇹🇭',speech:'th-TH'},
+  {code:'vi',name:'Tiếng Việt',flag:'🇻🇳',speech:'vi-VN'},
+  {code:'id',name:'Indonesia',flag:'🇮🇩',speech:'id-ID'},
+  {code:'ms',name:'Melayu',flag:'🇲🇾',speech:'ms-MY'},
+  {code:'tr',name:'Türkçe',flag:'🇹🇷',speech:'tr-TR'},
+  {code:'nl',name:'Nederlands',flag:'🇳🇱',speech:'nl-NL'},
+  {code:'pl',name:'Polski',flag:'🇵🇱',speech:'pl-PL'},
+  {code:'uk',name:'Українська',flag:'🇺🇦',speech:'uk-UA'},
+  {code:'hi',name:'हिन्दी',flag:'🇮🇳',speech:'hi-IN'}
+];
+const AUTO={code:'auto',name:'自动检测',flag:'🌐',speech:''};
+const state={sl:'auto', tl:'zh-CN'};
+
+const $=(s)=>document.querySelector(s);
+const $$=(s)=>document.querySelectorAll(s);
+function langByCode(c){ if(c==='auto')return AUTO; return LANGS.find(l=>l.code===c)||LANGS[0]; }
+function libreCode(c){ if(c==='zh-CN'||c==='zh-TW')return 'zh'; return c; }
+function speechLang(c){ if(c==='auto')return langByCode(state.tl).speech||'en-US'; const l=langByCode(c); return l.speech||c; }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- 主题 ---------- */
+function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); try{localStorage.setItem(LS_THEME,t);}catch(e){} }
+function initTheme(){ let t; try{t=localStorage.getItem(LS_THEME);}catch(e){} applyTheme(t||'dark'); }
+
+/* ---------- Toast ---------- */
+let toastTimer;
+function toast(msg){
+  const el=$('#toast'); el.textContent=msg; el.hidden=false;
+  requestAnimationFrame(()=>el.classList.add('show'));
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{ el.classList.remove('show'); setTimeout(()=>{el.hidden=true;},260); },2200);
+}
+
+/* ---------- 语言下拉 ---------- */
+function buildMenu(side){
+  const menu = side==='src'? $('#srcMenu'): $('#dstMenu');
+  const list = side==='src'? [AUTO, ...LANGS] : LANGS;
+  menu.innerHTML='';
+  const search=document.createElement('input');
+  search.className='ls-search'; search.placeholder='搜索语言…';
+  menu.appendChild(search);
+  const ul=document.createElement('div'); ul.className='ls-list';
+  list.forEach(l=>{
+    const item=document.createElement('button');
+    item.type='button'; item.className='ls-item'; item.dataset.code=l.code;
+    item.innerHTML='<span class="ls-flag">'+l.flag+'</span><span class="ls-name">'+l.name+'</span>';
+    item.onclick=()=>{ selectLang(side,l.code); closeMenus(); };
+    ul.appendChild(item);
+  });
+  menu.appendChild(ul);
+  search.oninput=()=>{ const v=search.value.trim().toLowerCase();
+    Array.prototype.forEach.call(ul.children,it=>{
+      const n=it.querySelector('.ls-name').textContent.toLowerCase();
+      it.style.display = n.indexOf(v)>=0?'':'none';
+    });
+  };
+  search.onclick=(e)=>e.stopPropagation();
+}
+function openMenu(side){
+  closeMenus();
+  const menu = side==='src'? $('#srcMenu'): $('#dstMenu');
+  menu.hidden=false;
+  const s=menu.querySelector('.ls-search'); if(s) s.focus();
+}
+function closeMenus(){ $('#srcMenu').hidden=true; $('#dstMenu').hidden=true; }
+function selectLang(side,code){
+  const l=langByCode(code);
+  if(side==='src'){ state.sl=code; $('#srcFlag').textContent=l.flag; $('#srcName').textContent=l.name; $('#srcTitle').textContent=l.name; }
+  else { state.tl=code; $('#dstFlag').textContent=l.flag; $('#dstName').textContent=l.name; $('#dstTitle').textContent=l.name; }
+  persistPrefs();
+  if($('#autoChk').checked && $('#input').value.trim()) scheduleTranslate();
+}
+function syncLangUI(){
+  const s=langByCode(state.sl), d=langByCode(state.tl);
+  $('#srcFlag').textContent=s.flag; $('#srcName').textContent=s.name; $('#srcTitle').textContent=s.name;
+  $('#dstFlag').textContent=d.flag; $('#dstName').textContent=d.name; $('#dstTitle').textContent=d.name;
+}
+
+/* ---------- 交换 ---------- */
+function swapLangs(){
+  const t=state.sl; state.sl=state.tl; state.tl=(t==='auto'?'zh-CN':t);
+  syncLangUI();
+  const inp=$('#input').value; const out=$('#output').textContent;
+  $('#input').value=out; $('#output').textContent=inp||''; updateCount();
+  persistPrefs();
+  if($('#autoChk').checked && $('#input').value.trim()) scheduleTranslate();
+}
+
+/* ---------- 翻译核心（多源免费 API） ---------- */
+async function fetchWithTimeout(url,opts={},ms=9000){
+  const ctrl=new AbortController(); const id=setTimeout(()=>ctrl.abort(),ms);
+  try{ return await fetch(url,Object.assign({},opts,{signal:ctrl.signal})); }
+  finally{ clearTimeout(id); }
+}
+async function tryMyMemory(q,sl,tl){
+  if(sl==='auto') throw new Error('skip');
+  const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(q)+'&langpair='+encodeURIComponent(sl+'|'+tl);
+  const r=await fetchWithTimeout(url);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  if(String(j.responseStatus)!=='200') throw new Error(j.responseDetails||'MyMemory 错误');
+  return j.responseData.translatedText;
+}
+async function tryGoogle(q,sl,tl){
+  const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl='+(sl==='auto'?'auto':sl)+'&tl='+tl+'&dt=t&q='+encodeURIComponent(q);
+  const r=await fetchWithTimeout(url);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  let t=''; (j[0]||[]).forEach(seg=>{ if(seg[0]) t+=seg[0]; });
+  return t;
+}
+async function tryLibre(q,sl,tl){
+  const url='https://libretranslate.com/translate';
+  const body={q:q, source: sl==='auto'?'auto':libreCode(sl), target: libreCode(tl), format:'text'};
+  const r=await fetchWithTimeout(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  if(!j.translatedText) throw new Error('LibreTranslate 空结果');
+  return j.translatedText;
+}
+async function translateText(q,sl,tl){
+  const srcs=[['MyMemory',tryMyMemory],['Google',tryGoogle],['LibreTranslate',tryLibre]];
+  let last;
+  for(let i=0;i<srcs.length;i++){
+    const name=srcs[i][0], fn=srcs[i][1];
+    try{ const t=await fn(q,sl,tl); if(t && t.trim()) return {text:t.trim(), src:name}; }
+    catch(e){ last=e; }
+  }
+  throw last||new Error('无可用翻译源');
+}
+
+let transTimer;
+function scheduleTranslate(){ clearTimeout(transTimer); transTimer=setTimeout(doTranslate,600); }
+function setLoading(b){
+  const btn=$('#translateBtn');
+  btn.classList.toggle('loading',b);
+  btn.textContent=b?'翻译中…':'翻译';
+}
+async function doTranslate(){
+  const q=$('#input').value.trim();
+  if(!q){ $('#output').textContent=''; $('#srcBadge').textContent=''; return; }
+  setLoading(true);
+  try{
+    const res=await translateText(q,state.sl,state.tl);
+    $('#output').textContent=res.text;
+    $('#srcBadge').textContent='· '+res.src;
+    saveHistory(q,res.text,state.sl,state.tl);
+    renderHistory();
+  }catch(e){
+    $('#output').textContent='⚠️ 翻译失败：'+((e&&e.message)?e.message:e)+'\n\n建议：检查网络连接、稍后重试；如使用「自动检测」可改手动指定源语言再试。';
+  }finally{ setLoading(false); }
+}
+
+/* ---------- 历史 ---------- */
+function saveHistory(q,a,sl,tl){
+  let h=loadHistory();
+  h.unshift({q:q,a:a,sl:sl,tl:tl,t:Date.now()});
+  h=h.slice(0,50);
+  try{ localStorage.setItem(LS_HIST,JSON.stringify(h)); }catch(e){}
+}
+function loadHistory(){ try{ return JSON.parse(localStorage.getItem(LS_HIST)||'[]'); }catch(e){ return []; } }
+function renderHistory(){
+  const h=loadHistory(); const box=$('#histList');
+  if(!h.length){ box.innerHTML='<div class="hist-empty">暂无历史记录</div>'; return; }
+  box.innerHTML='';
+  h.forEach(it=>{
+    const d=document.createElement('button'); d.type='button'; d.className='hist-item';
+    d.innerHTML='<div class="hist-q">'+escapeHtml(it.q)+'</div><div class="hist-a">'+escapeHtml(it.a)+'</div><div class="hist-meta">'+langByCode(it.sl).name+' → '+langByCode(it.tl).name+'</div>';
+    d.onclick=()=>{
+      selectLang('src',it.sl); selectLang('dst',it.tl);
+      $('#input').value=it.q; $('#output').textContent=it.a; updateCount(); closeHist();
+    };
+    box.appendChild(d);
+  });
+}
+
+/* ---------- 朗读 / 复制 ---------- */
+function speak(text,code){
+  if(!('speechSynthesis' in window)){ toast('当前浏览器不支持朗读'); return; }
+  if(!text || !text.trim()){ toast('没有可朗读的内容'); return; }
+  try{
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang=speechLang(code); u.rate=1;
+    window.speechSynthesis.speak(u);
+  }catch(e){ toast('朗读启动失败'); }
+}
+async function copyText(t){
+  if(!t || !t.trim()){ toast('没有可复制的内容'); return; }
+  try{ await navigator.clipboard.writeText(t); toast('已复制译文'); }
+  catch(e){
+    try{
+      const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      toast('已复制译文');
+    }catch(_){ toast('复制失败，请手动选择'); }
+  }
+}
+
+/* ---------- 偏好 ---------- */
+function persistPrefs(){ try{ localStorage.setItem(LS_PREFS,JSON.stringify({auto:$('#autoChk').checked, sl:state.sl, tl:state.tl})); }catch(e){} }
+function loadPrefs(){
+  try{
+    const p=JSON.parse(localStorage.getItem(LS_PREFS)||'{}');
+    if(typeof p.auto==='boolean') $('#autoChk').checked=p.auto;
+    if(p.sl) state.sl=p.sl;
+    if(p.tl) state.tl=p.tl;
+    syncLangUI();
+  }catch(e){}
+}
+
+/* ---------- 计数 ---------- */
+function updateCount(){ $('#charCount').textContent=$('#input').value.length+' / 5000'; }
+
+/* ---------- UI 绑定 ---------- */
+function bindUI(){
+  $('#themeBtn').onclick=()=>{ const cur=document.documentElement.getAttribute('data-theme'); applyTheme(cur==='dark'?'light':'dark'); };
+  $('#srcTrigger').onclick=(e)=>{ e.stopPropagation(); openMenu('src'); };
+  $('#dstTrigger').onclick=(e)=>{ e.stopPropagation(); openMenu('dst'); };
+  $('#swapBtn').onclick=swapLangs;
+  $('#translateBtn').onclick=doTranslate;
+  $('#clearBtn').onclick=()=>{ $('#input').value=''; $('#output').textContent=''; $('#srcBadge').textContent=''; updateCount(); $('#input').focus(); };
+  $('#pasteBtn').onclick=async()=>{
+    try{ const t=await navigator.clipboard.readText(); const ta=$('#input'); ta.value=(ta.value?ta.value+'\n':'')+t; updateCount(); if($('#autoChk').checked) scheduleTranslate(); }
+    catch(e){ toast('无法读取剪贴板，请手动粘贴'); }
+  };
+  $('#copyBtn').onclick=()=>copyText($('#output').textContent);
+  $('#speakSrcBtn').onclick=()=>speak($('#input').value,state.sl);
+  $('#speakDstBtn').onclick=()=>speak($('#output').textContent,state.tl);
+  $('#input').addEventListener('input',()=>{ updateCount(); if($('#autoChk').checked) scheduleTranslate(); });
+  $('#input').addEventListener('keydown',(e)=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){ e.preventDefault(); doTranslate(); } });
+  $('#autoChk').onchange=persistPrefs;
+  $$('.chip').forEach(c=>{ c.onclick=()=>{ $('#input').value=c.dataset.ph; updateCount(); if($('#autoChk').checked) scheduleTranslate(); }; });
+  $('#histToggle').onclick=()=>{ const box=$('#histList'); if(box.hidden){ renderHistory(); box.hidden=false; $('#histToggle').textContent='收起'; } else { closeHist(); } };
+  $('#histClear').onclick=()=>{ if(typeof confirm==='function' && !confirm('确定清空全部历史记录？')) return; try{ localStorage.removeItem(LS_HIST); }catch(e){} renderHistory(); toast('已清空历史'); };
+  document.addEventListener('click',()=>closeMenus());
+}
+function closeHist(){ $('#histList').hidden=true; $('#histToggle').textContent='展开'; }
+
+/* ---------- 初始化 ---------- */
+function init(){
+  initTheme();
+  buildMenu('src'); buildMenu('dst');
+  loadPrefs();
+  bindUI();
+  updateCount();
+}
+init();
+
+/* 暴露纯函数供测试 */
+if(typeof window!=='undefined'){
+  window.TEST={ state, swapLangs, libreCode, saveHistory, loadHistory, langByCode, AUTO, LANGS };
+}
+</script>
+</body>
+</html>

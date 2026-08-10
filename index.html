@@ -39,6 +39,7 @@
                      radial-gradient(1000px 560px at 100% 0%,rgba(94,92,230,.10),transparent 55%);
     background-attachment:fixed;
     transition:background-color .4s ease,color .4s ease;
+    scroll-behavior:smooth;
   }
   a{color:inherit;text-decoration:none;}
   button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
@@ -90,6 +91,13 @@
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
   }
   .hero p.lead{margin:18px auto 0; max-width:560px; font-size:clamp(15px,2.4vw,18px); color:var(--muted);}
+  .hero > *{ animation:heroIn .7s cubic-bezier(.2,.7,.3,1) both; }
+  @keyframes heroIn{ from{opacity:0; transform:translateY(18px);} to{opacity:1; transform:none;} }
+  .hero .eyebrow{animation-delay:.02s}
+  .hero h2{animation-delay:.08s}
+  .hero p.lead{animation-delay:.14s}
+  .hero .stats{animation-delay:.2s}
+  .hero .search-wrap{animation-delay:.26s}
   .stats{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:26px;}
   .stat{
     display:inline-flex; align-items:center; gap:8px; padding:8px 15px; border-radius:999px;
@@ -132,13 +140,19 @@
     padding:22px; border-radius:var(--radius); background:var(--card);
     border:1px solid var(--line); box-shadow:var(--shadow);
     transition:transform .22s cubic-bezier(.2,.7,.3,1),box-shadow .22s ease,border-color .22s ease;
-    overflow:hidden;
+    overflow:hidden; will-change:transform;
+    animation:cardIn .5s cubic-bezier(.2,.7,.3,1) both;
+    animation-delay:calc(var(--i,0) * 38ms);
   }
+  @keyframes cardIn{ from{opacity:0; transform:translateY(14px) scale(.985);} to{opacity:1; transform:none;} }
+  .card:focus-visible{ outline:none; border-color:color-mix(in srgb,var(--accent) 60%,transparent);
+    box-shadow:var(--shadow-lg),0 0 0 3px color-mix(in srgb,var(--accent) 50%,transparent); }
   .card::before{content:""; position:absolute; inset:0; border-radius:inherit; padding:1px;
     background:var(--grad); -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
     -webkit-mask-composite:xor; mask-composite:exclude; opacity:0; transition:opacity .25s ease; pointer-events:none;}
   .card:hover{transform:translateY(-6px); box-shadow:var(--shadow-lg);}
   .card:hover::before{opacity:1;}
+  .card:active{transform:translateY(-2px) scale(.992);}
   .card .icon{
     width:54px; height:54px; border-radius:15px; display:grid; place-items:center; flex:0 0 auto;
     box-shadow:0 8px 20px rgba(0,0,0,.16); transition:transform .25s ease;
@@ -179,23 +193,31 @@
     .grid{grid-template-columns:1fr; gap:16px;}
     .ghost-btn span.lbl{display:none;}
     .ghost-btn{padding:9px;}
+    .filters{flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start; gap:8px; padding-bottom:6px; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+    .filters::-webkit-scrollbar{display:none;}
+    .pill{flex:0 0 auto;}
   }
 
   /* ===== 访问统计（基础公开数据 + 入口） ===== */
   .stats-fab{
     position:fixed; right:18px; bottom:18px; z-index:60;
     width:52px; height:52px; border-radius:50%;
-    background:var(--grad); color:#fff; font-size:24px;
+    background:var(--grad); color:#fff;
     display:grid; place-items:center; text-decoration:none;
     box-shadow:0 8px 24px rgba(10,132,255,.4);
     transition:transform .2s ease, box-shadow .2s ease;
   }
+  .stats-fab svg{width:24px;height:24px;}
   .stats-fab:hover{ transform:scale(1.08) rotate(8deg); box-shadow:0 12px 32px rgba(10,132,255,.5); }
   .stats-fab:active{ transform:scale(.96); }
   .data-foot{ text-align:center; margin-top:18px; font-size:14px; }
   .data-foot a{ color:var(--accent); font-weight:600; text-decoration:none; }
   .data-foot a:hover{ text-decoration:underline; }
   @media (max-width:560px){ .stats-fab{ right:14px; bottom:14px; } }
+  @media (prefers-reduced-motion:reduce){
+    .card{animation:none;}
+    .hero > *{animation:none;}
+  }
 </style>
 </head>
 <body>
@@ -254,11 +276,11 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l7 3v6c0 5-3 8-7 11-4-3-7-6-7-11V5z"/><path d="M9 12l2 2 4-4"/></svg>
     所有工具均在你的设备本地运行 · 图片与数据不会上传任何服务器
   </div>
-  <div style="margin-top:12px;">双击任意工具即可在浏览器中打开使用 · 单 HTML 文件，可离线部署</div>
+  <div style="margin-top:12px;">点击任意工具卡片即可在新标签页打开使用 · 单 HTML 文件，可离线部署</div>
   <div class="data-foot"><a href="stats.html">📊 查看我的完整访问统计 →</a></div>
 </footer>
 
-<a class="stats-fab" id="statsFab" href="stats.html" title="查看我的完整访问统计">📊</a>
+<a class="stats-fab" id="statsFab" href="stats.html" title="查看我的完整访问统计" aria-label="查看我的完整访问统计"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg></a>
 
 <script>
 /* ============================================================
@@ -303,6 +325,8 @@ const TOOLS = [
     desc:"公平随机抽奖，支持多奖池、中奖查询与导出。", tags:["抽奖","公平","多池","活动"] },
   { id:"long",          file:"long.html",           title:"长视频文字摘要辅助", cat:"ai",
     desc:"辅助提取长视频文字要点并整理成摘要。", tags:["摘要","长视频","整理","AI"] },
+  { id:"translate",     file:"translate.html",      title:"极速翻译",           cat:"ai",
+    desc:"免费多语种在线翻译：对接 MyMemory / Google / LibreTranslate 多源兜底，21 种语言 + 自动检测；源目标一键交换、朗读、复制、历史记录、自动翻译与明暗主题，纯本地处理。", tags:["翻译","多语种","语言","在线","实时","离线"] },
   { id:"rmb",           file:"rmb-converter.html",   title:"人民币大小写转换",   cat:"finance",
     desc:"财务规范金额大写双向转换、批量处理与不规范写法提醒。", tags:["人民币","大写","财务","批量"] },
   { id:"fx",            file:"fx.html",              title:"实时汇率换算",       cat:"finance",
@@ -334,6 +358,7 @@ const GLYPHS = {
   "pomodoro":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9.5V13l3 2"/><path d="M9 3.5c0-1 1-1.7 2-1.3.8.3 1.2 1.2 1 2.1-.2.9-1 1.5-1.8 1.3-.9-.2-1.3-1-1.2-2.1z"/><path d="M10.5 3.2c0-1 1.3-1.3 2-1 .6.3.8 1 .5 1.6-.3.7-1.2.9-1.8.6-.5-.3-.7-1-.7-1.2z"/></svg>',
   "magictower":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V5l5-3 5 3v16"/><path d="M7 21h10M10 8h1M13 8h1M10 12h1M13 12h1M10 16h1M13 16h1"/></svg>',
   "fx":'<svg viewBox="0 0 24 24"><text x="12" y="18" font-size="16" text-anchor="middle" fill="white" font-weight="700" font-family="-apple-system,Segoe UI,sans-serif">$</text></svg>',
+  "translate":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7M7.5 5v1.5c0 3-1.8 5.5-4 7M14 20l4-9 4 9M15.5 17h5"/><path d="M4 5h7" /></svg>',
 };
 const CAT_GLYPH = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>';
 
@@ -357,10 +382,10 @@ function renderFilters(){
   });
 }
 
-function cardHTML(t){
+function cardHTML(t,i){
   const g = CATEGORIES[t.cat] || { label:"工具", grad:"var(--grad)" };
   const tags = t.tags.map(x=>'<span class="tag">'+esc(x)+'</span>').join("");
-  return '<a class="card" href="'+esc(t.file)+'" target="_blank" rel="noopener">'
+  return '<a class="card" style="--i:'+i+'" href="'+esc(t.file)+'" target="_blank" rel="noopener">'
     + '<div class="icon" style="background:'+g.grad+'">'+glyphFor(t)+'</div>'
     + '<div><h3>'+esc(t.title)+'</h3></div>'
     + '<div class="desc">'+esc(t.desc)+'</div>'
@@ -370,8 +395,8 @@ function cardHTML(t){
     + '</a>';
 }
 
-function moreCard(){
-  return '<div class="card more">'
+function moreCard(i){
+  return '<div class="card more" style="--i:'+i+'">'
     + '<div class="plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>'
     + '<h3>更多工具即将上线</h3>'
     + '<div class="desc">本索引可随工具增加随时扩展</div>'
@@ -386,8 +411,8 @@ function render(){
     const hay = (t.title+" "+t.desc+" "+t.tags.join(" ")).toLowerCase();
     return hay.indexOf(q)>=0;
   });
-  let html = list.map(cardHTML).join("");
-  if(state.cat==="all" && !q) html += moreCard();
+  let html = list.map((t,i)=>cardHTML(t,i)).join("");
+  if(state.cat==="all" && !q) html += moreCard(list.length);
   if(!list.length){
     html = '<div class="empty">'
       + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>'
