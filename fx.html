@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>实时汇率换算</title>
+<style>
+  :root{
+    --bg:#0d1326; --bg2:#121a33; --panel:#161f3d; --panel2:#1d2849; --line:#2a3760;
+    --text:#e8edff; --muted:#93a0c8;
+    --accent:#3bb6ff; --accent2:#6fd3ff; --accent-d:#1f8fd6;
+    --green:#2ecc71; --red:#ff5d73; --gold:#e6b54a;
+    --shadow:0 18px 48px rgba(0,0,0,.35); --shadow-soft:0 6px 18px rgba(0,0,0,.22);
+    --radius:16px;
+  }
+  [data-theme="light"]{
+    --bg:#eef1f7; --bg2:#f5f7fb; --panel:#ffffff; --panel2:#f1f3f9; --line:#dde3ef;
+    --text:#1a2238; --muted:#69739a;
+    --accent:#1086d6; --accent2:#2ba6f0; --accent-d:#0c6cad;
+    --green:#1f9d57; --red:#d83a52; --gold:#a9842f;
+    --shadow:0 16px 44px rgba(20,30,60,.14); --shadow-soft:0 6px 18px rgba(20,30,60,.09);
+  }
+  *{box-sizing:border-box}
+  html{overflow-x:hidden;-webkit-text-size-adjust:100%}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:var(--text); background:radial-gradient(1200px 600px at 80% -10%, #15244a, transparent),linear-gradient(160deg,var(--bg),var(--bg2));
+    min-height:100vh; padding:18px;
+  }
+  .wrap{max-width:720px; margin:0 auto;}
+  header{display:flex; align-items:center; gap:12px; margin-bottom:14px;}
+  .logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;box-shadow:var(--shadow-soft);}
+  header h1{font-size:20px;margin:0;font-weight:700;letter-spacing:.5px}
+  header .sub{font-size:12px;color:var(--muted);margin-top:2px}
+  .spacer{flex:1}
+  .icon-btn{width:40px;height:40px;border:none;border-radius:12px;background:var(--panel);color:var(--text);cursor:pointer;font-size:18px;box-shadow:var(--shadow-soft);transition:.15s}
+  .icon-btn:hover{background:var(--panel2)}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:14px}
+  .status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:14px;flex-wrap:wrap}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}
+  .dot.ok{background:var(--green)} .dot.err{background:var(--red)} .dot.wait{background:var(--gold)}
+  .status .refresh{cursor:pointer;margin-left:auto;padding:4px 10px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:12px}
+  .status .refresh:hover{background:var(--line)}
+
+  .conv{display:flex;flex-direction:column;gap:12px}
+  .side{background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;position:relative}
+  .side .row1{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .cur-box{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:6px 8px;cursor:pointer;min-width:118px}
+  .cur-flag{font-size:18px;line-height:1}
+  .cur-code{font-weight:700;font-size:14px}
+  .cur-box .caret{color:var(--muted);font-size:10px}
+  .lock-btn{margin-left:auto;width:34px;height:34px;border:none;border-radius:10px;background:var(--bg);border:1px solid var(--line);color:var(--muted);cursor:pointer;font-size:15px}
+  .lock-btn.on{color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent}
+  .amount{width:100%;background:transparent;border:none;color:var(--text);font-size:30px;font-weight:700;outline:none;letter-spacing:.5px}
+  .amount::placeholder{color:var(--muted)}
+  .rate-line{font-size:12px;color:var(--muted);margin-top:6px}
+
+  .swap-wrap{display:flex;justify-content:center;margin:-6px 0}
+  .swap{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--accent);font-size:20px;cursor:pointer;box-shadow:var(--shadow-soft);transition:.2s}
+  .swap:hover{transform:rotate(180deg);background:var(--panel2)}
+  .swap:active{transform:rotate(180deg) scale(.92)}
+
+  .quick{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .chip{padding:6px 12px;border-radius:20px;background:var(--panel2);border:1px solid var(--line);color:var(--text);font-size:12px;cursor:pointer}
+  .chip:hover{background:var(--line)}
+
+  .panel-title{font-size:14px;font-weight:700;margin:0 0 12px;display:flex;align-items:center;gap:8px}
+  .panel-title .t-line{flex:1;height:1px;background:var(--line)}
+
+  .hist{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow:auto}
+  .hist .item{display:flex;align-items:center;gap:8px;font-size:13px;padding:8px 10px;background:var(--panel2);border:1px solid var(--line);border-radius:10px}
+  .hist .item .amt{font-weight:700}
+  .hist .item .arrow{color:var(--muted)}
+  .hist .item .t{margin-left:auto;color:var(--muted);font-size:11px}
+  .hist .empty{color:var(--muted);font-size:13px;text-align:center;padding:18px}
+
+  .trend{width:100%;height:150px;display:block}
+
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(5,8,18,.6);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .overlay.show{display:flex}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px;width:100%;max-width:420px;max-height:84vh;overflow:auto}
+  .modal h2{margin:0 0 14px;font-size:18px}
+  .search{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:14px;outline:none;margin-bottom:12px}
+  .cur-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cur-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);cursor:pointer;font-size:13px}
+  .cur-item:hover{background:var(--line)}
+  .cur-item .c-code{font-weight:700}
+  .cur-item .c-name{color:var(--muted);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .actions{display:flex;gap:10px;margin-top:16px;justify-content:flex-end}
+  .btn{padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:14px;cursor:pointer;font-weight:600}
+  .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#fff}
+  .btn:hover{filter:brightness(1.05)}
+
+  .opt-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .opt-row:last-child{border-bottom:none}
+  .opt-row .desc{color:var(--muted);font-size:11px;margin-top:2px}
+  .opt-row .ctrl{margin-left:auto}
+  .toggle{width:46px;height:26px;border-radius:14px;background:var(--line);position:relative;cursor:pointer;transition:.2s;border:none}
+  .toggle.on{background:var(--accent)}
+  .toggle::after{content:"";position:absolute;width:20px;height:20px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.2s}
+  .toggle.on::after{left:23px}
+  .manual-box{margin-top:10px;display:none;flex-direction:column;gap:8px}
+  .manual-box.show{display:flex}
+  .manual-box input{padding:9px 11px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:14px;outline:none}
+  .note{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5}
+
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--panel);border:1px solid var(--line);color:var(--text);padding:11px 18px;border-radius:12px;box-shadow:var(--shadow);font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:99}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  footer{text-align:center;color:var(--muted);font-size:11px;margin-top:6px;line-height:1.6}
+  @media (max-width:520px){
+    header h1{font-size:18px}
+    .amount{font-size:26px}
+    .cur-box{min-width:104px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">💱</div>
+    <div>
+      <h1>实时汇率换算</h1>
+      <div class="sub">联网获取最新汇率 · 离线自动缓存 · 纯本地</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="btnTheme" title="切换主题">🌙</button>
+    <button class="icon-btn" id="btnSettings" title="设置">⚙️</button>
+  </header>
+
+  <div class="card">
+    <div class="status">
+      <span class="dot wait" id="statDot"></span>
+      <span id="statText">正在获取最新汇率…</span>
+      <span class="refresh" id="btnRefresh">↻ 刷新</span>
+    </div>
+
+    <div class="conv">
+      <div class="side">
+        <div class="row1">
+          <div class="cur-box" id="fromBox">
+            <span class="cur-flag" id="fromFlag">🇺🇸</span>
+            <span class="cur-code" id="fromCode">USD</span>
+            <span class="caret">▼</span>
+          </div>
+          <button class="lock-btn" id="lockFrom" title="固定此货币">🔓</button>
+        </div>
+        <input class="amount" id="fromAmt" inputmode="decimal" value="1" autocomplete="off">
+        <div class="rate-line" id="fromRate"></div>
+      </div>
+
+      <div class="swap-wrap">
+        <button class="swap" id="btnSwap" title="交换货币">⇅</button>
+      </div>
+
+      <div class="side">
+        <div class="row1">
+          <div class="cur-box" id="toBox">
+            <span class="cur-flag" id="toFlag">🇨🇳</span>
+            <span class="cur-code" id="toCode">CNY</span>
+            <span class="caret">▼</span>
+          </div>
+          <button class="lock-btn" id="lockTo" title="固定此货币">🔓</button>
+        </div>
+        <input class="amount" id="toAmt" inputmode="decimal" value="0" autocomplete="off" readonly>
+        <div class="rate-line" id="toRate"></div>
+      </div>
+    </div>
+
+    <div class="quick" id="quick"></div>
+  </div>
+
+  <div class="card">
+    <div class="panel-title">📈 近期走势 <span class="t-line"></span> <span id="trendInfo" style="font-size:11px;color:var(--muted);font-weight:400"></span></div>
+    <canvas class="trend" id="trend"></canvas>
+    <div class="note" id="trendNote">走势为近 30 天参考（需联网，离线/失败时不显示）。</div>
+  </div>
+
+  <div class="card">
+    <div class="panel-title">🕘 换算记录 <span class="t-line"></span> <span style="font-size:11px;color:var(--muted);font-weight:400;cursor:pointer" id="clearHist">清除</span></div>
+    <div class="hist" id="hist"><div class="empty">暂无换算记录</div></div>
+  </div>
+
+  <footer>
+    数据来源：货币汇率 API（基准 USD）+ 央行参考汇率兜底 · 仅供参考，交易以银行实际报价为准<br>
+    本地工具 · 零上传 · 自动缓存 · © 工具箱
+  </footer>
+</div>
+
+<!-- currency picker -->
+<div class="overlay" id="curPick">
+  <div class="modal">
+    <h2 id="pickTitle">选择货币</h2>
+    <input class="search" id="curSearch" placeholder="搜索代码或名称，如 CNY / 人民币">
+    <div class="cur-list" id="curList"></div>
+  </div>
+</div>
+
+<!-- settings -->
+<div class="overlay" id="settings">
+  <div class="modal">
+    <h2>设置</h2>
+    <div class="opt-row">
+      <div>
+        <div>自动刷新汇率</div>
+        <div class="desc">每 5 分钟后台自动更新一次</div>
+      </div>
+      <button class="toggle ctrl" id="tgAuto"></button>
+    </div>
+    <div class="opt-row">
+      <div>
+        <div>离线手写汇率</div>
+        <div class="desc">断网时启用下方手动汇率（1 USD = ?），实时获取成功时自动失效</div>
+      </div>
+      <button class="toggle ctrl" id="tgManual"></button>
+    </div>
+    <div class="manual-box" id="manualBox">
+      <input id="manualUSD" inputmode="decimal" placeholder="例如 1 USD = 7.18 CNY，请填写对应人民币值">
+      <div class="note">仅作离线兜底。开启「离线手写」后，USD→CNY 使用此值推算其他货币（按内置相对汇率）。</div>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btnSettingsClose">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== 货币元数据 ===================== */
+const CURRENCIES = {
+  USD:{name:"美元",flag:"🇺🇸"}, CNY:{name:"人民币",flag:"🇨🇳"}, EUR:{name:"欧元",flag:"🇪🇺"},
+  JPY:{name:"日元",flag:"🇯🇵"}, GBP:{name:"英镑",flag:"🇬🇧"}, HKD:{name:"港币",flag:"🇭🇰"},
+  TWD:{name:"新台币",flag:"🇹🇼"}, KRW:{name:"韩元",flag:"🇰🇷"}, AUD:{name:"澳元",flag:"🇦🇺"},
+  CAD:{name:"加元",flag:"🇨🇦"}, CHF:{name:"瑞士法郎",flag:"🇨🇭"}, SGD:{name:"新加坡元",flag:"🇸🇬"},
+  THB:{name:"泰铢",flag:"🇹🇭"}, MYR:{name:"马来西亚林吉特",flag:"🇲🇾"}, RUB:{name:"卢布",flag:"🇷🇺"},
+  INR:{name:"印度卢比",flag:"🇮🇳"}, NZD:{name:"新西兰元",flag:"🇳🇿"}, PHP:{name:"菲律宾比索",flag:"🇵🇭"},
+  VND:{name:"越南盾",flag:"🇻🇳"}, BRL:{name:"巴西雷亚尔",flag:"🇧🇷"}, ZAR:{name:"南非兰特",flag:"🇿🇦"},
+  MXN:{name:"墨西哥比索",flag:"🇲🇽"}, TRY:{name:"土耳其里拉",flag:"🇹🇷"}, AED:{name:"阿联酋迪拉姆",flag:"🇦🇪"},
+  SAR:{name:"沙特里亚尔",flag:"🇸🇦"}, SEK:{name:"瑞典克朗",flag:"🇸🇪"}, NOK:{name:"挪威克朗",flag:"🇳🇴"},
+  DKK:{name:"丹麦克朗",flag:"🇩🇰"}, PLN:{name:"波兰兹罗提",flag:"🇵🇱"}, IDR:{name:"印尼盾",flag:"🇮🇩"},
+  CZK:{name:"捷克克朗",flag:"🇨🇿"}, HUF:{name:"匈牙利福林",flag:"🇭🇺"}, ILS:{name:"以色列谢克尔",flag:"🇮🇱"}
+};
+const HOT = ["USD","CNY","EUR","JPY","GBP","HKD","TWD","KRW","AUD","CAD","SGD","THB"];
+
+/* ===================== 状态 ===================== */
+const SAVE_KEY = "fx-state-v1";
+const CACHE_KEY = "fx-rates-cache-v1";
+let rates = {};            // USD -> amount
+let rateMeta = {updatedAt:0, source:"", base:"USD"};
+let state = {
+  from:"USD", to:"CNY", fromAmt:"1",
+  lockFrom:false, lockTo:false,
+  auto:true, manual:false, manualUSD:"7.18",
+  theme:"dark"
+};
+let history = [];
+let pickTarget = "from";
+
+/* ===================== 工具 ===================== */
+function $(id){return document.getElementById(id);}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function toast(msg){
+  const t=$("toast"); if(!t) return; t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove("show"),2200);
+}
+function fmtNum(n, max){
+  if(!isFinite(n)) return "0";
+  const m = (max==null)?8:max;
+  let s;
+  if(Math.abs(n)>=1e9) s = n.toExponential(3);
+  else {
+    const dp = Math.abs(n)<1 ? 6 : (Math.abs(n)<100?4:2);
+    s = n.toLocaleString("en-US",{maximumFractionDigits:dp, minimumFractionDigits:0});
+  }
+  return s;
+}
+function parseAmt(v){
+  if(typeof v==="number") return v;
+  const s=String(v).replace(/[, ]/g,"").replace(/[^0-9.\-]/g,"");
+  const n=parseFloat(s);
+  return isFinite(n)?n:0;
+}
+function flagOf(c){return (CURRENCIES[c]&&CURRENCIES[c].flag)||"🏳️";}
+function nameOf(c){return (CURRENCIES[c]&&CURRENCIES[c].name)||c;}
+
+/* 交叉汇率: 1 单位 a = ? 单位 b */
+function rateAB(a,b){
+  if(!rates[a]||!rates[b]) return null;
+  return rates[b]/rates[a];
+}
+
+/* ===================== 渲染 ===================== */
+function render(){
+  $("fromFlag").textContent=flagOf(state.from);
+  $("fromCode").textContent=state.from;
+  $("toFlag").textContent=flagOf(state.to);
+  $("toCode").textContent=state.to;
+  $("lockFrom").classList.toggle("on",state.lockFrom);
+  $("lockFrom").textContent = state.lockFrom?"🔒":"🔓";
+  $("lockTo").classList.toggle("on",state.lockTo);
+  $("lockTo").textContent = state.lockTo?"🔒":"🔓";
+  compute();
+  renderQuick();
+  renderHist();
+}
+function compute(){
+  const amt = parseAmt(state.fromAmt);
+  const r = rateAB(state.from, state.to);
+  if(r==null){
+    $("toAmt").value="—";
+    $("fromRate").textContent="汇率不可用（离线且无缓存）";
+    $("toRate").textContent="";
+    return;
+  }
+  const out = amt*r;
+  $("toAmt").value = fmtNum(out);
+  const inv = 1/r;
+  $("fromRate").textContent = "1 "+state.from+" = "+fmtNum(r)+" "+state.to;
+  $("toRate").textContent = "1 "+state.to+" = "+fmtNum(inv)+" "+state.from;
+}
+function renderQuick(){
+  const box=$("quick"); box.innerHTML="";
+  HOT.filter(c=>c!==state.from && c!==state.to).slice(0,8).forEach(c=>{
+    const r = rateAB(state.from, c);
+    const chip=document.createElement("div");
+    chip.className="chip";
+    chip.textContent = r==null? c : (fmtNum(r)+" "+c);
+    chip.title="以 1 "+state.from+" 查看兑换 "+c;
+    chip.onclick=()=>{ setTo(c); };
+    box.appendChild(chip);
+  });
+}
+function renderHist(){
+  const box=$("hist");
+  if(!history.length){ box.innerHTML='<div class="empty">暂无换算记录</div>'; return; }
+  box.innerHTML="";
+  history.slice(0,30).forEach(h=>{
+    const d=document.createElement("div");
+    d.className="item";
+    d.innerHTML='<span class="amt">'+fmtNum(h.amt)+' '+h.from+'</span>'+
+      '<span class="arrow">→</span>'+
+      '<span class="amt">'+fmtNum(h.out)+' '+h.to+'</span>'+
+      '<span class="t">'+(h.rate?('@'+fmtNum(h.rate)):'')+' · '+h.time+'</span>';
+    box.appendChild(d);
+  });
+}
+function pushHistory(){
+  const amt=parseAmt(state.fromAmt);
+  const r=rateAB(state.from,state.to);
+  if(r==null) return;
+  const out=amt*r;
+  const t=new Date();
+  const hh=String(t.getHours()).padStart(2,"0"), mm=String(t.getMinutes()).padStart(2,"0");
+  history.unshift({amt,out,from:state.from,to:state.to,rate:r,time:hh+":"+mm});
+  if(history.length>50) history.length=50;
+  save();
+}
+
+/* ===================== 货币切换 ===================== */
+function otherCur(except){
+  if(except!=="USD") return "USD";
+  return "CNY";
+}
+function setFrom(c){
+  if(c===state.to){
+    if(state.lockTo){ // to 被固定：from 不能与之相同，改选替身
+      state.from = otherCur(state.to);
+    } else { // to 未固定：交换，保持两币不同
+      state.to = state.from; state.from = c;
+    }
+  } else {
+    state.from = c;
+  }
+  render();
+}
+function setTo(c){
+  if(c===state.from){
+    if(state.lockFrom){ // from 被固定：to 不能与之相同，改选替身
+      state.to = otherCur(state.from);
+    } else {
+      state.from = state.to; state.to = c;
+    }
+  } else {
+    state.to = c;
+  }
+  render();
+}
+function swap(){
+  const f=state.from, t=state.to;
+  state.from=t; state.to=f;
+  render();
+}
+
+/* ===================== 货币选择弹窗 ===================== */
+function openPicker(target){
+  pickTarget=target;
+  $("pickTitle").textContent = "选择"+(target==="from"?"源":"目标")+"货币";
+  renderCurList("");
+  $("curPick").classList.add("show");
+  setTimeout(()=>$("curSearch").focus(),50);
+}
+function renderCurList(q){
+  const list=$("curList"); list.innerHTML="";
+  q=(q||"").trim().toLowerCase();
+  const keys=Object.keys(CURRENCIES).filter(c=>{
+    if(!q) return true;
+    return c.toLowerCase().includes(q) || nameOf(c).toLowerCase().includes(q);
+  });
+  keys.forEach(c=>{
+    const d=document.createElement("div");
+    d.className="cur-item";
+    d.innerHTML='<span style="font-size:18px">'+flagOf(c)+'</span>'+
+      '<span class="c-code">'+c+'</span>'+
+      '<span class="c-name">'+nameOf(c)+'</span>';
+    d.onclick=()=>{
+      if(pickTarget==="from") setFrom(c); else setTo(c);
+      $("curPick").classList.remove("show");
+    };
+    list.appendChild(d);
+  });
+  if(!keys.length){ list.innerHTML='<div style="color:var(--muted);grid-column:1/3;text-align:center;padding:14px">未找到匹配的货币</div>'; }
+}
+
+/* ===================== 汇率获取 ===================== */
+async function fetchRates(){
+  setStatus("wait","正在获取最新汇率…");
+  // 1) 在线 USD 基准
+  try{
+    const res=await fetch("https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json",{cache:"no-store"});
+    if(res.ok){
+      const j=await res.json();
+      const usd=j.usd; if(usd && usd.usd){
+        rates={}; for(const k in usd) rates[k.toUpperCase()]=usd[k];
+        rates.USD=1;
+        rateMeta={updatedAt:Date.now(), source:"在线 · 货币汇率 API", base:"USD"};
+        cacheRates(); applyRatesReady();
+        return;
+      }
+    }
+  }catch(e){ /* 继续兜底 */ }
+
+  // 2) 在线兜底 open.er-api
+  try{
+    const res=await fetch("https://open.er-api.com/v6/latest/USD",{cache:"no-store"});
+    if(res.ok){
+      const j=await res.json();
+      if(j&&j.rates){
+        rates={}; for(const k in j.rates) rates[k.toUpperCase()]=j.rates[k];
+        rates.USD=1;
+        rateMeta={updatedAt:Date.now(), source:"在线 · ER-API", base:"USD"};
+        cacheRates(); applyRatesReady();
+        return;
+      }
+    }
+  }catch(e){ /* 继续 */ }
+
+  // 3) 本地缓存
+  const cached=loadCache();
+  if(cached && cached.rates && cached.rates.USD){
+    rates=cached.rates; rateMeta={updatedAt:cached.updatedAt, source:"本地缓存（离线）", base:"USD"};
+    applyRatesReady(false);
+    return;
+  }
+
+  // 4) 离线手写兜底
+  if(state.manual){
+    rates=buildManualRates();
+    rateMeta={updatedAt:Date.now(), source:"离线手写汇率", base:"USD"};
+    applyRatesReady(false);
+    return;
+  }
+  setStatus("err","无法获取汇率：当前离线且无缓存。可在「设置 → 离线手写汇率」中手动填写。");
+}
+function buildManualRates(){
+  const r={USD:1};
+  const cny=parseAmt(state.manualUSD)||7.18;
+  // 以内置近似 USD 相对权重 + CNY 手写锚定推算
+  const w={CNY:cny, EUR:cny/1.08, JPY:cny/0.0068, GBP:cny/1.27, HKD:cny/0.128, TWD:cny/0.031,
+    KRW:cny/0.0053, AUD:cny/0.66, CAD:cny/0.73, CHF:cny/1.12, SGD:cny/0.74, THB:cny/0.20,
+    MYR:cny/0.23, RUB:cny/0.078, INR:cny/0.086, NZD:cny/0.61, PHP:cny/0.12, VND:cny/0.00029,
+    BRL:cny/1.36, ZAR:cny/0.39, MXN:cny/0.42, TRY:cny/0.21, AED:cny/1.95, SAR:cny/1.91,
+    SEK:cny/0.68, NOK:cny/0.68, DKK:cny/0.146, PLN:cny/1.80, IDR:cny/0.00045, CZK:cny/0.31,
+    HUF:cny/0.020, ILS:cny/2.0};
+  for(const k in w) r[k]=w[k];
+  return r;
+}
+function applyRatesReady(online){
+  if(online!==false){
+    setStatus("ok","汇率已更新 · "+rateMeta.source+" · "+new Date(rateMeta.updatedAt).toLocaleString("zh-CN",{hour12:false}));
+  } else {
+    setStatus(rateMeta.source.includes("缓存")?"wait":"err","（"+rateMeta.source+"）· 数据为 "+new Date(rateMeta.updatedAt).toLocaleString("zh-CN",{hour12:false}));
+  }
+  render();
+  loadTrend();
+}
+function setStatus(kind,text){
+  const dot=$("statDot");
+  dot.className="dot "+(kind||"wait");
+  $("statText").textContent=text;
+}
+function cacheRates(){
+  try{ localStorage.setItem(CACHE_KEY, JSON.stringify({rates, updatedAt:rateMeta.updatedAt})); }catch(e){}
+}
+function loadCache(){
+  try{ const s=localStorage.getItem(CACHE_KEY); return s?JSON.parse(s):null; }catch(e){ return null; }
+}
+
+/* ===================== 走势 ===================== */
+async function loadTrend(){
+  const a=state.from, b=state.to;
+  $("trendInfo").textContent=a+" → "+b;
+  try{
+    const res=await fetch("https://api.frankfurter.app/2024-01-01..?from="+a+"&to="+b,{});
+    // 若当前年已变，使用动态区间更稳妥：
+  }catch(e){}
+  // 使用动态近 30 天区间
+  const end=new Date();
+  const start=new Date(end.getTime()-29*86400000);
+  const fmt=d=>d.toISOString().slice(0,10);
+  try{
+    const res=await fetch("https://api.frankfurter.app/"+fmt(start)+".."+fmt(end)+"?from="+a+"&to="+b,{cache:"no-store"});
+    if(res.ok){
+      const j=await res.json();
+      if(j&&j.rates){
+        const dates=Object.keys(j.rates).sort();
+        const series=dates.map(d=>j.rates[d][b]);
+        drawTrend(dates, series, a, b);
+        $("trendNote").textContent="近 30 天走势（来源 Frankfurter，需联网）。";
+        return;
+      }
+    }
+  }catch(e){}
+  drawTrend(null);
+  $("trendNote").textContent="走势数据获取失败（需联网），换算功能不受影响。";
+}
+function drawTrend(dates, series, a, b){
+  const cv=$("trend"); if(!cv) return;
+  const ctx=cv.getContext&&cv.getContext("2d"); if(!ctx) return;
+  const dpr=window.devicePixelRatio||1;
+  const w=cv.clientWidth||640, h=cv.clientHeight||150;
+  cv.width=w*dpr; cv.height=h*dpr; ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,w,h);
+  if(!dates||series.length<2){ ctx.fillStyle=getCss("--muted"); ctx.font="13px sans-serif"; ctx.fillText("暂无可显示走势",12,30); return; }
+  const min=Math.min(...series), max=Math.max(...series);
+  const pad=18, gw=w-pad*2, gh=h-pad*2;
+  const x=i=>pad+gw*i/(series.length-1);
+  const y=v=>pad+gh*(1-(v-min)/(max-min||1));
+  // grid
+  ctx.strokeStyle=getCss("--line"); ctx.lineWidth=1;
+  for(let g=0;g<=3;g++){ const yy=pad+gh*g/3; ctx.beginPath(); ctx.moveTo(pad,yy); ctx.lineTo(w-pad,yy); ctx.stroke(); }
+  // area
+  const grad=ctx.createLinearGradient(0,pad,0,h);
+  grad.addColorStop(0,getCss("--accent")+"55"); grad.addColorStop(1,getCss("--accent")+"00");
+  ctx.beginPath(); ctx.moveTo(x(0),y(series[0]));
+  series.forEach((v,i)=>ctx.lineTo(x(i),y(v)));
+  ctx.lineTo(x(series.length-1),h-pad); ctx.lineTo(x(0),h-pad); ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
+  // line
+  ctx.beginPath(); ctx.moveTo(x(0),y(series[0]));
+  series.forEach((v,i)=>ctx.lineTo(x(i),y(v)));
+  ctx.strokeStyle=getCss("--accent"); ctx.lineWidth=2; ctx.stroke();
+  // last point
+  ctx.fillStyle=getCss("--accent"); ctx.beginPath(); ctx.arc(x(series.length-1),y(series[series.length-1]),3,0,7); ctx.fill();
+  // labels
+  ctx.fillStyle=getCss("--muted"); ctx.font="11px sans-serif";
+  ctx.fillText(fmtAxis(dates[0]),pad,12);
+  ctx.fillText(fmtAxis(dates[dates.length-1]),w-pad-46,12);
+  ctx.fillText(fmtNum(min),pad,h-4);
+  ctx.fillText(fmtNum(max),w-pad-46,h-4);
+}
+function fmtAxis(d){ return d.slice(5); } // MM-DD
+function getCss(v){ const s=getComputedStyle(document.documentElement).getPropertyValue(v); return s&&s.trim()?s.trim():"#888"; }
+
+/* ===================== 设置 / 主题 / 持久化 ===================== */
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme", state.theme);
+  $("btnTheme").textContent = state.theme==="dark"?"🌙":"☀️";
+}
+function save(){
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify({state, history}));
+  }catch(e){}
+}
+function load(){
+  try{
+    const s=localStorage.getItem(SAVE_KEY); if(!s) return;
+    const o=JSON.parse(s);
+    if(o.state) Object.assign(state, o.state);
+    if(Array.isArray(o.history)) history=o.history;
+  }catch(e){}
+}
+function syncSettingsUI(){
+  $("tgAuto").classList.toggle("on",state.auto);
+  $("tgManual").classList.toggle("on",state.manual);
+  $("manualBox").classList.toggle("show",state.manual);
+  $("manualUSD").value=state.manualUSD;
+}
+
+/* ===================== 自动刷新 ===================== */
+let autoTimer=null;
+function startAuto(){
+  clearInterval(autoTimer);
+  if(state.auto) autoTimer=setInterval(()=>{ fetchRates(); }, 5*60*1000);
+}
+
+/* ===================== 事件绑定 ===================== */
+function bindUI(){
+  $("btnTheme").onclick=()=>{ state.theme=state.theme==="dark"?"light":"dark"; applyTheme(); save(); };
+  $("btnSettings").onclick=()=>{ syncSettingsUI(); $("settings").classList.add("show"); };
+  $("btnSettingsClose").onclick=()=>$("settings").classList.remove("show");
+
+  $("fromBox").onclick=()=>openPicker("from");
+  $("toBox").onclick=()=>openPicker("to");
+  $("lockFrom").onclick=()=>{ state.lockFrom=!state.lockFrom; render(); save(); };
+  $("lockTo").onclick=()=>{ state.lockTo=!state.lockTo; render(); save(); };
+  $("btnSwap").onclick=()=>swap();
+
+  $("fromAmt").addEventListener("input",(e)=>{
+    state.fromAmt=e.target.value;
+    compute();
+  });
+  $("fromAmt").addEventListener("change",()=>{ pushHistory(); save(); });
+
+  $("btnRefresh").onclick=()=>{ fetchRates(); };
+
+  $("curSearch").addEventListener("input",(e)=>renderCurList(e.target.value));
+  $("curPick").addEventListener("click",(e)=>{ if(e.target.id==="curPick") $("curPick").classList.remove("show"); });
+
+  $("clearHist").onclick=()=>{ history=[]; renderHist(); save(); toast("已清除换算记录"); };
+
+  $("tgAuto").onclick=()=>{ state.auto=!state.auto; $("tgAuto").classList.toggle("on",state.auto); startAuto(); save(); };
+  $("tgManual").onclick=()=>{ state.manual=!state.manual; $("tgManual").classList.toggle("on",state.manual); $("manualBox").classList.toggle("show",state.manual); save(); fetchRates(); };
+  $("manualUSD").addEventListener("input",(e)=>{ state.manualUSD=e.target.value; save(); if(state.manual){ rates=buildManualRates(); rateMeta={updatedAt:Date.now(),source:"离线手写汇率",base:"USD"}; setStatus("wait","离线手写汇率已更新"); render(); } });
+}
+
+/* ===================== 初始化 ===================== */
+function init(){
+  load();
+  applyTheme();
+  bindUI();
+  $('fromAmt').value = state.fromAmt;
+  render();
+  startAuto();
+  fetchRates();
+}
+
+if(typeof document!=="undefined" && document.getElementById){
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+}
+</script>
+</body>
+</html>

@@ -281,6 +281,7 @@ const CATEGORIES = {
   finance:  { label:"财务工具", grad:"linear-gradient(135deg,#0e9d72,#15b8a6)" },
   tooling:  { label:"实用工具", grad:"linear-gradient(135deg,#ff9f0a,#ff5e3a)" },
   edu:      { label:"教育学习", grad:"linear-gradient(135deg,#ff2d55,#ff9500)" },
+  game:     { label:"休闲游戏", grad:"linear-gradient(135deg,#ff9f0a,#ff375f)" },
 };
 
 const TOOLS = [
@@ -304,12 +305,16 @@ const TOOLS = [
     desc:"辅助提取长视频文字要点并整理成摘要。", tags:["摘要","长视频","整理","AI"] },
   { id:"rmb",           file:"rmb-converter.html",   title:"人民币大小写转换",   cat:"finance",
     desc:"财务规范金额大写双向转换、批量处理与不规范写法提醒。", tags:["人民币","大写","财务","批量"] },
+  { id:"fx",            file:"fx.html",              title:"实时汇率换算",       cat:"finance",
+    desc:"联网获取最新汇率（USD 基准，含兜底与本地缓存），任意货币交叉换算、固定/锁定某侧货币、一键交换、近 30 天走势图与换算记录；离线可手写汇率兜底，明暗主题自适应。", tags:["汇率","换算","货币","走势","离线","实时"] },
   { id:"html2exe",      file:"html2exe.html",        title:"HTML 转 EXE 打包",   cat:"tooling",
     desc:"把网页工具打包成独立 .exe。零插件、不向磁盘释放任何 DLL、纯本地离线生成；可自定义标题/图标/尺寸/无边框/置顶/单实例/缩放/UA/禁用右键与调试等。", tags:["打包","EXE","部署","离线","自定义"] },
   { id:"pinyin",        file:"pinyin.html",           title:"汉字拼音标注工具",   cat:"edu",
     desc:"标准四声注音（ā á ǎ à）、轻声识别、多音字可弹窗选择或手动修改；5 种排版一键切换，直接复制进 Word / WPS；纯本地离线处理，不上传。", tags:["拼音","注音","多音字","备课","识字","教育"] },
   { id:"pomodoro",      file:"pomodoro.html",          title:"番茄专注计时器",     cat:"prod",
     desc:"标准番茄工作法计时 + 任务清单 + 专注统计；专注/短休/长休一键切换、时长全自定义、可全屏投屏；音效与桌面通知提醒，纯本地离线、数据存本机。", tags:["番茄","专注","计时","任务","统计","效率","投屏"] },
+  { id:"magictower",    file:"magictower.html",         title:"极简魔塔 · 像素地牢冒险", cat:"game",
+    desc:"复古像素文字 RPG：爬塔、打怪、吃宝石、捡钥匙、闯关；回合制自动战斗、商店养成、成就系统与多套皮肤；10~100 层难度可选，纯本地离线存档。", tags:["魔塔","RPG","地牢","闯关","像素","离线","成就"] },
 ];
 
 /* 图标（白色描边，置于分类渐变方块上）。id 命中则用专属图标，否则用分类图标 */
@@ -327,6 +332,8 @@ const GLYPHS = {
   "html2exe":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/></svg>',
   "pinyin":'<svg viewBox="0 0 24 24"><text x="12" y="18" font-size="15" text-anchor="middle" fill="white" font-weight="700" font-family="-apple-system,Segoe UI,sans-serif">拼</text></svg>',
   "pomodoro":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9.5V13l3 2"/><path d="M9 3.5c0-1 1-1.7 2-1.3.8.3 1.2 1.2 1 2.1-.2.9-1 1.5-1.8 1.3-.9-.2-1.3-1-1.2-2.1z"/><path d="M10.5 3.2c0-1 1.3-1.3 2-1 .6.3.8 1 .5 1.6-.3.7-1.2.9-1.8.6-.5-.3-.7-1-.7-1.2z"/></svg>',
+  "magictower":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V5l5-3 5 3v16"/><path d="M7 21h10M10 8h1M13 8h1M10 12h1M13 12h1M10 16h1M13 16h1"/></svg>',
+  "fx":'<svg viewBox="0 0 24 24"><text x="12" y="18" font-size="16" text-anchor="middle" fill="white" font-weight="700" font-family="-apple-system,Segoe UI,sans-serif">$</text></svg>',
 };
 const CAT_GLYPH = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>';
 
