@@ -233,6 +233,33 @@
   .confetti{position:absolute; border-radius:2px; opacity:.95; z-index:30; pointer-events:none; animation:fall linear forwards;}
   @keyframes fall{0%{transform:translateY(0) rotate(0);}100%{transform:translateY(120vh) rotate(540deg); opacity:.15;}}
 
+  /* 抽奖类型控件 */
+  .drawTypeCtl{display:inline-flex; gap:4px; padding:4px; border-radius:999px; background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.25); z-index:2; margin:8px 0 2px;}
+  .dt-opt{border:none; background:transparent; color:#fff; padding:8px 18px; border-radius:999px; font-size:14px; cursor:pointer; transition:.18s; font-family:inherit; opacity:.82;}
+  .dt-opt:hover{opacity:1;}
+  .dt-opt.active{background:linear-gradient(135deg,var(--gold-l),var(--gold)); color:#241c00; opacity:1; box-shadow:0 4px 14px rgba(212,180,106,.5); font-weight:700;}
+
+  /* 大转盘 */
+  .wheel-wrap{position:relative; width:min(420px,82vw); aspect-ratio:1/1; margin:6px auto; z-index:2;}
+  .wheel-canvas{width:100%; height:100%; display:block; border-radius:50%; box-shadow:0 12px 44px rgba(0,0,0,.45); border:7px solid rgba(255,255,255,.22); background:rgba(255,255,255,.04);}
+  .wheel-pointer{position:absolute; top:-4px; left:50%; transform:translateX(-50%); width:0; height:0; border-left:15px solid transparent; border-right:15px solid transparent; border-top:28px solid var(--gold); filter:drop-shadow(0 3px 5px rgba(0,0,0,.45)); z-index:4;}
+  .wheel-hub{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,var(--gold-l),var(--gold)); color:#241c00; display:grid; place-items:center; font-weight:800; font-size:13px; letter-spacing:.5px; box-shadow:0 4px 16px rgba(0,0,0,.45); z-index:4; pointer-events:none;}
+  .wheel-result{font-size:clamp(20px,4vw,32px); font-weight:800; margin:12px 0 2px; text-align:center; z-index:2; text-shadow:0 2px 10px rgba(0,0,0,.4); min-height:1.2em; color:#fff;}
+  .wheel-spin-tip{font-size:13px; color:rgba(255,255,255,.78); text-shadow:0 1px 4px rgba(0,0,0,.5); text-align:center; z-index:2;}
+
+  /* 多宫格翻牌 */
+  .grid-board{display:grid; gap:12px; width:100%; max-width:780px; margin:8px auto; z-index:2; grid-template-columns:repeat(var(--cols,3),1fr);}
+  .flip-card{perspective:900px; aspect-ratio:3/2; cursor:default;}
+  .flip-inner{position:relative; width:100%; height:100%; transition:transform .55s cubic-bezier(.2,.7,.3,1); transform-style:preserve-3d;}
+  .flip-card.open .flip-inner{transform:rotateY(180deg);}
+  .flip-face{position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden; border-radius:14px; display:flex; align-items:center; justify-content:center; font-weight:800; text-align:center; padding:6px; word-break:break-all; font-size:clamp(13px,2.6vw,20px); box-shadow:var(--shadow-soft);}
+  .flip-front{background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.26); color:#fff;}
+  .flip-front .q{font-size:clamp(20px,4vw,34px); opacity:.7;}
+  .flip-back{transform:rotateY(180deg); background:linear-gradient(135deg,var(--gold-l),var(--gold)); color:#241c00;}
+  .flip-card.win .flip-back{box-shadow:0 0 0 4px #fff, 0 10px 26px rgba(0,0,0,.5); background:linear-gradient(135deg,#ffe9a8,var(--gold));}
+  .flip-card .seal{position:absolute; top:6px; right:8px; font-size:11px; font-weight:700; color:rgba(255,255,255,.6);}
+  .flip-card.win .seal{color:#7a5c00;}
+
   @media (max-width:680px){
     .wrap{padding:10px 10px 50px;}
     header.top{flex-direction:column; align-items:stretch;}
@@ -292,9 +319,22 @@
         <button class="dmopt active" data-mode="batch">整批抽</button>
         <button class="dmopt" data-mode="one">逐个抽</button>
       </div>
+      <div class="drawTypeCtl" id="drawTypeCtl" title="切换抽奖呈现方式：滚动翻滚 / 大转盘 / 多宫格翻牌">
+        <button class="dt-opt active" data-type="scroll">滚动翻滚</button>
+        <button class="dt-opt" data-type="wheel">大转盘</button>
+        <button class="dt-opt" data-type="grid">多宫格翻牌</button>
+      </div>
       <div class="roll-slots" id="rollSlots">
         <div class="slot">点击下方「开始抽奖」</div>
       </div>
+      <div class="wheel-wrap" id="wheelArea" style="display:none;">
+        <div class="wheel-pointer"></div>
+        <canvas class="wheel-canvas" id="wheelCanvas" width="420" height="420"></canvas>
+        <div class="wheel-hub">GO</div>
+      </div>
+      <div class="wheel-result" id="wheelResult" style="display:none;"></div>
+      <div class="wheel-spin-tip" id="wheelTip" style="display:none;">转盘旋转中…停止后定格中奖者</div>
+      <div class="grid-board" id="gridArea" style="display:none;"></div>
       <div class="drawn-label" id="drawnLabel"></div>
       <div class="drawn-list" id="drawnList"></div>
       <div class="bs-actions">
@@ -303,7 +343,7 @@
         <button class="btn" id="fullBtn">全屏</button>
       </div>
     </div>
-    <p class="hint">提示：大屏支持按 <b>空格键</b> 开始 / 停止；投屏时点击「全屏」获得最佳效果。抽取模式可在上方切换：<b>整批抽</b> 一次抽出全部名额，<b>逐个抽</b> 每次只抽 1 名、可反复抽直到名额抽完。抽错可点「撤销本轮」归还名额。</p>
+    <p class="hint">提示：大屏支持按 <b>空格键</b> 开始 / 停止；投屏时点击「全屏」获得最佳效果。顶部可切换 <b>抽奖方式</b>：<b>滚动翻滚</b>（多格滚动定格）、<b>大转盘</b>（指针旋转，可在高级设置选择转盘内容为人名或奖项）、<b>多宫格翻牌</b>（卡片依次翻开）。抽取模式：<b>整批抽</b> 一次抽出全部名额，<b>逐个抽</b> 每次只抽 1 名、可反复抽直到名额抽完。抽错可点「撤销本轮」归还名额。</p>
   </section>
 
   <!-- 视图B：后台管理 -->
@@ -393,6 +433,19 @@
           <span id="bigVal" class="hint"></span>
           <div class="checkrow"><input type="checkbox" id="setSound"> 开启抽奖音效</div>
           <div class="checkrow"><input type="checkbox" id="setDedupe"> 全局防重复中奖（一人只中一次）</div>
+          <label class="fld">默认抽奖方式</label>
+          <select class="inp" id="setDrawType">
+            <option value="scroll">滚动翻滚（多格滚动定格）</option>
+            <option value="wheel">大转盘（指针旋转）</option>
+            <option value="grid">多宫格翻牌（卡片翻开）</option>
+          </select>
+          <div id="wheelOptWrap">
+            <label class="fld">转盘内容</label>
+            <select class="inp" id="setWheelContent">
+              <option value="name">人名（按当前选中奖项抽取）</option>
+              <option value="award">奖项（转盘决定中几等奖，再抽 1 名）</option>
+            </select>
+          </div>
           <label class="fld">大屏背景</label>
           <div class="row">
             <input class="inp grow" type="color" id="setBg" style="max-width:80px; padding:4px; height:42px;">
@@ -498,7 +551,7 @@ function defaultState(){
     settings: {
       title:"幸运大抽奖", theme:"dark", sound:true, animSpeed:60, bigSize:84,
       bgColor:"#0a0e1a", bgImage:"", showLogo:true, logoText:"🏆", showTitle:true,
-      dedupeGlobal:true, adminPassword:"", drawMode:"batch"
+      dedupeGlobal:true, adminPassword:"", drawMode:"batch", drawType:"scroll", wheelContent:"name"
     }
   };
 }
@@ -641,6 +694,7 @@ function renderBigScreen(){
   $("#bsTitle").textContent = st.title || "幸运大抽奖";
   bs.style.setProperty("--big-size", st.bigSize + "px");
   renderDrawMode();
+  renderDrawType();
   renderAwardChips();
   renderDrawnList();
   renderProgress();
@@ -730,7 +784,8 @@ function fillWinners(winners, award){
 }
 
 /* ===================== 抽奖动作 ===================== */
-function startRoll(){
+function startScroll(){
+  showDrawArea("scroll");
   if(rolling) return;
   var a = getAward(currentAwardId);
   if(!a){ toast("请先选择奖项"); return; }
@@ -756,7 +811,7 @@ function startRoll(){
     if(state.settings.sound) playTick();
   }, state.settings.animSpeed);
 }
-function stopRoll(){
+function stopScroll(){
   if(!rolling) return;
   clearInterval(rollTimer); rolling = false;
   var a = getAward(currentAwardId); if(!a) return;
@@ -795,6 +850,237 @@ function animateReveal(a, winners, pool){
     }
   }
   step();
+}
+
+/* ===================== 抽奖类型分派 ===================== */
+function startDraw(){
+  var t = state.settings.drawType || "scroll";
+  if(t==="wheel") startWheel();
+  else if(t==="grid") startGrid();
+  else startScroll();
+}
+function stopDraw(){
+  var t = state.settings.drawType || "scroll";
+  if(t==="wheel") stopWheel();
+  else if(t==="grid") stopGrid();
+  else stopScroll();
+}
+
+/* ===================== 大转盘（canvas 旋转） ===================== */
+var wheelRot = 0, wheelCtxData = null, wheelRevealed = false, wheelSpinId = null;
+var WHEEL_COLORS = ["#d4b46a","#6c8cff","#3ecf8e","#f5a623","#e5484d","#b98cff","#5db4ff","#ff9f43","#7ee0c0","#caa24a"];
+function colorForIndex(i){ return WHEEL_COLORS[i % WHEEL_COLORS.length]; }
+function wheelItems(){
+  var wc = state.settings.wheelContent || "name";
+  if(wc === "award"){ return sortedAwards().map(function(a){ return a.name; }); }
+  var a = getAward(currentAwardId);
+  if(!a) return [];
+  return getEligible(a).map(function(p){ return p.name; });
+}
+function drawWheel(items, rotation, highlightIdx){
+  var cv = $("#wheelCanvas"); if(!cv || !cv.getContext) return;
+  var ctx = cv.getContext("2d"); if(!ctx) return;
+  var W = cv.width, H = cv.height, cx=W/2, cy=H/2, R=Math.min(W,H)/2-8;
+  ctx.clearRect(0,0,W,H);
+  var n = items.length; if(n===0) return;
+  var seg = 2*Math.PI/n;
+  ctx.textBaseline = "middle";
+  for(var i=0;i<n;i++){
+    var a0 = rotation + i*seg;
+    var a1 = a0 + seg;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,R,a0,a1); ctx.closePath();
+    ctx.fillStyle = (i===highlightIdx) ? "#ffffff" : colorForIndex(i);
+    ctx.fill();
+    ctx.save();
+    ctx.translate(cx,cy); ctx.rotate(a0 + seg/2);
+    ctx.fillStyle = (i===highlightIdx) ? "#241c00" : "#fff";
+    ctx.font = "bold 15px sans-serif";
+    ctx.textAlign = "right";
+    var label = String(items[i]);
+    if(label.length > 7) label = label.slice(0,7) + "…";
+    ctx.fillText(label, R - 12, 0);
+    ctx.restore();
+  }
+  ctx.beginPath(); ctx.arc(cx,cy, R*0.16, 0, 2*Math.PI); ctx.fillStyle="rgba(0,0,0,.28)"; ctx.fill();
+}
+function spinWheelTo(targetIdx, items, cb){
+  var n = items.length; if(n===0){ cb(); return; }
+  var seg = 2*Math.PI/n;
+  var base = -Math.PI/2 - seg/2 - targetIdx*seg;
+  base = ((base % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+  var startRot = wheelRot % (2*Math.PI);
+  var delta = base - startRot;
+  while(delta <= 0) delta += 2*Math.PI;
+  var turns = 5 + randInt(3);
+  var total = turns*2*Math.PI + delta;
+  var steps = 60, step = 0;
+  if(wheelSpinId) clearInterval(wheelSpinId);
+  wheelSpinId = setInterval(function(){
+    step++;
+    var p = step/steps;
+    var eased = 1 - Math.pow(1-p, 3);
+    wheelRot = startRot + total*eased;
+    drawWheel(items, wheelRot, -1);
+    if(state.settings.sound) playTick();
+    if(step >= steps){
+      clearInterval(wheelSpinId); wheelSpinId = null;
+      wheelRot = startRot + total; drawWheel(items, wheelRot, -1);
+      cb();
+    }
+  }, 16);
+}
+function startWheel(){
+  if(rolling) return;
+  var wc = state.settings.wheelContent || "name";
+  var items, winners, award;
+  if(wc === "award"){
+    var aw = sortedAwards();
+    var pick = null;
+    for(var i=0;i<aw.length;i++){ if(aw[i].quota - countWins(aw[i].id) > 0){ pick = aw[i]; break; } }
+    if(!pick){ toast("所有奖项名额已抽完"); return; }
+    award = pick; currentAwardId = pick.id; renderAwardChips();
+    var pool = getEligible(pick).map(function(p){ return p.name; });
+    if(!pool.length){ toast("「" + pick.name + "」可参与人数为 0"); return; }
+    winners = shuffle(pool).slice(0,1);
+    items = sortedAwards().map(function(a){ return a.name; });
+  } else {
+    var a = getAward(currentAwardId);
+    if(!a){ toast("请先选择奖项"); return; }
+    var rem = a.quota - countWins(a.id);
+    if(rem <= 0){ toast("「" + a.name + "」名额已抽完"); return; }
+    award = a;
+    var oneByOne = (state.settings.drawMode === "one");
+    var need = oneByOne ? 1 : rem;
+    var pool2 = getEligible(a).map(function(p){ return p.name; });
+    if(pool2.length < need){
+      openModal({title:"人数不足", bodyHTML:"可参与人数不足以抽取「" + esc(a.name) + "」：<br>本抽次需 <b>" + need + "</b> 人（剩余名额 " + rem + "），当前可用仅 <b>" + pool2.length + "</b> 人。"});
+      return;
+    }
+    winners = shuffle(pool2).slice(0, need);
+    items = pool2;
+  }
+  if(!items.length){ toast("暂无可抽取内容"); return; }
+  ensureAudio(); rolling = true; wheelRevealed = false;
+  $("#startBtn").textContent = "停止"; $("#startBtn").classList.remove("primary"); $("#startBtn").disabled = false;
+  showDrawArea("wheel");
+  $("#wheelResult").style.display = ""; $("#wheelResult").textContent = "";
+  $("#wheelTip").style.display = ""; $("#wheelTip").textContent = "转盘旋转中…";
+  drawWheel(items, wheelRot, -1);
+  wheelCtxData = { items:items, winners:winners, award:award };
+  var targetIdx = items.indexOf(winners[0]);
+  if(targetIdx < 0) targetIdx = 0;
+  spinWheelTo(targetIdx, items, finalizeWheel);
+}
+function stopWheel(){ if(rolling && !wheelRevealed) finalizeWheel(); }
+function finalizeWheel(){
+  if(wheelRevealed) return; wheelRevealed = true;
+  if(wheelSpinId){ clearInterval(wheelSpinId); wheelSpinId = null; }
+  rolling = false;
+  var d = wheelCtxData; if(!d) return;
+  $("#wheelTip").style.display = "none";
+  $("#startBtn").textContent = "开奖中…"; $("#startBtn").disabled = true;
+  setTimeout(function(){
+    revealWinners(d.award, d.winners);
+    $("#wheelResult").textContent = d.winners.join("、");
+  }, 360);
+}
+
+/* ===================== 多宫格翻牌 ===================== */
+var gridCtxData = null, gridRevealed = false, gridTimer = null;
+function gridCols(n){
+  if(n <= 4) return 2;
+  if(n <= 9) return 3;
+  if(n <= 16) return 4;
+  return 5;
+}
+function buildGrid(pool, winners, award){
+  var box = $("#gridArea");
+  var cols = gridCols(pool.length);
+  box.style.setProperty("--cols", cols);
+  box.innerHTML = "";
+  var display = shuffle(pool.slice());
+  display.forEach(function(nm){
+    var isWin = winners.indexOf(nm) >= 0;
+    var card = document.createElement("div");
+    card.className = "flip-card" + (isWin ? " win" : "");
+    card.dataset.name = nm;
+    card.innerHTML =
+      '<div class="flip-inner">' +
+        '<div class="flip-face flip-front"><span class="q">?</span></div>' +
+        '<div class="flip-face flip-back">'+esc(nm)+'<span class="seal">'+(isWin?"★中奖":"")+'</span></div>' +
+      '</div>';
+    box.appendChild(card);
+  });
+}
+function flipAllGrid(cb){
+  var cards = $all("#gridArea .flip-card");
+  var i = 0;
+  if(gridTimer) clearInterval(gridTimer);
+  gridTimer = setInterval(function(){
+    if(i >= cards.length){ clearInterval(gridTimer); gridTimer = null; if(cb) cb(); return; }
+    cards[i].classList.add("open");
+    if(state.settings.sound) playTick();
+    i++;
+  }, 90);
+}
+function startGrid(){
+  if(rolling) return;
+  var a = getAward(currentAwardId);
+  if(!a){ toast("请先选择奖项"); return; }
+  var rem = a.quota - countWins(a.id);
+  if(rem <= 0){ toast("「" + a.name + "」名额已抽完"); return; }
+  var oneByOne = (state.settings.drawMode === "one");
+  var need = oneByOne ? 1 : rem;
+  var pool = getEligible(a).map(function(p){ return p.name; });
+  if(pool.length < need){
+    openModal({title:"人数不足", bodyHTML:"可参与人数不足以抽取「" + esc(a.name) + "」：<br>本抽次需 <b>" + need + "</b> 人（剩余名额 " + rem + "），当前可用仅 <b>" + pool.length + "</b> 人。"});
+    return;
+  }
+  ensureAudio(); rolling = true; gridRevealed = false;
+  $("#startBtn").textContent = "停止"; $("#startBtn").classList.remove("primary"); $("#startBtn").disabled = false;
+  showDrawArea("grid");
+  var winners = shuffle(pool).slice(0, need);
+  buildGrid(pool, winners, a);
+  gridCtxData = { winners:winners, award:a };
+  flipAllGrid(finalizeGrid);
+}
+function stopGrid(){ if(rolling && !gridRevealed) finalizeGrid(); }
+function finalizeGrid(){
+  if(gridRevealed) return; gridRevealed = true;
+  if(gridTimer){ clearInterval(gridTimer); gridTimer = null; }
+  $all("#gridArea .flip-card").forEach(function(c){ c.classList.add("open"); });
+  rolling = false;
+  var d = gridCtxData; if(!d) return;
+  $("#startBtn").textContent = "开奖中…"; $("#startBtn").disabled = true;
+  setTimeout(function(){ revealWinners(d.award, d.winners); }, 360);
+}
+
+/* ===================== 区域显隐与类型渲染 ===================== */
+function showDrawArea(type){
+  $("#rollSlots").style.display = (type==="scroll") ? "" : "none";
+  $("#wheelArea").style.display = (type==="wheel") ? "" : "none";
+  $("#wheelResult").style.display = (type==="wheel") ? "" : "none";
+  $("#wheelTip").style.display = (type==="wheel") ? "" : "none";
+  $("#gridArea").style.display = (type==="grid") ? "" : "none";
+  if(type !== "wheel"){ if(wheelSpinId){ clearInterval(wheelSpinId); wheelSpinId = null; } wheelRevealed = true; }
+  if(type !== "grid"){ if(gridTimer){ clearInterval(gridTimer); gridTimer = null; } gridRevealed = true; }
+}
+function renderDrawType(){
+  var t = state.settings.drawType || "scroll";
+  $all("#drawTypeCtl .dt-opt").forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-type") === t); });
+  showDrawArea(t);
+  if(t === "wheel"){
+    var items = wheelItems();
+    if(items.length) drawWheel(items, wheelRot, -1);
+    else { var cv = $("#wheelCanvas"); if(cv && cv.getContext){ var c = cv.getContext("2d"); if(c) c.clearRect(0,0,cv.width,cv.height); } }
+    if(!rolling){ $("#wheelResult").textContent = ""; $("#wheelTip").textContent = "选择奖项后点击「开始抽奖」"; }
+  } else if(t === "grid"){
+    if(!rolling){ $("#gridArea").innerHTML = '<div class="empty" style="color:rgba(255,255,255,.7);grid-column:1/-1;">点击下方「开始抽奖」翻开卡片</div>'; }
+  } else {
+    if(!rolling){ $("#rollSlots").innerHTML = '<div class="slot">点击下方「开始抽奖」</div>'; }
+  }
+  var ww = $("#wheelOptWrap");
+  if(ww) ww.style.display = (t === "wheel") ? "" : "none";
 }
 function revealWinners(a, winners){
   var batchId = uid();
@@ -1168,7 +1454,7 @@ function bindEvents(){
   });
 
   // 大屏
-  $("#startBtn").onclick = function(){ if(rolling) stopRoll(); else startRoll(); };
+  $("#startBtn").onclick = function(){ if(rolling) stopDraw(); else startDraw(); };
   $("#undoBtn").onclick = undoLastBatch;
   // 抽奖池切换与管理
   $("#poolSelect").onchange = function(){ switchPool(this.value); };
@@ -1183,6 +1469,17 @@ function bindEvents(){
       state.settings.drawMode = m; saveState();
       renderDrawMode(); refreshStartBtn();
       toast(m === "one" ? "已切换为「逐个抽」：每次抽 1 名，可反复抽" : "已切换为「整批抽」：一次抽出全部名额");
+    };
+  });
+  // 抽奖类型切换
+  $all("#drawTypeCtl .dt-opt").forEach(function(b){
+    b.onclick = function(){
+      var t = b.getAttribute("data-type");
+      if(state.settings.drawType === t) return;
+      if(rolling){ toast("请先停止当前抽奖再切换方式"); return; }
+      state.settings.drawType = t; saveState();
+      renderDrawType(); refreshStartBtn();
+      toast("已切换为「" + (t==="wheel"?"大转盘":t==="grid"?"多宫格翻牌":"滚动翻滚") + "」");
     };
   });
   $("#fullBtn").onclick = function(){
@@ -1311,6 +1608,8 @@ function bindEvents(){
   $("#setBig").oninput = function(){ state.settings.bigSize = parseInt(this.value,10); $("#bigVal").textContent = this.value + " px"; $("#bigScreen").style.setProperty("--big-size", this.value+"px"); saveState(); };
   $("#setSound").onchange = function(){ state.settings.sound = this.checked; saveState(); if(this.checked){ ensureAudio(); playTick(); } };
   $("#setDedupe").onchange = function(){ state.settings.dedupeGlobal = this.checked; saveState(); };
+  $("#setDrawType").onchange = function(){ state.settings.drawType = this.value; saveState(); renderDrawType(); refreshStartBtn(); };
+  $("#setWheelContent").onchange = function(){ state.settings.wheelContent = this.value; saveState(); if(state.settings.drawType === "wheel"){ renderDrawType(); } };
   $("#setBg").oninput = function(){ state.settings.bgColor = this.value; state.settings.bgImage=""; saveState(); renderBigScreen(); };
   $("#bgImgBtn").onclick = function(){ $("#bgImgInput").click(); };
   $("#bgImgInput").onchange = function(e){
@@ -1380,7 +1679,7 @@ function bindEvents(){
     if(e.code === "Space" && !visitorMode){
       var active = $all(".view").find(function(v){ return v.classList.contains("active"); });
       if(active && active.id === "viewBig" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){
-        e.preventDefault(); if(rolling) stopRoll(); else startRoll();
+        e.preventDefault(); if(rolling) stopDraw(); else startDraw();
       }
     }
   });
@@ -1486,6 +1785,8 @@ function applySettingsInputs(){
   $("#setBig").value = s.bigSize; $("#bigVal").textContent = s.bigSize + " px";
   $("#setSound").checked = !!s.sound;
   $("#setDedupe").checked = s.dedupeGlobal !== false;
+  $("#setDrawType").value = s.drawType || "scroll";
+  $("#setWheelContent").value = s.wheelContent || "name";
   $("#setBg").value = s.bgColor || "#0a0e1a";
   $("#setPw").value = s.adminPassword || "";
   if($("#appTitleText")) $("#appTitleText").textContent = s.title || "幸运大抽奖";
