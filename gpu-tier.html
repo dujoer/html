@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>显卡性能天梯图 · GPU Tier List</title>
+<style>
+  :root{
+    --bg:#0a0a0a; --bg2:#101012; --panel:#161616; --panel2:#1e1e1e;
+    --line:#2a2a2a; --text:#fafafa; --muted:#a8a8a8;
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+    --radius:16px;
+    --ig:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5);
+    --nvidia:#76b900; --amd:#ed1c24; --intel:#0071c5; --other:#a2aaad;
+  }
+  [data-theme="light"]{
+    --bg:#fafafa; --bg2:#f0f0f2; --panel:#ffffff; --panel2:#f4f4f5;
+    --line:#e6e6e6; --text:#0a0a0a; --muted:#737373;
+    --shadow:0 10px 30px rgba(20,20,40,.10);
+  }
+  *{box-sizing:border-box;}
+  html{overflow-x:hidden;-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
+  body{
+    margin:0; background:
+      radial-gradient(900px 500px at 85% -10%, rgba(214,41,118,.10), transparent),
+      radial-gradient(800px 500px at 10% 0%, rgba(79,91,213,.10), transparent),
+      linear-gradient(160deg,var(--bg),var(--bg2));
+    color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
+      "PingFang SC","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 16px 120px;}
+  /* ===== Profile Header (Ins 风格) ===== */
+  header.profile{
+    display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;padding:10px 0 6px;
+  }
+  .avatar{
+    width:88px;height:88px;border-radius:50%;padding:4px;background:var(--ig);
+    box-shadow:0 8px 24px rgba(214,41,118,.35);
+  }
+  .avatar .inner{
+    width:100%;height:100%;border-radius:50%;background:var(--panel);
+    display:grid;place-items:center;font-weight:900;font-size:22px;letter-spacing:.5px;
+    background-image:var(--ig);color:#fff;-webkit-background-clip:text;background-clip:text;
+  }
+  .profile h1{
+    margin:0;font-size:clamp(24px,4.4vw,38px);font-weight:900;letter-spacing:.5px;
+    background:var(--ig);-webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .profile p.lead{margin:0;max-width:640px;color:var(--muted);font-size:clamp(13.5px,2.1vw,15px);line-height:1.65;}
+  .stats{display:flex;gap:26px;margin-top:2px;}
+  .stats .st{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .stats .st b{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .stats .st span{font-size:12px;color:var(--muted);}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+  .chip{font-size:12px;padding:5px 11px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--muted);}
+  .chip b{color:var(--ig);font-weight:700;-webkit-text-fill-color:initial;}
+  /* ===== Toolbar ===== */
+  .toolbar{
+    position:sticky;top:0;z-index:30;margin:20px 0 22px;padding:12px;border-radius:18px;
+    background:color-mix(in srgb, var(--panel) 88%, transparent);
+    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border:1px solid var(--line);box-shadow:var(--shadow);
+    display:flex;flex-wrap:wrap;gap:11px;align-items:center;
+  }
+  .search{flex:1 1 220px;display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:9px 13px;}
+  .search input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:14px;}
+  .search svg{flex:none;opacity:.55;}
+  .seg{display:flex;gap:4px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:4px;}
+  .seg button{border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:700;padding:7px 15px;border-radius:9px;cursor:pointer;transition:.18s;white-space:nowrap;}
+  .seg button.active{background:var(--ig);color:#fff;}
+  .brand-strip{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding:2px;scrollbar-width:none;}
+  .brand-strip::-webkit-scrollbar{display:none;}
+  .bf{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;flex:none;
+    border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:6px 13px 6px 10px;font-size:13px;font-weight:700;color:var(--muted);transition:.18s;}
+  .bf .dot{width:11px;height:11px;border-radius:50%;flex:none;}
+  .bf.off{opacity:.38;filter:grayscale(.8);}
+  .icon-btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);width:40px;height:40px;border-radius:12px;cursor:pointer;display:grid;place-items:center;transition:.18s;flex:none;}
+  .icon-btn:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--ig) 60%, var(--line));}
+  /* ===== Brand columns ===== */
+  .cols{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;}
+  @media (max-width:900px){ .cols{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:560px){ .cols{grid-template-columns:1fr;} }
+  .col{background:color-mix(in srgb, var(--panel) 86%, transparent);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:11px;}
+  .col-head{display:flex;align-items:center;gap:9px;padding-bottom:9px;border-bottom:1px dashed var(--line);}
+  .col-head .logo{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:14px;color:#fff;flex:none;}
+  .col-head h3{margin:0;font-size:15px;font-weight:800;}
+  .col-head .cnt{margin-left:auto;font-size:12px;color:var(--muted);}
+  /* ===== GPU card (Ins 帖子风) ===== */
+  .gpu{
+    position:relative;display:flex;flex-direction:column;gap:9px;padding:14px 14px 13px;
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    cursor:pointer;transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;overflow:hidden;
+    opacity:0;transform:translateY(10px);animation:rise .42s cubic-bezier(.2,.7,.3,1) forwards;
+  }
+  @keyframes rise{to{opacity:1;transform:none;}}
+  .gpu::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--tc,#888);}
+  .gpu:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:color-mix(in srgb,var(--tc) 55%, var(--line));}
+  .gpu .hd{display:flex;align-items:flex-start;gap:8px;padding-right:30px;}
+  .gpu .nm{font-size:14.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .gpu .sub{font-size:11.5px;color:var(--muted);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;}
+  .gpu .bd{display:flex;align-items:center;gap:10px;}
+  .gpu .bar{flex:1;height:8px;border-radius:99px;background:color-mix(in srgb,var(--text) 12%, transparent);overflow:hidden;}
+  .gpu .bar i{display:block;height:100%;border-radius:99px;}
+  .gpu .sc{font-weight:800;font-size:17px;flex:none;font-variant-numeric:tabular-nums;}
+  .gpu .sc small{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:1px;}
+  .add{position:absolute;top:9px;right:9px;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);
+    background:var(--panel2);color:var(--text);font-size:17px;line-height:1;cursor:pointer;display:grid;place-items:center;transition:.15s;z-index:3;}
+  .add:hover{transform:scale(1.12);}
+  .add.on{background:var(--ig);color:#fff;border-color:transparent;}
+  .tier-tag{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;color:#0a0a0a;flex:none;}
+  mark{background:var(--ig);color:#fff;border-radius:3px;padding:0 2px;}
+  /* ===== Unified tier (横条榜单) ===== */
+  .tier-rows{display:flex;flex-direction:column;gap:8px;}
+  .trow{display:grid;grid-template-columns:42px 1fr 62px;align-items:center;gap:12px;
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:11px 14px;position:relative;transition:.15s;}
+  .trow:hover{transform:translateX(3px);border-color:color-mix(in srgb,var(--tc) 50%, var(--line));}
+  .trow .rank{font-weight:800;font-size:15px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums;}
+  .trow .tmain{display:flex;flex-direction:column;gap:7px;min-width:0;padding-right:28px;}
+  .trow .tn{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;min-width:0;}
+  .trow .tn .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .trow .tn .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .trow .tbar{height:9px;border-radius:99px;background:color-mix(in srgb,var(--text) 12%, transparent);overflow:hidden;}
+  .trow .tbar i{display:block;height:100%;border-radius:99px;}
+  .trow .tsc{font-weight:800;font-size:16px;text-align:right;font-variant-numeric:tabular-nums;}
+  .trow .tsc small{font-size:10px;color:var(--muted);font-weight:600;}
+  /* ===== Legend / foot ===== */
+  .legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:28px 0 6px;color:var(--muted);font-size:12.5px;}
+  .legend .li{display:flex;align-items:center;gap:6px;}
+  .legend .sw{width:13px;height:13px;border-radius:4px;}
+  .foot{text-align:center;color:var(--muted);font-size:12.5px;line-height:1.7;margin-top:22px;}
+  .foot a{color:#d62976;cursor:pointer;font-weight:600;}
+  /* ===== Compare tray ===== */
+  .tray{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:18px;z-index:60;
+    display:none;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);
+    border-radius:20px;box-shadow:0 14px 40px rgba(0,0,0,.5);padding:12px 16px;max-width:calc(100% - 28px);
+    opacity:0;transition:.25s;}
+  .tray.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0);}
+  .tray .chips{display:flex;gap:8px;flex-wrap:wrap;max-width:52vw;}
+  .tray .cc{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px 8px 5px 11px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+  .tray .cc .x{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;}
+  .tray .acts{display:flex;gap:8px;flex:none;}
+  .tray .btn{border:none;border-radius:12px;padding:9px 16px;font-weight:800;cursor:pointer;font-size:13.5px;transition:.15s;}
+  .tray .btn.cmp{background:var(--ig);color:#fff;}
+  .tray .btn.cmp:disabled{opacity:.4;cursor:not-allowed;}
+  .tray .btn.clear{background:var(--panel2);color:var(--muted);border:1px solid var(--line);}
+  /* ===== Modal ===== */
+  .modal{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:18px;
+    background:rgba(5,5,10,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+  .modal.show{display:flex;}
+  .sheet{width:min(480px,100%);background:var(--panel);border:1px solid var(--line);border-radius:22px;
+    box-shadow:var(--shadow);padding:22px;animation:pop .22s ease;max-height:88vh;overflow:auto;}
+  @keyframes pop{from{transform:scale(.94);opacity:0;}to{transform:none;opacity:1;}}
+  .sheet h2{margin:0 0 4px;font-size:21px;display:flex;align-items:center;gap:10px;}
+  .sheet .badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;color:#0a0a0a;}
+  .sheet .row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px;}
+  .sheet .row span:first-child{color:var(--muted);}
+  .sheet .row b{text-align:right;}
+  .sheet .note{margin-top:12px;font-size:13px;color:var(--muted);line-height:1.6;background:var(--panel2);border-radius:12px;padding:11px 13px;}
+  .sheet .close{margin-top:16px;width:100%;border:none;background:var(--ig);color:#fff;font-weight:800;font-size:15px;padding:11px;border-radius:13px;cursor:pointer;}
+  /* compare body */
+  .cmp-row{margin-bottom:15px;}
+  .cmp-row .ch{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;margin-bottom:6px;gap:10px;}
+  .cmp-row .ch b{font-weight:800;}
+  .cmp-row .ch .v{font-weight:800;font-variant-numeric:tabular-nums;}
+  .cmp-bar{height:15px;border-radius:99px;background:color-mix(in srgb,var(--text) 12%, transparent);overflow:hidden;}
+  .cmp-bar i{display:block;height:100%;border-radius:99px;}
+  .cmp-delta{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);}
+  .cmp-delta h3{margin:0 0 10px;font-size:14px;}
+  .cmp-delta .d{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--muted);}
+  .cmp-delta .d b{color:var(--text);font-variant-numeric:tabular-nums;}
+  .empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px;}
+  @media (prefers-reduced-motion:reduce){ .gpu{animation:none;opacity:1;transform:none;} html{scroll-behavior:auto;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="profile">
+    <div class="avatar"><div class="inner">GPU</div></div>
+    <h1>显卡性能天梯图</h1>
+    <p class="lead">NVIDIA · AMD · Intel 及 Apple 等品牌显卡，从初代到最新型号，按游戏光栅性能统一排名。性能分以 RTX 5090 = 100 为基准，条越长越强。</p>
+    <div class="stats">
+      <div class="st"><b id="statCount">0</b><span>收录型号</span></div>
+      <div class="st"><b id="statVer">2026-08</b><span>数据版本</span></div>
+      <div class="st"><b>100</b><span>RTX 5090 基准</span></div>
+    </div>
+    <div class="chips">
+      <span class="chip">更新于 <b id="metaDate">2026-08-10</b></span>
+      <span class="chip">每月更新</span>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="q" type="text" placeholder="搜索型号，如 RTX 5090 / RX 9070 / Arc B580" autocomplete="off">
+    </label>
+    <div class="seg" id="viewSeg">
+      <button data-view="brand" class="active">分品牌</button>
+      <button data-view="tier">统一天梯</button>
+    </div>
+    <div class="brand-strip" id="brandFilters"></div>
+    <button class="icon-btn" id="themeBtn" title="切换主题">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
+    </button>
+    <button class="icon-btn" id="infoBtn" title="数据说明">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg>
+    </button>
+  </div>
+
+  <div id="stage"></div>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="foot">
+    性能分为相对估算（以 RTX 5090 = 100 的 1080p 光栅综合性能百分比），综合 Tom's Hardware GPU Hierarchy、TechRankUp、3DMark / PassMark 等公开跑分与厂商规格取多源几何均值，仅供参考，不代表任何单一基准的绝对分数；光追性能未单独计入（通常 N 卡更强）。<br>
+    <a id="infoLink">数据来源与更新说明</a> · 单 HTML 文件，可离线打开 · 收藏本页，每月来此查看最新数据
+  </div>
+</div>
+
+<div class="tray" id="tray">
+  <div class="chips" id="trayChips"></div>
+  <div class="acts">
+    <button class="btn clear" id="trayClear">清空</button>
+    <button class="btn cmp" id="trayCmp" disabled>对比</button>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+/* ============================================================
+ * 显卡天梯图 · 数据
+ * 评分体系：以 NVIDIA RTX 5090 在 1080p 光栅化（rasterization）综合游戏性能 = 100 的「相对百分比」。
+ * 数据综合自 Tom's Hardware GPU Hierarchy / TechRankUp / 3DMark / PassMark 等公开来源，取多源几何均值估算。
+ * —— 按月更新：在此数组增删型号，并修改下方 META.updated 为当前年月即可。
+ * ============================================================ */
+const META = { version:"2026-08", updated:"2026-08-10", base:100 };
+
+const BRANDS = {
+  nvidia:{ name:"NVIDIA", short:"N", color:"#76b900", grad:"linear-gradient(135deg,#76b900,#9fe000)" },
+  amd:   { name:"AMD",    short:"A", color:"#ed1c24", grad:"linear-gradient(135deg,#ed1c24,#ff5a4d)" },
+  intel: { name:"Intel",  short:"I", color:"#0071c5", grad:"linear-gradient(135deg,#0071c5,#36a3ff)" },
+  other: { name:"其他 / Apple", short:"O", color:"#a2aaad", grad:"linear-gradient(135deg,#8a9296,#c6ccce)" }
+};
+
+const TIERS = {
+  flagship:  { name:"旗舰",   color:"#e6b54a" },
+  high:      { name:"高端",   color:"#ff7a45" },
+  uppermid:  { name:"中高端", color:"#ffa940" },
+  mainstream:{ name:"主流",   color:"#36cfc9" },
+  sweet:     { name:"甜品级", color:"#73d13d" },
+  entry:     { name:"入门",   color:"#8c9bab" },
+  igpu:      { name:"核显",   color:"#bfbfbf" },
+  classic:   { name:"经典",   color:"#b08d57" }
+};
+
+/* b=品牌 s=性能分(5090=100) y=年份 t=层级 v=显存 n=备注 */
+const GPUS = [
+  // ---------- NVIDIA ----------
+  {b:"nvidia",name:"GeForce 256",s:0.5,y:1999,t:"classic",v:"—",n:"全球首款 GPU，1999 年开创图形处理器时代（性能分仅为象征性参照）。"},
+  {b:"nvidia",name:"GTX 750 Ti",s:5,y:2014,t:"entry",v:"2GB",n:"Maxwell 架构入门卡，低功耗经典。"},
+  {b:"nvidia",name:"GTX 980 Ti",s:21,y:2015,t:"high",v:"6GB",n:"Maxwell 旗舰，曾长期保值。"},
+  {b:"nvidia",name:"GTX 1050 Ti",s:9,y:2017,t:"entry",v:"4GB",n:"流行入门网游卡。"},
+  {b:"nvidia",name:"GTX 1060",s:15,y:2016,t:"sweet",v:"6GB",n:"一代神卡甜品，本图相对倍率基准（=1×）。"},
+  {b:"nvidia",name:"GTX 1070",s:18,y:2016,t:"mainstream",v:"8GB",n:"Pascal 主流主力。"},
+  {b:"nvidia",name:"GTX 1080",s:22,y:2016,t:"uppermid",v:"8GB",n:"Pascal 高端。"},
+  {b:"nvidia",name:"GTX 1080 Ti",s:28,y:2017,t:"high",v:"11GB",n:"Pascal 卡皇，性能逼近初代 RTX 20 系。"},
+  {b:"nvidia",name:"GTX 1660 Super",s:14,y:2019,t:"sweet",v:"6GB",n:"图灵无光追甜品。"},
+  {b:"nvidia",name:"RTX 2060",s:16,y:2019,t:"mainstream",v:"6GB",n:"初代光追入门。"},
+  {b:"nvidia",name:"RTX 2070 SUPER",s:27,y:2019,t:"uppermid",v:"8GB",n:"图灵 SUPER 中坚。"},
+  {b:"nvidia",name:"RTX 2080 Ti",s:31,y:2018,t:"high",v:"11GB",n:"图灵旗舰，曾为算力性价比之选。"},
+  {b:"nvidia",name:"RTX 3050",s:16,y:2022,t:"entry",v:"8GB",n:"Ampere 入门带光追。"},
+  {b:"nvidia",name:"RTX 3060",s:22,y:2021,t:"sweet",v:"12GB",n:"大显存甜品，二手热门。"},
+  {b:"nvidia",name:"RTX 3060 Ti",s:29,y:2020,t:"mainstream",v:"8GB",n:"Ampere 性价比标杆。"},
+  {b:"nvidia",name:"RTX 3070",s:33,y:2020,t:"mainstream",v:"8GB",n:"Ampere 主流。"},
+  {b:"nvidia",name:"RTX 3070 Ti",s:36,y:2021,t:"uppermid",v:"8GB",n:"Ampere 中高端。"},
+  {b:"nvidia",name:"RTX 3080",s:43,y:2020,t:"uppermid",v:"10GB",n:"Ampere 高端主力。"},
+  {b:"nvidia",name:"RTX 3080 Ti",s:47,y:2021,t:"high",v:"12GB",n:"Ampere 次旗舰。"},
+  {b:"nvidia",name:"RTX 3090",s:49,y:2020,t:"high",v:"24GB",n:"Ampere 旗舰，生产力兼游戏。"},
+  {b:"nvidia",name:"RTX 3090 Ti",s:55,y:2022,t:"high",v:"24GB",n:"Ampere 终极卡皇。"},
+  {b:"nvidia",name:"RTX 4060",s:25,y:2023,t:"sweet",v:"8GB",n:"Ada 甜品，能效比高。"},
+  {b:"nvidia",name:"RTX 4060 Ti",s:33,y:2023,t:"sweet",v:"8/16GB",n:"Ada 甜品，可选 16GB。"},
+  {b:"nvidia",name:"RTX 4070",s:50,y:2023,t:"mainstream",v:"12GB",n:"Ada 主流，DLSS3 加持。"},
+  {b:"nvidia",name:"RTX 4070 Ti",s:57,y:2023,t:"uppermid",v:"12GB",n:"Ada 中高端。"},
+  {b:"nvidia",name:"RTX 4070 SUPER",s:58,y:2024,t:"uppermid",v:"12GB",n:"Ada SUPER 中坚。"},
+  {b:"nvidia",name:"RTX 4070 Ti SUPER",s:67,y:2024,t:"high",v:"16GB",n:"Ada SUPER 高端。"},
+  {b:"nvidia",name:"RTX 4080",s:66,y:2022,t:"high",v:"16GB",n:"Ada 次旗舰。"},
+  {b:"nvidia",name:"RTX 4080 SUPER",s:67,y:2024,t:"high",v:"16GB",n:"Ada SUPER 高端。"},
+  {b:"nvidia",name:"RTX 4090",s:90,y:2022,t:"flagship",v:"24GB",n:"Ada 旗舰，4K / AI 标杆。"},
+  {b:"nvidia",name:"RTX 4090 D",s:86,y:2023,t:"flagship",v:"24GB",n:"中国特供版，性能略限。"},
+  {b:"nvidia",name:"RTX 5050",s:32,y:2025,t:"sweet",v:"8GB",n:"Blackwell 入门。"},
+  {b:"nvidia",name:"RTX 5060",s:43,y:2025,t:"sweet",v:"8GB",n:"Blackwell 甜品。"},
+  {b:"nvidia",name:"RTX 5060 Ti",s:52,y:2025,t:"mainstream",v:"16GB",n:"Blackwell 甜品，16GB 版。"},
+  {b:"nvidia",name:"RTX 5070",s:65,y:2025,t:"uppermid",v:"12GB",n:"Blackwell 主流，DLSS4。"},
+  {b:"nvidia",name:"RTX 5070 Ti",s:76,y:2025,t:"high",v:"16GB",n:"Blackwell 高端。"},
+  {b:"nvidia",name:"RTX 5080",s:82,y:2025,t:"high",v:"16GB",n:"Blackwell 次旗舰。"},
+  {b:"nvidia",name:"RTX 5090",s:100,y:2025,t:"flagship",v:"32GB",n:"Blackwell 旗舰，当前消费级性能天花板。"},
+  {b:"nvidia",name:"RTX 5090 D",s:99,y:2025,t:"flagship",v:"32GB",n:"中国特供版，性能近乎满血。"},
+
+  // ---------- AMD ----------
+  {b:"amd",name:"Radeon HD 5870",s:4,y:2009,t:"classic",v:"1GB",n:"Evergreen 架构，DX11 早期旗舰。"},
+  {b:"amd",name:"Radeon HD 7970",s:9,y:2012,t:"high",v:"3GB",n:"GCN 初代旗舰。"},
+  {b:"amd",name:"Radeon R9 Fury X",s:19,y:2015,t:"high",v:"4GB HBM",n:"首次采用 HBM 显存。"},
+  {b:"amd",name:"Radeon RX 480",s:16,y:2016,t:"mainstream",v:"8GB",n:"Polaris 主流，性价比爆款。"},
+  {b:"amd",name:"Radeon RX 570",s:15,y:2017,t:"entry",v:"4GB",n:"Polaris 入门。"},
+  {b:"amd",name:"Radeon RX 580",s:18,y:2017,t:"mainstream",v:"8GB",n:"一代经典，矿潮常客。"},
+  {b:"amd",name:"Radeon RX 5700 XT",s:25,y:2019,t:"mainstream",v:"8GB",n:"RDNA 初代中高端。"},
+  {b:"amd",name:"Radeon RX 6600",s:18,y:2021,t:"sweet",v:"8GB",n:"RDNA2 入门甜品。"},
+  {b:"amd",name:"Radeon RX 6600 XT",s:21,y:2021,t:"sweet",v:"8GB",n:"RDNA2 甜品。"},
+  {b:"amd",name:"Radeon RX 6700 XT",s:29,y:2021,t:"mainstream",v:"12GB",n:"RDNA2 主流。"},
+  {b:"amd",name:"Radeon RX 6750 XT",s:30,y:2022,t:"mainstream",v:"12GB",n:"RDNA2 主流强化。"},
+  {b:"amd",name:"Radeon RX 6800",s:35,y:2020,t:"mainstream",v:"16GB",n:"RDNA2 大显存主流。"},
+  {b:"amd",name:"Radeon RX 6800 XT",s:42,y:2020,t:"uppermid",v:"16GB",n:"RDNA2 中高端。"},
+  {b:"amd",name:"Radeon RX 6900 XT",s:44,y:2020,t:"high",v:"16GB",n:"RDNA2 旗舰。"},
+  {b:"amd",name:"Radeon RX 6950 XT",s:45,y:2022,t:"high",v:"16GB",n:"RDNA2 终极旗舰。"},
+  {b:"amd",name:"Radeon RX 7600",s:22,y:2023,t:"sweet",v:"8GB",n:"RDNA3 入门甜品。"},
+  {b:"amd",name:"Radeon RX 7600 XT",s:26,y:2024,t:"sweet",v:"16GB",n:"RDNA3 甜品，16GB。"},
+  {b:"amd",name:"Radeon RX 7700 XT",s:37,y:2023,t:"mainstream",v:"12GB",n:"RDNA3 主流。"},
+  {b:"amd",name:"Radeon RX 7800 XT",s:43,y:2023,t:"uppermid",v:"16GB",n:"RDNA3 中高端，2K 利器。"},
+  {b:"amd",name:"Radeon RX 7900 GRE",s:48,y:2023,t:"uppermid",v:"16GB",n:"RDNA3 特供中高端。"},
+  {b:"amd",name:"Radeon RX 7900 XT",s:56,y:2022,t:"high",v:"20GB",n:"RDNA3 高端。"},
+  {b:"amd",name:"Radeon RX 7900 XTX",s:66,y:2022,t:"flagship",v:"24GB",n:"RDNA3 旗舰，光栅强卡。"},
+  {b:"amd",name:"Radeon RX 9070 GRE",s:55,y:2025,t:"uppermid",v:"12GB",n:"RDNA4 中高端。"},
+  {b:"amd",name:"Radeon RX 9060 XT",s:46,y:2025,t:"sweet",v:"16GB",n:"RDNA4 甜品，性价比高。"},
+  {b:"amd",name:"Radeon RX 9070",s:69,y:2025,t:"uppermid",v:"16GB",n:"RDNA4 中高端。"},
+  {b:"amd",name:"Radeon RX 9070 XT",s:77,y:2025,t:"high",v:"16GB",n:"RDNA4 高端，光栅逼近 5070 Ti。"},
+
+  // ---------- Intel ----------
+  {b:"intel",name:"HD Graphics 4000",s:1.2,y:2012,t:"igpu",v:"核显",n:"Ivy Bridge 核显。"},
+  {b:"intel",name:"UHD Graphics 630",s:2.5,y:2017,t:"igpu",v:"核显",n:"八/九代酷睿核显。"},
+  {b:"intel",name:"Iris Xe Graphics",s:5,y:2020,t:"igpu",v:"核显",n:"十一代起强核显。"},
+  {b:"intel",name:"Arc A380",s:8,y:2022,t:"entry",v:"6GB",n:"Arc 入门，首款 Xe-HPG。"},
+  {b:"intel",name:"Arc A580",s:20,y:2022,t:"entry",v:"8GB",n:"Arc 主流入门。"},
+  {b:"intel",name:"Arc A750",s:22,y:2022,t:"mainstream",v:"8GB",n:"Arc Alchemist 主流。"},
+  {b:"intel",name:"Arc A770",s:25,y:2022,t:"mainstream",v:"16GB",n:"Arc Alchemist 旗舰。"},
+  {b:"intel",name:"Arc B570",s:28,y:2024,t:"sweet",v:"10GB",n:"Battlemage 甜品。"},
+  {b:"intel",name:"Arc B580",s:33,y:2024,t:"sweet",v:"12GB",n:"Battlemage 爆款，预算首选。"},
+
+  // ---------- 其他 / Apple（统一内存 GPU，近似参考） ----------
+  {b:"other",name:"Apple M1",s:22,y:2020,t:"mainstream",v:"统一内存",n:"Apple Silicon 初代，近似光栅参考。"},
+  {b:"other",name:"Apple M1 Max",s:32,y:2021,t:"uppermid",v:"统一内存",n:"M1 大核 GPU。"},
+  {b:"other",name:"Apple M2 Max",s:40,y:2022,t:"high",v:"统一内存",n:"M2 大核 GPU。"},
+  {b:"other",name:"Apple M3 Max",s:50,y:2023,t:"high",v:"统一内存",n:"M3 大核 GPU。"},
+  {b:"other",name:"Apple M4 Pro",s:45,y:2024,t:"uppermid",v:"统一内存",n:"M4 中核 GPU。"},
+  {b:"other",name:"Apple M2 Ultra",s:60,y:2023,t:"flagship",v:"统一内存",n:"双芯合一，顶级 SOC GPU。"},
+  {b:"other",name:"Apple M3 Ultra",s:65,y:2024,t:"flagship",v:"统一内存",n:"M3 双芯，SOC GPU 天花板。"},
+  {b:"other",name:"Apple M4 Max",s:55,y:2024,t:"high",v:"统一内存",n:"M4 大核 GPU。"}
+];
+
+/* =========================== 渲染逻辑 =========================== */
+const $ = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.prototype.slice.call((r||document).querySelectorAll(s));
+const esc = (s)=> String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function hl(text,q){
+  if(!q) return esc(text);
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if(i<0) return esc(text);
+  return esc(text.slice(0,i)) + "<mark>" + esc(text.slice(i,i+q.length)) + "</mark>" + esc(text.slice(i+q.length));
+}
+
+const state = { view:"brand", q:"", brands:new Set(Object.keys(BRANDS)), compare:[] };
+const MAX = 100; // RTX 5090 基准
+const compareSet = ()=> state.compare;
+
+function tierColor(t){ return (TIERS[t]||{}).color || "#888"; }
+function brandOf(b){ return BRANDS[b] || {name:b,grad:"linear-gradient(135deg,#888,#aaa)"}; }
+
+function gpuCard(g,q,br){
+  const tc = tierColor(g.t);
+  return '<div class="gpu" style="--tc:'+tc+'" data-name="'+esc(g.name)+'">'
+    + '<button class="add'+(state.compare.indexOf(g.name)>=0?" on":"")+'" data-add="'+esc(g.name)+'" title="加入对比">＋</button>'
+    + '<div class="hd"><div class="info">'
+    + '<div class="nm">'+hl(g.name,q)+'</div>'
+    + '<div class="sub"><span>'+g.y+' 年</span><span>'+(g.v||"")+'</span></div>'
+    + '</div></div>'
+    + '<div class="bd"><div class="bar"><i style="width:'+g.s+'%;background:'+br.grad+'"></i></div>'
+    + '<div class="sc">'+g.s+'<small>%</small></div></div>'
+    + '</div>';
+}
+function tierRow(g,q,br,rank){
+  const tc = tierColor(g.t);
+  return '<div class="trow" style="--tc:'+tc+'" data-name="'+esc(g.name)+'">'
+    + '<button class="add'+(state.compare.indexOf(g.name)>=0?" on":"")+'" data-add="'+esc(g.name)+'" title="加入对比" style="top:8px;right:8px;">＋</button>'
+    + '<div class="rank">#'+rank+'</div>'
+    + '<div class="tmain"><div class="tn"><span class="dot" style="background:'+br.color+'"></span><span class="nm">'+hl(g.name,q)+'</span></div>'
+    + '<div class="tbar"><i style="width:'+g.s+'%;background:'+br.grad+'"></i></div></div>'
+    + '<div class="tsc">'+g.s+'<small>%</small></div>'
+    + '</div>';
+}
+function filtered(){
+  const q = state.q.trim().toLowerCase();
+  return GPUS.filter(g=> state.brands.has(g.b) && (!q || g.name.toLowerCase().includes(q)));
+}
+
+function renderBrandView(){
+  const q = state.q.trim();
+  const data = filtered().slice().sort((a,b)=> b.s-a.s);
+  const byBrand = {};
+  data.forEach(g=>{ (byBrand[g.b]=byBrand[g.b]||[]).push(g); });
+  const order = ["nvidia","amd","intel","other"].filter(b=> state.brands.has(b) && byBrand[b]);
+  if(!order.length){ return '<div class="empty">没有匹配的显卡，试试其它关键词或开启品牌筛选。</div>'; }
+  let html = '<div class="cols">';
+  order.forEach(b=>{
+    const br = BRANDS[b];
+    const list = byBrand[b];
+    html += '<div class="col"><div class="col-head">'
+      + '<div class="logo" style="background:'+br.grad+'">'+br.short+'</div>'
+      + '<h3>'+esc(br.name)+'</h3><span class="cnt">'+list.length+' 款</span></div>';
+    list.forEach(g=>{ html += gpuCard(g,q,br); });
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderTierView(){
+  const q = state.q.trim();
+  const data = filtered().slice().sort((a,b)=> b.s-a.s);
+  if(!data.length){ return '<div class="empty">没有匹配的显卡。</div>'; }
+  let html = '<div class="tier-rows">';
+  data.forEach((g,i)=>{ html += tierRow(g,q,brandOf(g.b),i+1); });
+  html += '</div>';
+  return html;
+}
+
+function render(){
+  const stage = $("#stage");
+  stage.innerHTML = state.view==="brand" ? renderBrandView() : renderTierView();
+  $$(".gpu,.trow",stage).forEach(el=>{
+    el.onclick = (e)=>{
+      if(e.target && e.target.getAttribute && e.target.getAttribute("data-add")){ toggleCompare(e.target.getAttribute("data-add")); e.stopPropagation(); return; }
+      openDetail(el.getAttribute("data-name"));
+    };
+  });
+  if(state.view==="brand"){
+    $$(".cols .gpu",stage).forEach((el,i)=>{ el.style.animationDelay = (i*20)+"ms"; });
+  }
+  $("#metaCount") && ($("#metaCount").textContent = GPUS.length);
+  $("#statCount").textContent = GPUS.length;
+  $("#statVer").textContent = META.version;
+  $("#metaDate").textContent = META.updated;
+}
+
+function buildBrandFilters(){
+  const box = $("#brandFilters");
+  box.innerHTML = Object.keys(BRANDS).map(b=>{
+    const br = BRANDS[b];
+    return '<span class="bf'+(state.brands.has(b)?"":" off")+'" data-b="'+b+'">'
+      + '<span class="dot" style="background:'+br.color+'"></span>'+esc(br.name)+'</span>';
+  }).join("");
+  $$(".bf",box).forEach(el=>{
+    el.onclick = ()=>{
+      const b = el.getAttribute("data-b");
+      if(state.brands.has(b)){ if(state.brands.size>1) state.brands.delete(b); }
+      else state.brands.add(b);
+      buildBrandFilters(); render();
+    };
+  });
+}
+
+function buildLegend(){
+  const box = $("#legend");
+  box.innerHTML = Object.keys(TIERS).map(t=>{
+    const ti = TIERS[t];
+    return '<span class="li"><span class="sw" style="background:'+ti.color+'"></span>'+esc(ti.name)+'</span>';
+  }).join("");
+}
+
+function toggleCompare(name){
+  const i = state.compare.indexOf(name);
+  if(i>=0) state.compare.splice(i,1);
+  else { if(state.compare.length>=4){ flashTray("最多对比 4 张"); return; } state.compare.push(name); }
+  render(); renderTray();
+}
+function renderTray(){
+  const tray = $("#tray"), chips = $("#trayChips"), cmp = $("#trayCmp");
+  if(!state.compare.length){ tray.classList.remove("show"); return; }
+  chips.innerHTML = state.compare.map(n=>{
+    const g = GPUS.find(x=>x.name===n); const br = brandOf(g.b);
+    return '<span class="cc"><span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+br.color+'"></span>'+esc(n)+'<button class="x" data-rm="'+esc(n)+'">×</button></span>';
+  }).join("");
+  $$(".cc .x",chips).forEach(b=> b.onclick = ()=> toggleCompare(b.getAttribute("data-rm")) );
+  cmp.disabled = state.compare.length<2;
+  tray.classList.add("show");
+}
+function flashTray(msg){
+  const cmp = $("#trayCmp");
+  const old = cmp.textContent; cmp.textContent = msg;
+  setTimeout(()=>{ cmp.textContent = "对比"; }, 1200);
+}
+
+function openDetail(name){
+  const g = GPUS.find(x=> x.name===name);
+  if(!g) return;
+  const br = BRANDS[g.b], ti = TIERS[g.t]||{};
+  const x = (g.s/15).toFixed(2);
+  $("#sheet").innerHTML =
+    '<h2><span class="logo" style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:800;color:#fff;background:'+br.grad+'">'+br.short+'</span>'+esc(g.name)+'</h2>'
+    + '<div style="margin:6px 0 14px;display:flex;gap:8px;flex-wrap:wrap;">'
+    + '<span class="badge" style="background:'+ti.color+'">'+esc(ti.name)+'</span>'
+    + '<span class="chip">'+esc(br.name)+'</span></div>'
+    + '<div class="row"><span>发布年份</span><b>'+g.y+' 年</b></div>'
+    + '<div class="row"><span>性能分</span><b style="color:'+tierColor(g.t)+'">'+g.s+' / 100（RTX 5090 = 100）</b></div>'
+    + '<div class="row"><span>相对 GTX 1060</span><b>约 '+x+'×</b></div>'
+    + '<div class="row"><span>显存</span><b>'+(g.v||"—")+'</b></div>'
+    + '<div class="note">'+esc(g.n||"")+'</div>'
+    + '<button class="close" id="closeModal">关闭</button>';
+  $("#modal").classList.add("show");
+  $("#closeModal").onclick = closeModal;
+}
+
+function openCompare(){
+  const list = state.compare.map(n=> GPUS.find(x=>x.name===n)).filter(Boolean).slice().sort((a,b)=>b.s-a.s);
+  if(list.length<2) return;
+  const rows = list.map(g=>{
+    const br = brandOf(g.b), ti = TIERS[g.t]||{};
+    return '<div class="cmp-row"><div class="ch"><b style="color:'+tierColor(g.t)+'">'+esc(g.name)+'</b>'
+      + '<span class="v">'+g.s+'% · 约 '+(g.s/15).toFixed(2)+'×</span></div>'
+      + '<div class="cmp-bar"><i style="width:'+g.s+'%;background:'+br.grad+'"></i></div></div>';
+  }).join("");
+  // 差距：最强 vs 其余
+  const top = list[0];
+  let delta = '<div class="cmp-delta"><h3>相对差距（以最强 '+esc(top.name)+' 为 100%）</h3>';
+  list.slice(1).forEach(g=>{
+    const pct = (g.s/top.s*100);
+    const gap = (100-pct).toFixed(1);
+    delta += '<div class="d"><span>'+esc(g.name)+'</span><b>'+pct.toFixed(1)+'% · 弱 '+gap+'%</b></div>';
+  });
+  delta += '</div>';
+  $("#sheet").innerHTML = '<h2>性能对比</h2><div style="margin:6px 0 14px;color:var(--muted);font-size:13px;">同刻度横向条，越长越强；下方列出与最强型号的相对差距。</div>'
+    + rows + delta + '<button class="close" id="closeModal">关闭</button>';
+  $("#modal").classList.add("show");
+  $("#closeModal").onclick = closeModal;
+}
+
+function closeModal(){ $("#modal").classList.remove("show"); }
+
+function openInfo(){
+  $("#sheet").innerHTML =
+    '<h2>数据说明</h2>'
+    + '<div class="note" style="margin-top:10px;">'
+    + '<p style="margin:0 0 8px;"><b>评分体系</b>：性能分以 NVIDIA RTX 5090 在 1080p 光栅化（rasterization）综合游戏性能 = <b>100</b> 的「相对百分比」。例如 RTX 4090 约 90、RX 9070 XT 约 77、GTX 1060 约 15。</p>'
+    + '<p style="margin:0 0 8px;"><b>怎么看差异</b>：每张卡片和统一天梯里的彩色横条，长度直接代表性能强弱（满格 = RTX 5090）。选中 2–4 张卡点「对比」，可在同刻度下并排查看差距百分比。</p>'
+    + '<p style="margin:0 0 8px;"><b>数据来源</b>：综合 Tom\'s Hardware GPU Hierarchy、TechRankUp、3DMark / PassMark 等公开跑分与厂商规格，取多源几何均值估算，仅供参考，不代表任何单一基准的绝对分数。</p>'
+    + '<p style="margin:0 0 8px;"><b>关于光追</b>：本图仅计光栅性能，未单独计入光线追踪；通常同档 N 卡光追更强。</p>'
+    + '<p style="margin:0 0 8px;"><b>Apple / 其他</b>：为统一内存 SOC GPU，架构不同，分数为近似光栅参考，不参与与传统独显的严格对比。</p>'
+    + '<p style="margin:0;"><b>如何按月更新</b>：本文件为单 HTML，数据内嵌在 <code>GPUS</code> 数组与 <code>META</code> 中。每月新增型号只需在数组增删条目、并把 <code>META.updated</code> 改为当前年月即可，无需任何后端。</p>'
+    + '</div>'
+    + '<button class="close" id="closeModal">知道了</button>';
+  $("#modal").classList.add("show");
+  $("#closeModal").onclick = closeModal;
+}
+
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  try{ localStorage.setItem("gpu-theme", t); }catch(e){}
+}
+function init(){
+  $("#metaVer") && ($("#metaVer").textContent = META.version);
+  $("#metaDate").textContent = META.updated;
+  let t = "dark";
+  try{ t = localStorage.getItem("gpu-theme") || "dark"; }catch(e){}
+  applyTheme(t);
+
+  $("#q").addEventListener("input", function(){ state.q = this.value; render(); });
+  $$("#viewSeg button").forEach(btn=>{
+    btn.onclick = ()=>{
+      state.view = btn.getAttribute("data-view");
+      $$("#viewSeg button").forEach(x=> x.classList.toggle("active", x===btn));
+      render();
+    };
+  });
+  $("#themeBtn").onclick = ()=>{
+    const cur = document.documentElement.getAttribute("data-theme");
+    applyTheme(cur==="dark"?"light":"dark");
+  };
+  $("#infoBtn").onclick = openInfo;
+  $("#infoLink").onclick = openInfo;
+  $("#trayCmp").onclick = openCompare;
+  $("#trayClear").onclick = ()=>{ state.compare = []; render(); renderTray(); };
+  $("#modal").onclick = (e)=>{ if(e.target.id==="modal") closeModal(); };
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
+
+  buildBrandFilters();
+  buildLegend();
+  render();
+}
+
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init);
+else init();
+</script>
+</body>
+</html>

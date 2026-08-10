@@ -304,6 +304,7 @@ const CATEGORIES = {
   tooling:  { label:"实用工具", grad:"linear-gradient(135deg,#ff9f0a,#ff5e3a)" },
   edu:      { label:"教育学习", grad:"linear-gradient(135deg,#ff2d55,#ff9500)" },
   game:     { label:"休闲游戏", grad:"linear-gradient(135deg,#ff9f0a,#ff375f)" },
+  hw:       { label:"硬件对比", grad:"linear-gradient(135deg,#76b900,#0071c5)" },
 };
 
 const TOOLS = [
@@ -339,6 +340,8 @@ const TOOLS = [
     desc:"标准番茄工作法计时 + 任务清单 + 专注统计；专注/短休/长休一键切换、时长全自定义、可全屏投屏；音效与桌面通知提醒，纯本地离线、数据存本机。", tags:["番茄","专注","计时","任务","统计","效率","投屏"] },
   { id:"magictower",    file:"magictower.html",         title:"极简魔塔 · 像素地牢冒险", cat:"game",
     desc:"复古像素文字 RPG：爬塔、打怪、吃宝石、捡钥匙、闯关；回合制自动战斗、商店养成、成就系统与多套皮肤；10~100 层难度可选，纯本地离线存档。", tags:["魔塔","RPG","地牢","闯关","像素","离线","成就"] },
+  { id:"gpu",           file:"gpu-tier.html",            title:"显卡性能天梯图",       cat:"hw",
+    desc:"NVIDIA / AMD / Intel / Apple 等品牌显卡，从初代到最新型号按游戏光栅性能统一排名；分品牌与统一天梯双视图、搜索、品牌筛选与型号详情；性能分以 RTX 5090 = 100 为基准，纯本地、可按月更新。", tags:["显卡","天梯图","GPU","性能","对比","硬件","排名"] },
 ];
 
 /* 图标（白色描边，置于分类渐变方块上）。id 命中则用专属图标，否则用分类图标 */
@@ -359,6 +362,7 @@ const GLYPHS = {
   "magictower":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21V5l5-3 5 3v16"/><path d="M7 21h10M10 8h1M13 8h1M10 12h1M13 12h1M10 16h1M13 16h1"/></svg>',
   "fx":'<svg viewBox="0 0 24 24"><text x="12" y="18" font-size="16" text-anchor="middle" fill="white" font-weight="700" font-family="-apple-system,Segoe UI,sans-serif">$</text></svg>',
   "translate":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7M7.5 5v1.5c0 3-1.8 5.5-4 7M14 20l4-9 4 9M15.5 17h5"/><path d="M4 5h7" /></svg>',
+  "gpu":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 6V3M12 6V3M17 6V3M7 21v-3M12 21v-3M17 21v-3"/><circle cx="12" cy="12" r="2.4"/></svg>',
 };
 const CAT_GLYPH = '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>';
 
