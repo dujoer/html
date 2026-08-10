@@ -122,15 +122,29 @@
   #clearSearch:hover{color:var(--text);}
   #clearSearch svg{width:14px;height:14px;}
 
-  /* ===== Filters ===== */
-  .filters{max-width:1140px; margin:30px auto 0; padding:0 24px; display:flex; gap:9px; flex-wrap:wrap; justify-content:center;}
+  /* ===== Layout：左侧分类导航 + 右侧内容 ===== */
+  .layout{max-width:1140px; margin:0 auto; padding:0 24px; display:flex; gap:30px; align-items:flex-start;}
+  .sidebar{position:sticky; top:84px; flex:0 0 232px; align-self:flex-start; padding:18px 14px; border-radius:18px; background:var(--card); border:1px solid var(--line); box-shadow:var(--shadow);}
+  .side-head{display:flex; flex-direction:column; gap:2px; padding:0 10px 12px; margin-bottom:6px; border-bottom:1px solid var(--line);}
+  .side-title{font-size:14px; font-weight:700; letter-spacing:.02em;}
+  .side-tip{font-size:11.5px; color:var(--faint);}
+  .layout main{flex:1; min-width:0; max-width:none; margin:0; padding:0 0 60px;}
+
+  /* ===== Filters（侧栏内纵向列表；移动端回退横滑） ===== */
+  .filters{display:flex; flex-direction:column; gap:3px; flex-wrap:nowrap; justify-content:flex-start; margin:0; padding:0; max-width:none;}
   .pill{
-    padding:9px 16px; border-radius:999px; font-size:13.5px; font-weight:600;
-    background:var(--card); border:1px solid var(--line); color:var(--muted);
-    transition:all .18s ease; white-space:nowrap;
+    display:flex; align-items:center; gap:10px; width:100%;
+    padding:10px 12px; border-radius:11px; font-size:14px; font-weight:550;
+    background:transparent; border:1px solid transparent; color:var(--muted);
+    transition:all .16s ease; white-space:nowrap; text-align:left;
   }
-  .pill:hover{color:var(--text); border-color:color-mix(in srgb,var(--accent) 40%,transparent);}
-  .pill.on{color:#fff; background:var(--grad); border-color:transparent; box-shadow:0 6px 18px rgba(10,132,255,.35);}
+  .pill .s-dot{width:11px; height:11px; border-radius:4px; flex:0 0 auto; box-shadow:0 0 0 1px rgba(0,0,0,.04) inset;}
+  .pill .s-label{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis;}
+  .pill .s-count{font-size:12px; font-weight:600; color:var(--faint); background:var(--bg-2); padding:1px 8px; border-radius:999px; font-variant-numeric:tabular-nums;}
+  .pill:hover{background:var(--bg-2); color:var(--text);}
+  .pill.on{background:var(--card-2); color:var(--text); border-color:var(--line); box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .pill.on .s-count{background:color-mix(in srgb,var(--accent) 16%,transparent); color:var(--accent);}
+  .pill.on .s-dot{box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 32%,transparent);}
 
   /* ===== Grid ===== */
   main{max-width:1140px; margin:30px auto 0; padding:0 24px 60px;}
@@ -166,6 +180,10 @@
   .open{display:inline-flex; align-items:center; gap:5px; font-size:13.5px; font-weight:650; color:var(--accent); margin-top:2px;}
   .open svg{width:15px;height:15px; transition:transform .2s ease;}
   .card:hover .open svg{transform:translateX(4px);}
+  .card.web .icon{box-shadow:0 8px 20px rgba(94,92,230,.28);}
+  .web-badge{position:absolute; top:14px; right:14px; z-index:2; font-size:10.5px; font-weight:700; color:#fff; background:linear-gradient(135deg,#7c3aed,#2563eb); padding:3px 9px; border-radius:999px; letter-spacing:.02em;}
+  .domain{font-size:11.5px; color:var(--faint); font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; word-break:break-all; margin-top:-3px;}
+  .card.web .open{color:#5e5ce6;}
 
   /* placeholder card */
   .card.more{border-style:dashed; background:transparent; box-shadow:none; align-items:center; justify-content:center; text-align:center; color:var(--faint); min-height:210px;}
@@ -184,18 +202,21 @@
   footer .priv{display:inline-flex; align-items:center; gap:6px; padding:7px 14px; border-radius:999px; background:var(--card); border:1px solid var(--line); color:var(--muted); font-weight:550;}
   footer .priv svg{width:14px;height:14px;color:#30d158;}
 
-  @media (max-width:640px){
+  @media (max-width:900px){
     .bar{padding:12px 16px;}
     .brand .sub{display:none;}
     .hero{padding:44px 18px 22px;}
-    main{padding:0 16px 50px;}
-    .filters,.hero,.bar{max-width:100%;}
+    .layout{flex-direction:column; gap:0; padding:0 16px;}
+    .sidebar{position:static; flex:none; width:100%; padding:12px 14px 8px; border-radius:14px; margin:18px 0 0;}
+    .filters{flex-direction:row; flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start; gap:8px; padding-bottom:6px; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+    .filters::-webkit-scrollbar{display:none;}
+    .pill{width:auto; flex:0 0 auto; justify-content:center; border-radius:999px; padding:8px 14px; font-size:13px;}
+    .pill .s-dot{display:none;}
+    .pill .s-count{display:none;}
+    .layout main{padding:0 0 50px;}
     .grid{grid-template-columns:1fr; gap:16px;}
     .ghost-btn span.lbl{display:none;}
     .ghost-btn{padding:9px;}
-    .filters{flex-wrap:nowrap; overflow-x:auto; justify-content:flex-start; gap:8px; padding-bottom:6px; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
-    .filters::-webkit-scrollbar{display:none;}
-    .pill{flex:0 0 auto;}
   }
 
   /* ===== 访问统计（基础公开数据 + 入口） ===== */
@@ -265,11 +286,19 @@
   </div>
 </section>
 
-<nav class="filters" id="filters"></nav>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="side-head">
+      <span class="side-title">分类导航</span>
+      <span class="side-tip">点击分类快速筛选</span>
+    </div>
+    <nav class="filters" id="filters"></nav>
+  </aside>
 
-<main>
-  <div class="grid" id="grid"></div>
-</main>
+  <main>
+    <div class="grid" id="grid"></div>
+  </main>
+</div>
 
 <footer>
   <div class="priv">
@@ -305,6 +334,7 @@ const CATEGORIES = {
   edu:      { label:"教育学习", grad:"linear-gradient(135deg,#ff2d55,#ff9500)" },
   game:     { label:"休闲游戏", grad:"linear-gradient(135deg,#ff9f0a,#ff375f)" },
   hw:       { label:"硬件对比", grad:"linear-gradient(135deg,#76b900,#0071c5)" },
+  aiweb:    { label:"AI 导航",  grad:"linear-gradient(135deg,#7c3aed,#2563eb)" },
 };
 
 const TOOLS = [
@@ -344,6 +374,58 @@ const TOOLS = [
     desc:"NVIDIA / AMD / Intel / Apple 等品牌显卡，从初代到最新型号按游戏光栅性能统一排名；分品牌与统一天梯双视图、搜索、品牌筛选与型号详情；性能分以 RTX 5090 = 100 为基准，纯本地、可按月更新。", tags:["显卡","天梯图","GPU","性能","对比","硬件","排名"] },
   { id:"camera",        file:"camera-tier.html",         title:"相机性能天梯图",       cat:"hw",
     desc:"索尼 / 佳能 / 尼康 / 富士 / 松下 / 哈苏 / 徕卡等主流品牌，从单反到无反、中画幅到运动相机按综合影像力统一排名；分类榜单 + 统一天梯双视图、每款详细评测介绍、选购指南与对比；纯本地、可按月更新。", tags:["相机","天梯图","单反","微单","摄影","对比","硬件","排名"] },
+
+  /* ===== AI 工具官方导航（外链，与本地软件区分）===== */
+  { id:"nav-chatgpt", url:"https://chat.openai.com", title:"ChatGPT（OpenAI）", cat:"aiweb", gtype:"chat",
+    desc:"OpenAI 对话式 AI，支持 GPT-4o 多模态与联网，全球用户最多的 AI 助手。", tags:["海外","聊天","GPT","助手"] },
+  { id:"nav-claude", url:"https://claude.ai", title:"Claude（Anthropic）", cat:"aiweb", gtype:"chat",
+    desc:"Anthropic 出品，长文本与代码能力强、回答稳妥，擅长写作与文档分析。", tags:["海外","聊天","写作","助手"] },
+  { id:"nav-gemini", url:"https://gemini.google.com", title:"Gemini（Google）", cat:"aiweb", gtype:"chat",
+    desc:"Google 多模态大模型，深度整合搜索与 Workspace 生态。", tags:["海外","聊天","多模态","助手"] },
+  { id:"nav-copilot", url:"https://copilot.microsoft.com", title:"Microsoft Copilot", cat:"aiweb", gtype:"chat",
+    desc:"微软 AI 助手，内置于 Windows 与 Office，办公场景实用。", tags:["海外","聊天","办公","助手"] },
+  { id:"nav-perplexity", url:"https://www.perplexity.ai", title:"Perplexity", cat:"aiweb", gtype:"search",
+    desc:"对话式 AI 搜索引擎，回答附带来源引用，适合查证与调研。", tags:["海外","搜索","问答","研究"] },
+  { id:"nav-poe", url:"https://poe.com", title:"Poe（Quora）", cat:"aiweb", gtype:"chat",
+    desc:"一个入口聚合多家模型（Claude / GPT / 自研），可自由切换。", tags:["海外","聊天","聚合","助手"] },
+  { id:"nav-huggingface", url:"https://huggingface.co", title:"Hugging Face", cat:"aiweb", gtype:"code",
+    desc:"开源模型与数据集社区，托管海量预训练模型与 Space 应用。", tags:["海外","开源","模型","开发者"] },
+  { id:"nav-midjourney", url:"https://www.midjourney.com", title:"Midjourney", cat:"aiweb", gtype:"image",
+    desc:"顶级文生图工具，艺术风格与质感出众，靠网页 / Discord 出图。", tags:["海外","图像","绘画","创作"] },
+  { id:"nav-firefly", url:"https://www.adobe.com/products/firefly.html", title:"Adobe Firefly", cat:"aiweb", gtype:"image",
+    desc:"Adobe 创意生成式 AI，文生图 / 视频 / 修图，商用版权友好。", tags:["海外","图像","设计","创作"] },
+  { id:"nav-runway", url:"https://runwayml.com", title:"Runway", cat:"aiweb", gtype:"video",
+    desc:"AI 视频生成与编辑，绿幕 / 运镜 / 文生视频，影视创作利器。", tags:["海外","视频","生成","创作"] },
+  { id:"nav-elevenlabs", url:"https://elevenlabs.io", title:"ElevenLabs", cat:"aiweb", gtype:"audio",
+    desc:"顶尖 AI 语音合成与克隆，拟真度高，支持多语种配音。", tags:["海外","语音","配音","音频"] },
+  { id:"nav-suno", url:"https://suno.com", title:"Suno", cat:"aiweb", gtype:"audio",
+    desc:"一句话生成完整歌曲，含人声与编曲，AI 音乐创作神器。", tags:["海外","音乐","生成","创作"] },
+  { id:"nav-githubcopilot", url:"https://github.com/features/copilot", title:"GitHub Copilot", cat:"aiweb", gtype:"code",
+    desc:"微软 / OpenAI 编程助手，IDE 内实时补全与对话，提升开发效率。", tags:["海外","编程","代码","开发者"] },
+  { id:"nav-doubao", url:"https://www.doubao.com", title:"豆包（字节）", cat:"aiweb", gtype:"chat",
+    desc:"字节跳动 AI 助手，免费好用，支持聊天、写作、图像与文档。", tags:["国内","聊天","助手","免费"] },
+  { id:"nav-yiyan", url:"https://yiyan.baidu.com", title:"文心一言（百度）", cat:"aiweb", gtype:"chat",
+    desc:"百度大模型 ERNIE，中文理解强，深度整合搜索与中文生态。", tags:["国内","聊天","中文","助手"] },
+  { id:"nav-tongyi", url:"https://tongyi.aliyun.com", title:"通义千问（阿里）", cat:"aiweb", gtype:"chat",
+    desc:"阿里云大模型，多模态与长文本，兼顾办公与开发。", tags:["国内","聊天","多模态","助手"] },
+  { id:"nav-chatglm", url:"https://chatglm.cn", title:"智谱清言（智谱）", cat:"aiweb", gtype:"chat",
+    desc:"智谱 AI 对话助手，GLM 系列模型，中文与工具调用均衡。", tags:["国内","聊天","助手","工具"] },
+  { id:"nav-kimi", url:"https://kimi.moonshot.cn", title:"Kimi（月之暗面）", cat:"aiweb", gtype:"chat",
+    desc:"超长上下文 AI，擅长长文档阅读、资料整理与联网检索。", tags:["国内","聊天","长文本","检索"] },
+  { id:"nav-deepseek", url:"https://chat.deepseek.com", title:"DeepSeek", cat:"aiweb", gtype:"chat",
+    desc:"国产开源大模型，推理与代码能力强，免费且可本地部署。", tags:["国内","聊天","开源","推理"] },
+  { id:"nav-xinghuo", url:"https://xinghuo.xfyun.cn", title:"讯飞星火（科大讯飞）", cat:"aiweb", gtype:"chat",
+    desc:"讯飞大模型，语音交互见长，中文语音与多模态突出。", tags:["国内","聊天","语音","助手"] },
+  { id:"nav-yuanbao", url:"https://yuanbao.tencent.com", title:"腾讯元宝（混元）", cat:"aiweb", gtype:"chat",
+    desc:"腾讯混元大模型，微信生态联动，文档 / 搜索 / 创作一体。", tags:["国内","聊天","助手","生态"] },
+  { id:"nav-jimeng", url:"https://jimeng.jianying.com", title:"即梦 AI（字节）", cat:"aiweb", gtype:"image",
+    desc:"字节旗下文生图 / 文生视频，创意海报与短视频一键生成。", tags:["国内","图像","视频","创作"] },
+  { id:"nav-kling", url:"https://klingai.kuaishou.com", title:"可灵（快手）", cat:"aiweb", gtype:"video",
+    desc:"快手 AI 视频生成，画质与运镜自然，文生 / 图生视频强。", tags:["国内","视频","生成","创作"] },
+  { id:"nav-hailuo", url:"https://hailuoai.com", title:"海螺 AI（MiniMax）", cat:"aiweb", gtype:"audio",
+    desc:"MiniMax 出品，语音合成与 AI 对话，中文拟真度高。", tags:["国内","语音","助手","音频"] },
+  { id:"nav-metaso", url:"https://metaso.cn", title:"秘塔 AI 搜索", cat:"aiweb", gtype:"search",
+    desc:"国内 AI 搜索，回答带引用与溯源，无广告清爽查证。", tags:["国内","搜索","问答","研究"] },
 ];
 
 /* 图标（白色描边，置于分类渐变方块上）。id 命中则用专属图标，否则用分类图标 */
@@ -374,14 +456,37 @@ const state = { q:"", cat:"all" };
 const $ = (s)=>document.querySelector(s);
 const grid = $("#grid");
 
-function glyphFor(t){ return GLYPHS[t.id] || CAT_GLYPH; }
+/* AI 官网导航专用图标（按类型 gtype 取） */
+const WEB_GLYPHS = {
+  chat:  '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-4 4v-4H4z"/></svg>',
+  image: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10" r="1.6"/><path d="M21 17l-5-5-7 7"/></svg>',
+  video: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M10 9.5l5 2.5-5 2.5z"/></svg>',
+  audio: '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V6l10-2v12"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/></svg>',
+  search:'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>',
+  code:  '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 8l-4 4 4 4M15 8l4 4-4 4"/></svg>'
+};
+function hostOf(url){
+  try{ return new URL(url).hostname.replace(/^www\./,""); }catch(e){ return url; }
+}
+function glyphFor(t){
+  if(t.url && t.gtype && WEB_GLYPHS[t.gtype]) return WEB_GLYPHS[t.gtype];
+  return GLYPHS[t.id] || CAT_GLYPH;
+}
 
 function renderFilters(){
   const el = $("#filters");
   const cats = Object.keys(CATEGORIES);
-  let html = '<button class="pill'+(state.cat==="all"?" on":"")+'" data-cat="all">全部</button>';
+  const countOf = (c)=> TOOLS.filter(t=> c==="all" ? true : t.cat===c).length;
+  let html = '<button class="pill'+(state.cat==="all"?" on":"")+'" data-cat="all">'
+    + '<span class="s-dot" style="background:var(--grad)"></span>'
+    + '<span class="s-label">全部</span>'
+    + '<span class="s-count">'+countOf("all")+'</span></button>';
   cats.forEach(c=>{
-    html += '<button class="pill'+(state.cat===c?" on":"")+'" data-cat="'+c+'">'+CATEGORIES[c].label+'</button>';
+    const g = CATEGORIES[c];
+    html += '<button class="pill'+(state.cat===c?" on":"")+'" data-cat="'+c+'">'
+      + '<span class="s-dot" style="background:'+g.grad+'"></span>'
+      + '<span class="s-label">'+esc(g.label)+'</span>'
+      + '<span class="s-count">'+countOf(c)+'</span></button>';
   });
   el.innerHTML = html;
   el.querySelectorAll(".pill").forEach(b=>{
@@ -392,13 +497,22 @@ function renderFilters(){
 function cardHTML(t,i){
   const g = CATEGORIES[t.cat] || { label:"工具", grad:"var(--grad)" };
   const tags = t.tags.map(x=>'<span class="tag">'+esc(x)+'</span>').join("");
-  return '<a class="card" style="--i:'+i+'" href="'+esc(t.file)+'" target="_blank" rel="noopener">'
+  const isWeb = !!t.url;
+  const href = isWeb ? t.url : t.file;
+  const action = isWeb ? '访问官网' : '打开工具';
+  const arrow = isWeb
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M19 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  const webBadge = isWeb ? '<span class="web-badge">官网</span>' : '';
+  const domain = isWeb ? '<div class="domain">'+esc(hostOf(t.url))+'</div>' : '';
+  return '<a class="card'+(isWeb?' web':'')+'" style="--i:'+i+'" href="'+esc(href)+'" target="_blank" rel="noopener">'
+    + webBadge
     + '<div class="icon" style="background:'+g.grad+'">'+glyphFor(t)+'</div>'
     + '<div><h3>'+esc(t.title)+'</h3></div>'
     + '<div class="desc">'+esc(t.desc)+'</div>'
+    + domain
     + '<div class="tags">'+tags+'</div>'
-    + '<span class="open">打开工具'
-    + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>'
+    + '<span class="open">'+action+arrow+'</span>'
     + '</a>';
 }
 
@@ -415,7 +529,7 @@ function render(){
   const list = TOOLS.filter(t=>{
     if(state.cat!=="all" && t.cat!==state.cat) return false;
     if(!q) return true;
-    const hay = (t.title+" "+t.desc+" "+t.tags.join(" ")).toLowerCase();
+    const hay = (t.title+" "+t.desc+" "+(t.url?hostOf(t.url):"")+" "+t.tags.join(" ")).toLowerCase();
     return hay.indexOf(q)>=0;
   });
   let html = list.map((t,i)=>cardHTML(t,i)).join("");
