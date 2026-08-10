@@ -166,7 +166,7 @@ textarea#input,.output{flex:1;min-height:210px;width:100%;resize:vertical;backgr
     <div id="histList" class="hist-list" hidden></div>
   </section>
 
-  <p class="foot">翻译接口：MyMemory（免费）优先，Google / LibreTranslate 自动兜底 · 全程本地处理，不上传任何内容到第三方存储 · 朗读由浏览器自带语音合成提供</p>
+  <p class="foot">翻译接口：MyMemory（免费）优先，DeepLX（国内可达·免 key）/ LibreTranslate 自动兜底 · 全程本地处理，不上传任何内容到第三方存储 · 朗读由浏览器自带语音合成提供</p>
 </main>
 
 <div id="toast" class="toast" hidden></div>
@@ -291,13 +291,16 @@ async function tryMyMemory(q,sl,tl){
   if(String(j.responseStatus)!=='200') throw new Error(j.responseDetails||'MyMemory 错误');
   return j.responseData.translatedText;
 }
-async function tryGoogle(q,sl,tl){
-  const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl='+(sl==='auto'?'auto':sl)+'&tl='+tl+'&dt=t&q='+encodeURIComponent(q);
-  const r=await fetchWithTimeout(url);
+function deeplCode(c){ if(c==='zh-CN'||c==='zh-TW')return 'ZH'; if(c==='auto')return 'auto'; return c.toUpperCase(); }
+async function tryDeeplX(q,sl,tl){
+  // DeepLX 公共服务（部署在 Cloudflare，国内可达、免 key）；质量优于 MyMemory
+  const url='https://dplx.xi-xu.me/deepl';
+  const body={text:q, source_lang:deeplCode(sl), target_lang:deeplCode(tl)};
+  const r=await fetchWithTimeout(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)},12000);
   if(!r.ok) throw new Error('HTTP '+r.status);
   const j=await r.json();
-  let t=''; (j[0]||[]).forEach(seg=>{ if(seg[0]) t+=seg[0]; });
-  return t;
+  if(j.code!==200 || !j.data) throw new Error(j.message||'DeepLX 错误');
+  return j.data;
 }
 async function tryLibre(q,sl,tl){
   const url='https://libretranslate.com/translate';
@@ -309,7 +312,7 @@ async function tryLibre(q,sl,tl){
   return j.translatedText;
 }
 async function translateText(q,sl,tl){
-  const srcs=[['MyMemory',tryMyMemory],['Google',tryGoogle],['LibreTranslate',tryLibre]];
+  const srcs=[['MyMemory',tryMyMemory],['DeepLX',tryDeeplX],['LibreTranslate',tryLibre]];
   let last;
   for(let i=0;i<srcs.length;i++){
     const name=srcs[i][0], fn=srcs[i][1];
