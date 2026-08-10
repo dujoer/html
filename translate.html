@@ -166,7 +166,7 @@ textarea#input,.output{flex:1;min-height:210px;width:100%;resize:vertical;backgr
     <div id="histList" class="hist-list" hidden></div>
   </section>
 
-  <p class="foot">翻译接口：MyMemory（免费）优先，DeepLX（国内可达·免 key）/ LibreTranslate 自动兜底 · 全程本地处理，不上传任何内容到第三方存储 · 朗读由浏览器自带语音合成提供</p>
+  <p class="foot">翻译接口：彩云小译（国内·免费）优先，MyMemory / LibreTranslate 自动兜底 · 全程本地处理，不上传任何内容到第三方存储 · 朗读由浏览器自带语音合成提供</p>
 </main>
 
 <div id="toast" class="toast" hidden></div>
@@ -282,6 +282,33 @@ async function fetchWithTimeout(url,opts={},ms=9000){
   try{ return await fetch(url,Object.assign({},opts,{signal:ctrl.signal})); }
   finally{ clearTimeout(id); }
 }
+/* ---------- 彩云小译（国内主源） ---------- */
+// 彩云小译 token（公开测试用，每月100万免费额度；如失效用户可去 caiyunapp.com 申请自己的）
+const CAIYUN_TOKEN = '3975l6lr5pcbvidl6jl2';
+function caiyunDir(sl, tl){
+  // trans_type 格式: auto2zh / en2zh / zh2en / ja2zh 等
+  const m = {'zh-CN':'zh','zh-TW':'zh','en':'en','ja':'ja','ko':'ko','fr':'fr','de':'de',
+    'es':'es','ru':'ru','pt':'pt','it':'it','ar':'ar','th':'th','vi':'vi'};
+  const s = sl==='auto'?'auto': (m[sl]||sl);
+  const t = m[tl] || tl;
+  if(s==='auto') return 'auto2'+t;
+  return s+'2'+t;
+}
+async function tryCaiyun(q,sl,tl){
+  const url='https://api.interpreter.caiyunai.com/v1/translator';
+  const body={source:[q], trans_type:caiyunDir(sl,tl), detect: sl==='auto', media:'text', request_id:'mt-web'};
+  const r=await fetchWithTimeout(url,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Authorization':'token '+CAIYUN_TOKEN},
+    body:JSON.stringify(body)
+  },12000);
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const j=await r.json();
+  if(!j.target || !j.target.length) throw new Error(j.message||'彩云小译空结果');
+  return j.target[0];
+}
+
+/* ---------- MyMemory（海外兜底1） ---------- */
 async function tryMyMemory(q,sl,tl){
   if(sl==='auto') throw new Error('skip');
   const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(q)+'&langpair='+encodeURIComponent(sl+'|'+tl);
@@ -291,17 +318,8 @@ async function tryMyMemory(q,sl,tl){
   if(String(j.responseStatus)!=='200') throw new Error(j.responseDetails||'MyMemory 错误');
   return j.responseData.translatedText;
 }
-function deeplCode(c){ if(c==='zh-CN'||c==='zh-TW')return 'ZH'; if(c==='auto')return 'auto'; return c.toUpperCase(); }
-async function tryDeeplX(q,sl,tl){
-  // DeepLX 公共服务（部署在 Cloudflare，国内可达、免 key）；质量优于 MyMemory
-  const url='https://dplx.xi-xu.me/deepl';
-  const body={text:q, source_lang:deeplCode(sl), target_lang:deeplCode(tl)};
-  const r=await fetchWithTimeout(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)},12000);
-  if(!r.ok) throw new Error('HTTP '+r.status);
-  const j=await r.json();
-  if(j.code!==200 || !j.data) throw new Error(j.message||'DeepLX 错误');
-  return j.data;
-}
+
+/* ---------- LibreTranslate（海外兜底2） ---------- */
 async function tryLibre(q,sl,tl){
   const url='https://libretranslate.com/translate';
   const body={q:q, source: sl==='auto'?'auto':libreCode(sl), target: libreCode(tl), format:'text'};
@@ -311,8 +329,11 @@ async function tryLibre(q,sl,tl){
   if(!j.translatedText) throw new Error('LibreTranslate 空结果');
   return j.translatedText;
 }
+
+/* ---------- 翻译调度 ---------- */
 async function translateText(q,sl,tl){
-  const srcs=[['MyMemory',tryMyMemory],['DeepLX',tryDeeplX],['LibreTranslate',tryLibre]];
+  // 优先级：彩云小译(国内) → MyMemory(海外) → LibreTranslate(海外)
+  const srcs=[['彩云小译',tryCaiyun],['MyMemory',tryMyMemory],['LibreTranslate',tryLibre]];
   let last;
   for(let i=0;i<srcs.length;i++){
     const name=srcs[i][0], fn=srcs[i][1];
