@@ -113,11 +113,11 @@
   mark{background:var(--ig);color:#fff;border-radius:3px;padding:0 2px;}
   /* ===== Unified tier (横条榜单) ===== */
   .tier-rows{display:flex;flex-direction:column;gap:8px;}
-  .trow{display:grid;grid-template-columns:42px 1fr 62px;align-items:center;gap:12px;
+  .trow{display:grid;grid-template-columns:42px 1fr 54px 30px;align-items:center;gap:12px;
     background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:11px 14px;position:relative;transition:.15s;}
   .trow:hover{transform:translateX(3px);border-color:color-mix(in srgb,var(--tc) 50%, var(--line));}
   .trow .rank{font-weight:800;font-size:15px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums;}
-  .trow .tmain{display:flex;flex-direction:column;gap:7px;min-width:0;padding-right:28px;}
+  .trow .tmain{display:flex;flex-direction:column;gap:7px;min-width:0;}
   .trow .tn{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;min-width:0;}
   .trow .tn .dot{width:9px;height:9px;border-radius:50%;flex:none;}
   .trow .tn .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -384,11 +384,11 @@ function gpuCard(g,q,br){
 function tierRow(g,q,br,rank){
   const tc = tierColor(g.t);
   return '<div class="trow" style="--tc:'+tc+'" data-name="'+esc(g.name)+'">'
-    + '<button class="add'+(state.compare.indexOf(g.name)>=0?" on":"")+'" data-add="'+esc(g.name)+'" title="加入对比" style="top:8px;right:8px;">＋</button>'
     + '<div class="rank">#'+rank+'</div>'
     + '<div class="tmain"><div class="tn"><span class="dot" style="background:'+br.color+'"></span><span class="nm">'+hl(g.name,q)+'</span></div>'
     + '<div class="tbar"><i style="width:'+g.s+'%;background:'+br.grad+'"></i></div></div>'
     + '<div class="tsc">'+g.s+'<small>%</small></div>'
+    + '<button class="add'+(state.compare.indexOf(g.name)>=0?" on":"")+'" data-add="'+esc(g.name)+'" title="加入对比" style="position:static;width:24px;height:24px;font-size:15px;flex:none;">＋</button>'
     + '</div>';
 }
 function filtered(){
