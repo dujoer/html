@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>网页获源 · 网页资源嗅探工具</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --panel:#ffffff; --card:#ffffff; --text:#1d2333; --muted:#6b7280;
+    --line:#e6e9f0; --accent:#0a84ff; --accent2:#5e5ce6;
+    --grad:linear-gradient(135deg,#0a84ff,#5e5ce6);
+    --ok:#1aa260; --warn:#e0a200; --err:#e0483d;
+    --shadow:0 8px 30px rgba(20,30,60,.08);
+    --radius:16px;
+  }
+  body.dark{
+    --bg:#0e1117; --panel:#171b24; --card:#1b202b; --text:#e8ecf4; --muted:#9aa3b2;
+    --line:#2a3140; --accent:#3b9dff; --accent2:#7c7cff;
+    --grad:linear-gradient(135deg,#3b9dff,#7c7cff);
+    --shadow:0 8px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.55;-webkit-text-size-adjust:100%;}
+  a{color:var(--accent);}
+  .bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;
+    padding:14px 24px;background:var(--panel);border-bottom:1px solid var(--line);backdrop-filter:blur(8px);}
+  .bar .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;}
+  .bar .logo .dot{width:30px;height:30px;border-radius:9px;background:var(--grad);
+    display:grid;place-items:center;color:#fff;font-size:15px;box-shadow:var(--shadow);}
+  .bar .logo small{color:var(--muted);font-weight:500;font-size:12px;}
+  .bar .spacer{flex:1;}
+  .theme-btn{width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:var(--card);
+    color:var(--text);cursor:pointer;display:grid;place-items:center;font-size:18px;transition:.15s;}
+  .theme-btn:hover{border-color:var(--accent);}
+  .help-btn{padding:9px 14px;border-radius:11px;border:1px solid var(--line);background:var(--card);
+    color:var(--text);cursor:pointer;font-size:13.5px;font-weight:600;transition:.15s;}
+  .help-btn:hover{border-color:var(--accent);}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 24px 60px;}
+
+  /* input area */
+  .input-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px;position:relative;}
+  .input-row{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;}
+  .url-box{position:relative;flex:1;min-width:240px;}
+  .url-box input{width:100%;height:48px;padding:0 44px 0 16px;border-radius:12px;border:1px solid var(--line);
+    background:var(--bg);color:var(--text);font-size:15px;outline:none;transition:.15s;}
+  .url-box input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent);}
+  .hist-toggle{position:absolute;right:8px;top:9px;width:30px;height:30px;border:none;background:transparent;
+    color:var(--muted);cursor:pointer;font-size:18px;border-radius:8px;}
+  .hist-toggle:hover{background:var(--line);color:var(--text);}
+  .hist-drop{position:absolute;top:52px;left:0;right:0;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;box-shadow:var(--shadow);max-height:280px;overflow:auto;z-index:20;display:none;}
+  .hist-drop.show{display:block;}
+  .hist-item{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .hist-item:last-child{border-bottom:none;}
+  .hist-item:hover{background:var(--bg);}
+  .hist-item .u{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .hist-item .del{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px;}
+  .hist-item .del:hover{background:color-mix(in srgb,var(--err) 18%,transparent);color:var(--err);}
+
+  .btn{height:48px;padding:0 20px;border-radius:12px;border:none;cursor:pointer;font-size:15px;font-weight:700;
+    display:inline-flex;align-items:center;gap:7px;transition:.15s;white-space:nowrap;}
+  .btn-primary{background:var(--grad);color:#fff;box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 35%,transparent);}
+  .btn-primary:hover{filter:brightness(1.05);}
+  .btn-primary:disabled{opacity:.55;cursor:not-allowed;}
+  .btn-ghost{background:var(--card);border:1px solid var(--line);color:var(--text);}
+  .btn-ghost:hover{border-color:var(--accent);}
+  .btn-danger{background:color-mix(in srgb,var(--err) 14%,transparent);color:var(--err);border:1px solid color-mix(in srgb,var(--err) 30%,transparent);}
+  .btn-danger:hover{background:color-mix(in srgb,var(--err) 22%,transparent);}
+  .btn-sm{height:34px;padding:0 12px;font-size:13px;border-radius:9px;font-weight:600;}
+
+  .advanced-toggle{margin-top:12px;font-size:13px;color:var(--accent);cursor:pointer;user-select:none;display:inline-flex;gap:6px;align-items:center;}
+  .advanced-panel{margin-top:12px;padding:14px;border:1px dashed var(--line);border-radius:12px;display:none;
+    background:var(--bg);}
+  .advanced-panel.show{display:block;}
+  .opt-row{display:flex;flex-wrap:wrap;gap:18px;align-items:center;}
+  .opt{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--text);}
+  .opt select{padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:13.5px;}
+  .switch{position:relative;width:44px;height:24px;border-radius:999px;background:var(--line);cursor:pointer;transition:.2s;border:none;}
+  .switch.on{background:var(--accent);}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3);}
+  .switch.on::after{left:22px;}
+  .opt input[type=text]{padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:13.5px;width:220px;max-width:100%;}
+
+  /* preview */
+  .preview{margin-top:16px;border:1px solid var(--line);border-radius:12px;overflow:hidden;display:none;background:var(--panel);}
+  .preview.show{display:block;}
+  .preview .ph{display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:12.5px;color:var(--muted);}
+  .preview iframe{width:100%;height:380px;border:none;background:#fff;}
+
+  /* tabs */
+  .tabs{display:flex;gap:4px;margin:22px 0 14px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+    border-bottom:1px solid var(--line);}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{padding:11px 16px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;
+    border-bottom:2px solid transparent;transition:.15s;}
+  .tab:hover{color:var(--text);}
+  .tab.on{color:var(--accent);border-bottom-color:var(--accent);}
+  .tab .badge{display:inline-block;min-width:18px;padding:0 5px;margin-left:6px;font-size:11px;line-height:17px;text-align:center;
+    background:var(--line);color:var(--muted);border-radius:9px;}
+  .tab.on .badge{background:color-mix(in srgb,var(--accent) 22%,transparent);color:var(--accent);}
+
+  .panel{display:none;}
+  .panel.on{display:block;animation:fade .25s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+  .toolbar .grow{flex:1;min-width:160px;}
+  .search-box{padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:14px;width:100%;outline:none;}
+  .search-box:focus{border-color:var(--accent);}
+  .chip{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--muted);
+    font-size:12.5px;font-weight:600;cursor:pointer;transition:.15s;}
+  .chip:hover{border-color:var(--accent);color:var(--text);}
+  .chip.on{background:var(--grad);color:#fff;border-color:transparent;}
+  .label-in{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;}
+  .label-in input{padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:84px;font-size:12.5px;}
+
+  /* lists */
+  .list{display:flex;flex-direction:column;gap:8px;}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 13px;display:flex;gap:12px;align-items:flex-start;transition:.15s;}
+  .item:hover{border-color:color-mix(in srgb,var(--accent) 40%,transparent);}
+  .item .thumb{width:64px;height:64px;border-radius:9px;object-fit:cover;background:var(--bg);border:1px solid var(--line);flex-shrink:0;}
+  .item .meta{flex:1;min-width:0;}
+  .item .url{font-size:13px;word-break:break-all;color:var(--text);}
+  .item .sub{font-size:11.5px;color:var(--muted);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;}
+  .item .sub .tag{padding:1px 7px;border-radius:6px;background:var(--bg);}
+  .item .acts{display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+  .icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);
+    cursor:pointer;display:grid;place-items:center;font-size:14px;transition:.15s;}
+  .icon-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* source view */
+  .src-tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center;}
+  .src-box{border:1px solid var(--line);border-radius:12px;background:var(--bg);overflow:auto;max-height:62vh;}
+  pre.code{margin:0;padding:14px 16px;font-family:"SF Mono",Consolas,Menlo,monospace;font-size:12.5px;line-height:1.7;
+    white-space:pre;tab-size:2;color:var(--text);}
+  .code .t{color:#2b8a3e;} .code .a{color:#c2410c;} .code .s{color:#d6336c;} .code .c{color:#868e96;font-style:italic;}
+  .code .k{color:#1971c2;} .code .n{color:#e8590c;}
+  .paste-area{width:100%;min-height:120px;border:1px solid var(--line);border-radius:12px;background:var(--bg);
+    color:var(--text);padding:12px;font-family:monospace;font-size:13px;resize:vertical;outline:none;margin-bottom:10px;}
+  .paste-area:focus{border-color:var(--accent);}
+
+  .empty{text-align:center;padding:48px 20px;color:var(--muted);}
+  .empty .big{font-size:40px;margin-bottom:10px;}
+  .empty .small{font-size:13px;}
+
+  .note{background:color-mix(in srgb,var(--warn) 12%,transparent);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);
+    color:var(--text);border-radius:12px;padding:12px 14px;font-size:13px;margin:0 0 14px;line-height:1.6;}
+  .note.err{background:color-mix(in srgb,var(--err) 12%,transparent);border-color:color-mix(in srgb,var(--err) 35%,transparent);}
+  .note b{color:var(--warn);}
+  .note.err b{color:var(--err);}
+
+  .count{font-size:12.5px;color:var(--muted);margin-bottom:10px;}
+
+  /* history panel */
+  .hist-panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:20px;}
+  .hist-panel h3{margin:0 0 10px;font-size:15px;display:flex;align-items:center;gap:8px;}
+  .hist-panel .clr{margin-left:auto;}
+
+  /* footer */
+  .foot{margin-top:30px;padding:18px 0 0;border-top:1px solid var(--line);font-size:12px;color:var(--muted);text-align:center;line-height:1.7;}
+
+  /* modal */
+  .mask{position:fixed;inset:0;background:rgba(10,15,30,.5);z-index:50;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px);}
+  .mask.show{display:flex;}
+  .modal{background:var(--panel);border-radius:18px;max-width:620px;width:100%;max-height:84vh;overflow:auto;
+    box-shadow:var(--shadow);padding:24px;}
+  .modal h2{margin:0 0 14px;font-size:19px;display:flex;align-items:center;gap:10px;}
+  .modal h3{font-size:15px;margin:18px 0 8px;}
+  .modal p,.modal li{font-size:13.5px;line-height:1.7;color:var(--text);}
+  .modal ul{padding-left:20px;margin:6px 0;}
+  .modal .close{float:right;width:34px;height:34px;border:none;background:var(--bg);border-radius:9px;cursor:pointer;font-size:18px;color:var(--muted);}
+  .modal .close:hover{color:var(--text);}
+  .modal code{background:var(--bg);padding:1px 6px;border-radius:5px;font-size:12.5px;}
+
+  /* tray */
+  .tray{position:fixed;left:0;right:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);
+    box-shadow:0 -8px 30px rgba(0,0,0,.12);z-index:40;transform:translateY(110%);transition:.25s;padding:12px 18px;
+    display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  .tray.show{transform:translateY(0);}
+  .tray .info{font-size:13px;color:var(--muted);}
+  .tray .spacer{flex:1;}
+
+  /* toast */
+  #toast{position:fixed;left:50%;top:24px;transform:translateX(-50%) translateY(-20px);z-index:80;
+    background:var(--text);color:var(--bg);padding:10px 18px;border-radius:11px;font-size:13.5px;font-weight:600;
+    opacity:0;transition:.25s;pointer-events:none;box-shadow:var(--shadow);max-width:90vw;text-align:center;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .loading{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  @media (max-width:760px){
+    .wrap{padding:16px 14px 80px;}
+    .bar{padding:12px 14px;}
+    .bar .logo small{display:none;}
+    .btn{padding:0 14px;font-size:14px;}
+    .item .acts{flex-direction:row;}
+    .preview iframe{height:300px;}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+  <div class="bar">
+    <div class="logo"><span class="dot">源</span><div>网页获源<br><small>网页资源嗅探工具 · 纯前端</small></div></div>
+    <div class="spacer"></div>
+    <button class="help-btn" id="helpBtn">使用须知</button>
+    <button class="theme-btn" id="themeBtn" title="切换主题">🌙</button>
+  </div>
+
+  <div class="wrap">
+    <div class="input-card">
+      <div class="input-row">
+        <div class="url-box">
+          <input id="urlInput" type="text" placeholder="粘贴目标网址，如 https://example.com" autocomplete="off" spellcheck="false">
+          <button class="hist-toggle" id="histToggle" title="历史记录">🕘</button>
+          <div class="hist-drop" id="histDrop"></div>
+        </div>
+        <button class="btn btn-primary" id="loadBtn">加载页面</button>
+        <button class="btn btn-ghost" id="stopBtn" disabled>停止</button>
+        <button class="btn btn-ghost" id="clearBtn">清空</button>
+      </div>
+
+      <div class="advanced-toggle" id="advToggle">▸ 高级选项（UA / JS 开关 / Referer）</div>
+      <div class="advanced-panel" id="advPanel">
+        <div class="opt-row">
+          <div class="opt"><span>User-Agent</span>
+            <select id="uaSel">
+              <option value="pc">PC 浏览器</option>
+              <option value="mobile">移动端手机</option>
+            </select>
+          </div>
+          <div class="opt"><span>启用 JavaScript</span><button class="switch on" id="jsSwitch"></button></div>
+          <div class="opt"><span>Referer</span><input type="text" id="refInput" placeholder="https://referer.com（可选）"></div>
+        </div>
+      </div>
+
+      <div class="preview" id="preview">
+        <div class="ph"><span>🌐 内嵌预览</span><span id="previewUrl" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span></div>
+        <iframe id="previewFrame" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>
+      </div>
+    </div>
+
+    <div class="tabs" id="tabs">
+      <div class="tab on" data-tab="src">页面源码<span class="badge" id="b-src">0</span></div>
+      <div class="tab" data-tab="media">媒体资源<span class="badge" id="b-media">0</span></div>
+      <div class="tab" data-tab="img">图片资源<span class="badge" id="b-img">0</span></div>
+      <div class="tab" data-tab="net">网络请求<span class="badge" id="b-net">0</span></div>
+      <div class="tab" data-tab="pkg">静态打包<span class="badge" id="b-pkg">·</span></div>
+    </div>
+
+    <!-- Tab1 源码 -->
+    <div class="panel on" id="p-src">
+      <div class="note" id="srcNote">提示：由于浏览器跨域（CORS）限制，多数第三方站点无法直接读取源码。若加载失败，可在下方粘贴源码进行解析，所有提取功能均可正常使用。</div>
+      <textarea class="paste-area" id="pasteArea" placeholder="将目标网页的 HTML 源码粘贴到此处，点击「解析粘贴的源码」即可使用全部提取功能（图片/媒体/链接/正则筛选等）。"></textarea>
+      <div class="src-tools">
+        <button class="btn btn-ghost btn-sm" id="parsePasteBtn">解析粘贴的源码</button>
+        <span style="flex:1"></span>
+        <button class="chip" id="fmtBtn">格式化代码</button>
+        <button class="chip" id="fScript">仅 script</button>
+        <button class="chip" id="fStyle">仅 style</button>
+        <button class="chip" id="fAll">全部</button>
+        <button class="btn btn-ghost btn-sm" id="copySrcBtn">复制全部</button>
+        <button class="btn btn-ghost btn-sm" id="dlSrcBtn">下载 index.html</button>
+      </div>
+      <div class="toolbar">
+        <input class="search-box grow" id="srcSearch" placeholder="搜索源码关键词（class、链接、文本…）">
+      </div>
+      <div class="src-box"><pre class="code" id="srcView"><span style="color:var(--muted)">尚未加载或解析源码。粘贴源码或成功加载页面后，这里显示带语法高亮的 HTML 源代码。</span></pre></div>
+    </div>
+
+    <!-- Tab2 媒体 -->
+    <div class="panel" id="p-media">
+      <div class="toolbar">
+        <button class="chip on" data-mf="all">全部</button>
+        <button class="chip" data-mf="m3u8">仅 m3u8</button>
+        <button class="chip" data-mf="video">仅视频</button>
+        <button class="chip" data-mf="audio">仅音频</button>
+        <span style="flex:1"></span>
+        <button class="btn btn-ghost btn-sm" id="copyMediaBtn">批量复制链接</button>
+        <button class="btn btn-ghost btn-sm" id="expMediaBtn">导出 TXT</button>
+      </div>
+      <div class="count" id="mediaCount"></div>
+      <div class="list" id="mediaList"></div>
+    </div>
+
+    <!-- Tab3 图片 -->
+    <div class="panel" id="p-img">
+      <div class="toolbar">
+        <button class="chip on" data-if="all">全部</button>
+        <button class="chip" data-if="big">仅大图(≥<span></span>)</button>
+        <span class="label-in">最小边长(px)<input type="number" id="imgThresh" value="60" min="0"></span>
+        <span style="flex:1"></span>
+        <button class="btn btn-ghost btn-sm" id="copyImgBtn">批量复制链接</button>
+        <button class="btn btn-ghost btn-sm" id="expImgBtn">导出 TXT</button>
+      </div>
+      <div class="count" id="imgCount"></div>
+      <div class="list" id="imgList"></div>
+    </div>
+
+    <!-- Tab4 网络请求 -->
+    <div class="panel" id="p-net">
+      <div class="note">能力边界：纯前端无法捕获跨域 iframe 内部发起的 XHR/Fetch 动态接口；下表列出从页面源码中解析出的「静态资源与媒体请求」。这与 Fiddler / Charles 抓包不同，仅反映源码中声明的资源。</div>
+      <div class="toolbar">
+        <button class="chip on" data-nf="all">全部</button>
+        <button class="chip" data-nf="api">仅接口</button>
+        <button class="chip" data-nf="media">仅媒体</button>
+        <span style="flex:1"></span>
+        <button class="btn btn-ghost btn-sm" id="copyNetBtn">批量复制链接</button>
+        <button class="btn btn-ghost btn-sm" id="expNetBtn">导出 TXT</button>
+      </div>
+      <div class="count" id="netCount"></div>
+      <div class="list" id="netList"></div>
+    </div>
+
+    <!-- Tab5 静态打包 -->
+    <div class="panel" id="p-pkg">
+      <div class="note">说明：受跨域限制，无法自动下载外部远程资源到本地（与 HTTrack 等整站下载工具不同）。下列两种模式仅基于源码中解析出的依赖。</div>
+      <div class="toolbar">
+        <button class="chip on" data-pm="list">资源清单</button>
+      </div>
+      <div id="pkgBody"></div>
+      <div class="toolbar" style="margin-top:14px;">
+        <button class="btn btn-primary btn-sm" id="pkgModeA">模式A：下载主 HTML</button>
+        <button class="btn btn-ghost btn-sm" id="pkgModeB">模式B：导出资源清单 TXT</button>
+      </div>
+    </div>
+
+    <!-- 历史 -->
+    <div class="hist-panel">
+      <h3>🕘 本地访问历史 <button class="btn btn-danger btn-sm clr" id="clrHistBtn">清空全部</button></h3>
+      <div id="histList"></div>
+    </div>
+
+    <div class="foot">
+      网页获源 · 纯前端单 HTML 工具，所有数据仅存于本地浏览器（LocalStorage），不上传任何服务器。<br>
+      受浏览器跨域（CORS）与 X-Frame-Options 限制，部分网站无法读取源码或被禁止内嵌预览，请知悉。仅供学习研究，禁止侵权用途。
+    </div>
+  </div>
+
+  <!-- tray -->
+  <div class="tray" id="tray">
+    <span class="info" id="trayInfo">已选择 0 项</span>
+    <span class="spacer"></span>
+    <button class="btn btn-ghost btn-sm" id="trayClear">清空选择</button>
+  </div>
+
+  <!-- help modal -->
+  <div class="mask" id="helpMask">
+    <div class="modal">
+      <button class="close" id="helpClose">×</button>
+      <h2>📖 使用须知与免责声明</h2>
+      <h3>一、它能做什么</h3>
+      <p>网页获源是一款浏览器内运行的网页资源嗅探工具：输入网址或粘贴源码，解析并提取页面中的图片、视频、音频、m3u8 流媒体、链接等资源，支持查看源码、正则筛选、去重、链接编解码、导出 TXT 与静态打包清单。</p>
+      <h3>二、浏览器安全限制（重要）</h3>
+      <ul>
+        <li><b>跨域 CORS</b>：浏览器禁止前端读取绝大多数第三方站点的 HTML 源码。直接「加载页面」仅对同源页面、或明确开启跨域许可（<code>Access-Control-Allow-Origin</code>）的站点有效。</li>
+        <li><b>X-Frame-Options / CSP</b>：许多现代站点禁止被 iframe 内嵌，此时预览区会显示拦截提示，属正常现象。</li>
+        <li><b>登录鉴权</b>：需要 Cookie、Token 登录的私有内容无法获取。</li>
+        <li><b>动态混淆</b>：经 JS 加密、动态生成的资源地址，静态解析可能遗漏。</li>
+      </ul>
+      <h3>三、与专业工具的区别</h3>
+      <p>本工具不是底层抓包工具（不同于 Fiddler、Charles、HTTrack），不进行数据包拦截、不搭建代理后端、不自动整站下载远程资源。</p>
+      <h3>四、免责声明</h3>
+      <p>本工具仅供学习研究与技术参考。请严格遵守相关法律法规与目标网站服务条款：<b>禁止未经授权抓取受版权保护的视频、图片与素材，禁止任何商用侵权用途。</b>使用本工具产生的一切后果由使用者自行承担。</p>
+      <h3>五、推荐使用方式</h3>
+      <p>若「加载页面」因跨域失败，请复制目标页面的网页源代码，粘贴到「页面源码」标签的输入框中，点击「解析粘贴的源码」，即可使用全部提取与筛选功能。</p>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+<script>
+/* ===================== 网页获源 webget.html ===================== */
+(function(){
+  "use strict";
+  const $ = s=>document.querySelector(s);
+  const $$ = s=>Array.prototype.slice.call(document.querySelectorAll(s));
+  const esc = s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const LS = {
+    get(k,d){ try{ const v=localStorage.getItem('webget-'+k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+    set(k,v){ try{ localStorage.setItem('webget-'+k, JSON.stringify(v)); }catch(e){} }
+  };
+
+  const state = {
+    theme: LS.get('theme','light'),
+    history: LS.get('history',[]),   // [{url,time}]
+    src: '',            // raw html source
+    baseUrl: '',
+    media: [], img: [], links: [], requests: [],
+    loading: false,
+    sel: new Set(),     // selected resource keys for tray
+    filter: { media:'all', img:'all', net:'all', pkg:'list' },
+    settings: { ua:'pc', js:true, referer:'' }
+  };
+
+  /* ---------- helpers ---------- */
+  function normalizeUrl(u){
+    u=(u||'').trim();
+    if(!u) return '';
+    if(!/^https?:\/\//i.test(u)) u='https://'+u;
+    return u;
+  }
+  function isValidUrl(u){ return /^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(u); }
+  function baseOf(url){
+    try{ const p=new URL(url); return p.origin+p.pathname.replace(/[^\/]*$/,'');
+    }catch(e){ return ''; }
+  }
+  function absUrl(href, base){
+    if(!href) return '';
+    if(/^(https?:)?\/\//i.test(href)) return /^https?:/i.test(href)?href:'https:'+href;
+    if(/^data:/i.test(href)||/^blob:/i.test(href)) return href;
+    if(/^#/.test(href)) return '';
+    try{ return new URL(href, base||'').href; }catch(e){ return href; }
+  }
+  function dedupe(arr){
+    const seen=new Set(), out=[];
+    arr.forEach(x=>{ const k=(x.url||'').trim(); if(k && !seen.has(k)){ seen.add(k); out.push(x);} });
+    return out;
+  }
+  function mediaType(url){
+    const u=(url||'').toLowerCase().split('?')[0];
+    if(/\.m3u8(\b|$)/.test(u)) return 'm3u8';
+    if(/\.(mp4|webm|ogg|mov|m4v|flv)(\b|$)/.test(u)) return 'video';
+    if(/\.(mp3|wav|m4a|aac|ogg)(\b|$)/.test(u) && !/\.ogg$/.test(u)) return 'audio';
+    if(/\.flv(\b|$)/.test(u)) return 'video';
+    return 'other';
+  }
+  function extOf(url){ const m=String(url||'').match(/\.([a-z0-9]+)(?:[?#]|$)/i); return m?m[1].toLowerCase():''; }
+  function isMediaExt(e){ return ['mp4','webm','mov','m4v','flv','mp3','wav','m4a','aac','m3u8'].includes(e); }
+  function isImgExt(e){ return ['png','jpg','jpeg','gif','webp','svg','bmp','avif','ico'].includes(e); }
+
+  /* ---------- toast ---------- */
+  let toastTimer=null;
+  function toast(msg){
+    const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),1800);
+  }
+
+  /* ---------- theme ---------- */
+  function applyTheme(){
+    document.body.classList.toggle('dark', state.theme==='dark');
+    $('#themeBtn').textContent = state.theme==='dark'?'☀️':'🌙';
+    LS.set('theme', state.theme);
+  }
+  $('#themeBtn').onclick=()=>{ state.theme = state.theme==='dark'?'light':'dark'; applyTheme(); };
+
+  /* ---------- history ---------- */
+  function addHistory(url){
+    url=normalizeUrl(url);
+    if(!isValidUrl(url)) return;
+    state.history = state.history.filter(h=>h.url!==url);
+    state.history.unshift({url, time:Date.now()});
+    if(state.history.length>50) state.history.length=50;
+    LS.set('history', state.history);
+    renderHistory();
+  }
+  function renderHistory(){
+    const drop=$('#histDrop'), panel=$('#histList');
+    const fmt=t=>{ const d=new Date(t); return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+    if(state.history.length===0){
+      drop.innerHTML='<div class="hist-item" style="color:var(--muted)">暂无历史记录</div>';
+      panel.innerHTML='<div style="color:var(--muted);font-size:13px;padding:6px 2px;">暂无历史记录</div>';
+      return;
+    }
+    drop.innerHTML = state.history.map((h,i)=>
+      '<div class="hist-item" data-u="'+esc(h.url)+'"><span class="u">'+esc(h.url)+'</span><span style="color:var(--muted);font-size:11px">'+fmt(h.time)+'</span><button class="del" data-del="'+i+'">×</button></div>'
+    ).join('');
+    panel.innerHTML = state.history.map((h,i)=>
+      '<div class="hist-item" data-u="'+esc(h.url)+'"><span class="u">'+esc(h.url)+'</span><span style="color:var(--muted);font-size:11px">'+fmt(h.time)+'</span><button class="del" data-del="'+i+'">×</button></div>'
+    ).join('');
+    $$('#histDrop .hist-item, #histList .hist-item').forEach(it=>{
+      it.onclick=(e)=>{
+        if(e.target.dataset.del!==undefined){ state.history.splice(+e.target.dataset.del,1); LS.set('history',state.history); renderHistory(); return; }
+        const u=it.dataset.u; $('#urlInput').value=u; $('#histDrop').classList.remove('show');
+        if(e.metaKey||e.ctrlKey) loadPage(u);
+      };
+    });
+  }
+
+  /* ---------- loading ---------- */
+  function setLoading(on){
+    state.loading=on;
+    const b=$('#loadBtn');
+    b.disabled=on; b.innerHTML = on?'<span class="loading"></span> 加载中…':'加载页面';
+    $('#stopBtn').disabled=!on;
+    if(on){ $('#srcNote').className='note'; $('#srcNote').innerHTML='正在尝试加载页面（若目标站点跨域或禁止内嵌，将自动给出边界提示）…'; }
+  }
+  let abortCtrl=null;
+  function stopLoad(){ if(abortCtrl){ try{abortCtrl.abort();}catch(e){} abortCtrl=null; } setLoading(false); toast('已停止加载'); }
+
+  /* ---------- core load ---------- */
+  async function loadPage(raw){
+    if(state.loading) return;
+    const url=normalizeUrl(raw||$('#urlInput').value);
+    if(!isValidUrl(url)){ toast('请输入合法的网址'); return; }
+    addHistory(url);
+    setLoading(true);
+    abortCtrl = (window.AbortController)?new AbortController():null;
+    const signal = abortCtrl?abortCtrl.signal:undefined;
+    let fetched=false, text='';
+    try{
+      const headers={};
+      if(state.settings.referer) headers['Referer']=state.settings.referer;
+      // 注意：浏览器无法自定义 UA 发送 fetch，此处仅作记录；UA 主要影响 iframe 预览（无法直接设置）
+      const res = await fetch(url, {method:'GET', mode:'cors', credentials:'omit', redirect:'follow', signal, headers});
+      text = await res.text();
+      fetched=true;
+    }catch(e){
+      fetched=false;
+    }
+    if(fetched){
+      onSourceLoaded(url, text);
+      showPreview(url);
+      setLoading(false);
+      toast('源码已加载（同源或已开启跨域许可）');
+    }else{
+      // 跨域 / 网络失败：仍尝试 iframe 预览（可能被 X-Frame-Options 拦截）
+      showPreview(url);
+      setLoading(false);
+      $('#srcNote').className='note err';
+      $('#srcNote').innerHTML='<b>跨域限制：</b>浏览器禁止读取该站点的源码（CORS）。你可：① 复制该页面的网页源代码，粘贴到下方输入框点击「解析粘贴的源码」使用全部功能；② 部分站点可能在 iframe 预览区提示被禁止内嵌（X-Frame-Options）。这是浏览器安全策略，纯前端工具无法绕过。';
+      toast('跨域限制，无法读取源码');
+    }
+  }
+  function showPreview(url){
+    const pv=$('#preview'); pv.classList.add('show'); $('#previewUrl').textContent=url;
+    const f=$('#previewFrame'); f.src=''; // reset
+    // 给一点延迟确保重置生效
+    setTimeout(()=>{ try{ f.src=url; }catch(e){} },30);
+  }
+
+  function onSourceLoaded(url, text){
+    state.src=text; state.baseUrl=baseOf(url);
+    parseAll(text, state.baseUrl);
+    renderSource();
+    renderMedia(); renderImg(); renderNet(); renderPkg();
+    updateBadges();
+  }
+
+  /* ---------- parse ---------- */
+  function parseAll(html, base){
+    const media=[], img=[], links=[];
+    // img 标签
+    const imgRe=/<img\b[^>]*>/gi; let m;
+    while((m=imgRe.exec(html))){
+      const tag=m[0];
+      const src=attr(tag,'src')||attr(tag,'data-src')||attr(tag,'data-original')||attr(tag,'data-lazy-src');
+      if(src){ const u=absUrl(src,base); if(u) img.push({url:u, type:extOf(u)||'img'}); }
+    }
+    // 背景图 url(...)
+    const bgRe=/url\(\s*['"]?([^'"\)]+)['"]?\s*\)/gi;
+    while((m=bgRe.exec(html))){
+      const u=absUrl(m[1],base);
+      if(u && (isImgExt(extOf(u))||/^data:image/.test(u))){ img.push({url:u, type:extOf(u)||'img', bg:true}); }
+    }
+    // 媒体：video/audio/src/href + 常见媒体
+    const mediaRe=/(?:src|href|data-src)\s*=\s*["']([^"']+\.(?:mp4|webm|mov|m4v|flv|mp3|wav|m4a|aac|m3u8)(?:\?[^"']*)?)["']/gi;
+    while((m=mediaRe.exec(html))){ const u=absUrl(m[1],base); if(u) media.push({url:u, type:mediaType(u)}); }
+    // source 标签
+    const srcRe=/<source\b[^>]*>/gi;
+    while((m=srcRe.exec(html))){ const s=attr(m[0],'src'); if(s){ const u=absUrl(s,base); if(u) media.push({url:u,type:mediaType(u)});} }
+    // 任意 http(s) 链接（用于网络请求/接口/资源清单）
+    const linkRe=/(?:href|src)\s*=\s*["']([^"']+)["']/gi;
+    while((m=linkRe.exec(html))){
+      const u=absUrl(m[1],base); if(!u) continue;
+      const e=extOf(u);
+      let kind='other';
+      if(isMediaExt(e)) kind='media';
+      else if(isImgExt(e)) kind='image';
+      else if(/\.(css|js|json|xml|html?|php|woff2?|ttf|eot)(\b|$)/.test(u.split('?')[0])) kind='asset';
+      else if(/^https?:/.test(u)) kind='link';
+      links.push({url:u, kind, ext:e});
+    }
+    state.img = dedupe(img);
+    state.media = dedupe(media);
+    // 接口：非静态资源的 http 链接，且非媒体/图片
+    const apis = links.filter(l=>l.kind==='link' || (l.kind==='asset' && !isMediaExt(l.ext) && !isImgExt(l.ext) && !['css','js','woff2','woff','ttf','eot'].includes(l.ext)));
+    state.requests = dedupe(links);
+  }
+  function attr(tag,name){
+    const re=new RegExp(name+'\\s*=\\s*["\']([^"\']*)["\']','i');
+    const m=tag.match(re); return m?m[1]:'';
+  }
+
+  /* ---------- source view + highlight ---------- */
+  function highlightHTML(code){
+    let h=esc(code);
+    // comments
+    h=h.replace(/(&lt;!--[\s\S]*?--&gt;)/g,'<span class="c">$1</span>');
+    // attributes + values（先于标签，避免重复包裹已插入的 span）
+    h=h.replace(/([\w-]+)(=)(&quot;[^&]*&quot;|&#39;[^&]*&#39;|"[^"]*"|'[^']*')/g,
+      '<span class="a">$1</span>$2<span class="s">$3</span>');
+    // tags
+    h=h.replace(/(&lt;\/?)([a-zA-Z][\w-]*)/g,'$1<span class="t">$2</span>');
+    return h;
+  }
+  function highlightCSS(code){
+    let h=esc(code);
+    h=h.replace(/(\/\*[\s\S]*?\*\/)/g,'<span class="c">$1</span>');
+    h=h.replace(/([\w-]+)(\s*:)/g,'<span class="k">$1</span>$2');
+    h=h.replace(/(:\s*)([^;{}]+)(;)/g,'$1<span class="n">$2</span>$3');
+    return h;
+  }
+  function highlightJS(code){
+    let h=esc(code);
+    h=h.replace(/(\/\/[^\n]*|\/\*[\s\S]*?\*\/)/g,'<span class="c">$1</span>');
+    h=h.replace(/\b(const|let|var|function|return|if|else|for|while|new|class|import|export|await|async|try|catch)\b/g,'<span class="k">$1</span>');
+    h=h.replace(/('[^']*'|"[^"]*"|`[^`]*`)/g,'<span class="s">$1</span>');
+    return h;
+  }
+  function renderSource(filterMode){
+    const code=state.src||'';
+    let view=code;
+    if(filterMode==='script'){ view = extractBlocks(code,'script'); }
+    else if(filterMode==='style'){ view = extractBlocks(code,'style'); }
+    $('#srcView').innerHTML = code? highlightHTML(view) : '<span style="color:var(--muted)">尚未加载或解析源码。</span>';
+    applySrcSearch();
+  }
+  function extractBlocks(html, tag){
+    const re=new RegExp('<'+tag+'\\b[^>]*>([\\s\\S]*?)<\\/'+tag+'>','gi');
+    let m, out='';
+    while((m=re.exec(html))){ out += '<'+tag+'>\n'+m[1]+'\n</'+tag+'>\n\n'; }
+    if(!out) out='（未找到 '+tag+' 代码块）';
+    return out;
+  }
+  function applySrcSearch(){
+    const q=$('#srcSearch').value.trim().toLowerCase();
+    if(!q||!state.src){ $('#b-src').textContent=(state.src?state.src.length:0)?'1':'0'; return; }
+    const lines=state.src.split('\n');
+    const hits=lines.filter(l=>l.toLowerCase().includes(q)).length;
+    $('#b-src').textContent= hits;
+  }
+  function formatHTML(code){
+    // 简易美化：按标签缩进
+    let res='', pad=0;
+    const tokens=code.replace(/>\s*</g,'>\n<').split('\n');
+    tokens.forEach(line=>{
+      line=line.trim(); if(!line) return;
+      if(/^<\/(.*)>/.test(line)) pad=Math.max(0,pad-1);
+      res+= '  '.repeat(pad)+line+'\n';
+      if(/^<[a-zA-Z][^>]*[^\/]>$/.test(line) && !/^<(img|br|hr|input|meta|link)\b/i.test(line)) pad++;
+      else if(/^<(img|br|hr|input|meta|link)\b/i.test(line)){}
+    });
+    return res;
+  }
+
+  /* ---------- lists render ---------- */
+  function renderMedia(){
+    const f=state.filter.media;
+    let list=state.media.slice();
+    if(f==='m3u8') list=list.filter(x=>x.type==='m3u8');
+    else if(f==='video') list=list.filter(x=>x.type==='video');
+    else if(f==='audio') list=list.filter(x=>x.type==='audio');
+    const kw=$('#srcSearch').value.trim().toLowerCase();
+    if(kw) list=list.filter(x=>x.url.toLowerCase().includes(kw));
+    $('#mediaCount').textContent='共 '+list.length+' 个媒体资源'+(f!=='all'?'（已筛选）':'');
+    $('#mediaList').innerHTML = list.length? list.map(x=>mediaItem(x)).join('') : emptyHTML('🎬','暂无媒体资源');
+    bindItemActs('#mediaList');
+  }
+  function mediaItem(x){
+    const key='m::'+x.url;
+    const sel=state.sel.has(key);
+    return '<div class="item" data-key="'+esc(key)+'">'
+      +'<div class="meta"><div class="url">'+esc(x.url)+'</div>'
+      +'<div class="sub"><span class="tag">'+x.type.toUpperCase()+'</span><span class="tag">大小：—</span></div></div>'
+      +'<div class="acts">'
+      +'<button class="icon-btn" data-act="copy" title="复制链接">⧉</button>'
+      +'<button class="icon-btn" data-act="open" title="新标签预览">↗</button>'
+      +'<button class="icon-btn" data-act="dl" title="下载">⤓</button>'
+      +'<button class="icon-btn" data-act="sel" title="选择" style="'+(sel?'border-color:var(--accent);color:var(--accent)':'')+'">'+(sel?'✓':'□')+'</button>'
+      +'</div></div>';
+  }
+  function renderImg(){
+    const f=state.filter.img; let list=state.img.slice();
+    const thr=Math.max(0, parseInt($('#imgThresh').value||'0',10)||0);
+    if(f==='big') list=list.filter(x=> x.w&&x.h ? Math.min(x.w,x.h)>=thr : true);
+    const kw=$('#srcSearch').value.trim().toLowerCase();
+    if(kw) list=list.filter(x=>x.url.toLowerCase().includes(kw));
+    $('#imgCount').textContent='共 '+list.length+' 张图片'+(f!=='all'?'（已筛选大图）':'');
+    $('#imgList').innerHTML = list.length? list.map(x=>imgItem(x)).join('') : emptyHTML('🖼️','暂无图片资源');
+    bindItemActs('#imgList');
+  }
+  function imgItem(x){
+    const key='i::'+x.url; const sel=state.sel.has(key);
+    return '<div class="item" data-key="'+esc(key)+'">'
+      +'<img class="thumb" src="'+esc(x.url)+'" loading="lazy" onerror="this.style.opacity=.25;this.src=\'\'">'
+      +'<div class="meta"><div class="url">'+esc(x.url)+'</div>'
+      +'<div class="sub"><span class="tag">'+(x.type||'img').toUpperCase()+'</span>'+(x.bg?'<span class="tag">背景图</span>':'')+'<span class="tag">尺寸：—</span></div></div>'
+      +'<div class="acts">'
+      +'<button class="icon-btn" data-act="copy" title="复制地址">⧉</button>'
+      +'<button class="icon-btn" data-act="open" title="打开">↗</button>'
+      +'<button class="icon-btn" data-act="dl" title="下载">⤓</button>'
+      +'<button class="icon-btn" data-act="sel" title="选择" style="'+(sel?'border-color:var(--accent);color:var(--accent)':'')+'">'+(sel?'✓':'□')+'</button>'
+      +'</div></div>';
+  }
+  function renderNet(){
+    const f=state.filter.net; let list=state.requests.slice();
+    if(f==='api') list=list.filter(x=>x.kind==='link'||(x.kind==='asset'&&!isMediaExt(x.ext)&&!isImgExt(x.ext)));
+    else if(f==='media') list=list.filter(x=>x.kind==='media'||x.kind==='image'||isMediaExt(x.ext)||isImgExt(x.ext));
+    const kw=$('#srcSearch').value.trim().toLowerCase();
+    if(kw) list=list.filter(x=>x.url.toLowerCase().includes(kw));
+    $('#netCount').textContent='共 '+list.length+' 条请求（源码解析所得）';
+    $('#netList').innerHTML = list.length? list.map(x=>netItem(x)).join('') : emptyHTML('🌐','未解析到请求');
+    bindItemActs('#netList');
+  }
+  function netItem(x){
+    const key='n::'+x.url; const sel=state.sel.has(key);
+    const method='GET';
+    const typeTxt = x.kind==='media'?'媒体':x.kind==='image'?'图片':x.kind==='asset'?'静态资源':x.kind==='link'?'接口/链接':'其他';
+    return '<div class="item" data-key="'+esc(key)+'">'
+      +'<div class="meta"><div class="url">'+esc(x.url)+'</div>'
+      +'<div class="sub"><span class="tag">'+method+'</span><span class="tag">'+typeTxt+'</span><span class="tag">状态：—</span></div></div>'
+      +'<div class="acts">'
+      +'<button class="icon-btn" data-act="copy" title="复制链接">⧉</button>'
+      +'<button class="icon-btn" data-act="open" title="打开">↗</button>'
+      +'<button class="icon-btn" data-act="sel" title="选择" style="'+(sel?'border-color:var(--accent);color:var(--accent)':'')+'">'+(sel?'✓':'□')+'</button>'
+      +'</div></div>';
+  }
+  function renderPkg(){
+    const css=state.requests.filter(x=>x.ext==='css');
+    const js=state.requests.filter(x=>x.ext==='js');
+    const imgs=state.img;
+    const others=state.requests.filter(x=>!['css','js'].includes(x.ext)&&!isImgExt(x.ext)&&!isMediaExt(x.ext));
+    $('#pkgBody').innerHTML =
+      '<div class="count">主 HTML 已包含内联 CSS/JS。外部依赖如下：</div>'
+      + pkgGroup('🎨 外部样式表 ('+css.length+')', css)
+      + pkgGroup('📜 外部脚本 ('+js.length+')', js)
+      + pkgGroup('🖼️ 图片资源 ('+imgs.length+')', imgs.map(x=>({url:x.url})))
+      + pkgGroup('🔗 其它链接 ('+others.length+')', others);
+    bindItemActs('#pkgBody');
+  }
+  function pkgGroup(title, arr){
+    if(!arr.length) return '<div style="margin:8px 0;font-size:13px;color:var(--muted)">'+title+'：无</div>';
+    return '<div style="margin:12px 0;"><b style="font-size:13.5px">'+title+'</b>'
+      +'<div class="list" style="margin-top:6px;">'+arr.map(x=>'<div class="item"><div class="meta"><div class="url" style="font-size:12.5px">'+esc(x.url)+'</div></div>'
+      +'<div class="acts"><button class="icon-btn" data-act="copy" data-url="'+esc(x.url)+'" title="复制">⧉</button><button class="icon-btn" data-act="open" data-url="'+esc(x.url)+'" title="打开">↗</button></div></div>').join('')+'</div></div>';
+  }
+  function emptyHTML(icon,msg){ return '<div class="empty"><div class="big">'+icon+'</div><div>'+msg+'</div><div class="small">提示：若主站点跨域，可粘贴源码解析。</div></div>'; }
+
+  /* ---------- item actions ---------- */
+  function bindItemActs(scope){
+    $$(scope+' .item').forEach(it=>{
+      const key=it.dataset.key;
+      it.querySelectorAll('[data-act]').forEach(b=>{
+        b.onclick=(e)=>{
+          e.stopPropagation();
+          const act=b.dataset.act;
+          const url = b.dataset.url || (state._resolve && state._resolve(key)) || '';
+          if(act==='copy'){ copyText(url); }
+          else if(act==='open'){ window.open(url,'_blank','noopener'); }
+          else if(act==='dl'){ dlUrl(url); }
+          else if(act==='sel'){ toggleSel(key); }
+        };
+      });
+    });
+  }
+  // 从 key 解析出 url：key 形如 m::/i::/n:: + url
+  state._resolve=(key)=>{ const i=key.indexOf('::'); return i>=0?key.slice(i+2):key; };
+
+  function toggleSel(key){
+    if(state.sel.has(key)) state.sel.delete(key); else state.sel.add(key);
+    updateTray();
+    // 局部刷新该 item 的选中态
+    const item=document.querySelector('.item[data-key="'+CSS.escape?CSS.escape(key):key+'"]');
+    if(item){ const b=item.querySelector('[data-act="sel"]'); if(b){ const on=state.sel.has(key); b.textContent=on?'✓':'□'; b.style.borderColor=on?'var(--accent)':''; b.style.color=on?'var(--accent)':''; } }
+  }
+  function updateTray(){
+    const n=state.sel.size; $('#trayInfo').textContent='已选择 '+n+' 项';
+    $('#tray').classList.toggle('show', n>0);
+  }
+
+  /* ---------- copy / download / export ---------- */
+  function copyText(t){
+    if(!t){ toast('无内容可复制'); return; }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(t).then(()=>toast('已复制链接')).catch(()=>fallbackCopy(t));
+    } else fallbackCopy(t);
+  }
+  function fallbackCopy(t){
+    const ta=document.createElement('textarea'); ta.value=t; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast('已复制链接'); }catch(e){ toast('复制失败'); }
+    document.body.removeChild(ta);
+  }
+  function dlUrl(url){
+    if(!url) return;
+    const a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener';
+    a.download=''; try{ a.click(); toast('已触发下载'); }catch(e){ toast('下载被浏览器拦截'); }
+  }
+  function exportTxt(name, lines){
+    const content=lines.join('\n');
+    const blob=new Blob([content],{type:'text/plain;charset=utf-8'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name;
+    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000); toast('已导出 '+name);
+  }
+  function selectedUrls(){ const out=[]; state.sel.forEach(k=>out.push(state._resolve(k))); return out; }
+
+  /* ---------- m3u8 cleanup ---------- */
+  function tidyM3u8(list){
+    // 仅提示整理：去除明显重复 / 拼接相对路径（已在 absUrl 阶段处理）
+    return list.filter(x=>x.type==='m3u8');
+  }
+
+  /* ---------- UI bindings ---------- */
+  $('#loadBtn').onclick=()=>loadPage();
+  $('#stopBtn').onclick=stopLoad;
+  $('#clearBtn').onclick=()=>{
+    state.src=''; state.baseUrl=''; state.media=[]; state.img=[]; state.links=[]; state.requests=[]; state.sel.clear();
+    $('#urlInput').value=''; $('#pasteArea').value=''; $('#preview').classList.remove('show'); $('#previewFrame').src='';
+    renderSource(); renderMedia(); renderImg(); renderNet(); renderPkg(); updateBadges(); updateTray();
+    $('#srcNote').className='note'; $('#srcNote').innerHTML='提示：由于浏览器跨域（CORS）限制，多数第三方站点无法直接读取源码。若加载失败，可在下方粘贴源码进行解析。';
+    toast('已清空');
+  };
+  $('#urlInput').addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&e.key==='Enter') loadPage(); });
+  // history dropdown
+  $('#histToggle').onclick=(e)=>{ e.stopPropagation(); renderHistory(); $('#histDrop').classList.toggle('show'); };
+  document.addEventListener('click',()=>$('#histDrop').classList.remove('show'));
+  // advanced
+  $('#advToggle').onclick=()=>{ const p=$('#advPanel'); const s=p.classList.toggle('show'); $('#advToggle').textContent=(s?'▾':'▸')+' 高级选项（UA / JS 开关 / Referer）'; };
+  $('#jsSwitch').onclick=()=>{ state.settings.js=!state.settings.js; $('#jsSwitch').classList.toggle('on',state.settings.js); };
+  $('#uaSel').onchange=e=>state.settings.ua=e.target.value;
+  $('#refInput').oninput=e=>state.settings.referer=e.target.value.trim();
+  // preview frame sandbox 无法通过 JS 设置 UA；说明
+  $('#previewFrame').addEventListener('load',()=>{ /* 若被 X-Frame-Options 拦截，浏览器自动显示错误页，无需处理 */ });
+
+  // tabs
+  $$('#tabs .tab').forEach(t=>{
+    t.onclick=()=>{
+      $$('#tabs .tab').forEach(x=>x.classList.remove('on'));
+      $$('.panel').forEach(x=>x.classList.remove('on'));
+      t.classList.add('on'); $('#p-'+t.dataset.tab).classList.add('on');
+    };
+  });
+
+  // src tools
+  $('#parsePasteBtn').onclick=()=>{
+    const v=$('#pasteArea').value.trim();
+    if(!v){ toast('请先粘贴 HTML 源码'); return; }
+    state.src=v; state.baseUrl=baseOf(normalizeUrl($('#urlInput').value)||location.href);
+    parseAll(v, state.baseUrl);
+    renderSource(); renderMedia(); renderImg(); renderNet(); renderPkg(); updateBadges();
+    toast('已解析粘贴的源码');
+  };
+  $('#fmtBtn').onclick=()=>{ if(!state.src){toast('无源码');return;} state.src=formatHTML(state.src); renderSource(currentFilter()); toast('已格式化'); };
+  $('#fScript').onclick=()=>{ setFilterBtn(['fScript','fStyle','fAll'],'fScript'); renderSource('script'); };
+  $('#fStyle').onclick=()=>{ setFilterBtn(['fScript','fStyle','fAll'],'fStyle'); renderSource('style'); };
+  $('#fAll').onclick=()=>{ setFilterBtn(['fScript','fStyle','fAll'],'fAll'); renderSource('all'); };
+  function currentFilter(){ if($('#fScript').classList.contains('on'))return'script'; if($('#fStyle').classList.contains('on'))return'style'; return 'all'; }
+  function setFilterBtn(ids,onId){ ids.forEach(i=>$('#'+i).classList.toggle('on', i===onId)); }
+  $('#copySrcBtn').onclick=()=>copyText(state.src);
+  $('#dlSrcBtn').onclick=()=>{ if(!state.src){toast('无源码');return;} exportTxt('index.html',[state.src]); };
+  $('#srcSearch').addEventListener('input',()=>{ applySrcSearch(); renderMedia(); renderImg(); renderNet(); });
+
+  // media filters
+  $$('#p-media [data-mf]').forEach(c=>{ c.onclick=()=>{ $$('#p-media [data-mf]').forEach(x=>x.classList.remove('on')); c.classList.add('on'); state.filter.media=c.dataset.mf; renderMedia(); }; });
+  $('#copyMediaBtn').onclick=()=>{ const list=filteredMediaUrls(); copyText(list.join('\n')); };
+  $('#expMediaBtn').onclick=()=>{ exportTxt('media_links.txt', filteredMediaUrls()); };
+  function filteredMediaUrls(){ const f=state.filter.media; return state.media.filter(x=>f==='all'||x.type===f).map(x=>x.url); }
+
+  // img filters
+  $$('#p-img [data-if]').forEach(c=>{ c.onclick=()=>{ $$('#p-img [data-if]').forEach(x=>x.classList.remove('on')); c.classList.add('on'); state.filter.img=c.dataset.if; renderImg(); }; });
+  $('#imgThresh').addEventListener('input',()=>{ if(state.filter.img==='big') renderImg(); });
+  $('#copyImgBtn').onclick=()=>copyText(state.img.map(x=>x.url).join('\n'));
+  $('#expImgBtn').onclick=()=>exportTxt('image_links.txt', state.img.map(x=>x.url));
+
+  // net filters
+  $$('#p-net [data-nf]').forEach(c=>{ c.onclick=()=>{ $$('#p-net [data-nf]').forEach(x=>x.classList.remove('on')); c.classList.add('on'); state.filter.net=c.dataset.nf; renderNet(); }; });
+  $('#copyNetBtn').onclick=()=>copyText(state.requests.map(x=>x.url).join('\n'));
+  $('#expNetBtn').onclick=()=>exportTxt('requests.txt', state.requests.map(x=>x.url));
+
+  // pkg
+  $$('#p-pkg [data-pm]').forEach(c=>{ c.onclick=()=>{ $$('#p-pkg [data-pm]').forEach(x=>x.classList.remove('on')); c.classList.add('on'); state.filter.pkg=c.dataset.pm; renderPkg(); }; });
+  $('#pkgModeA').onclick=()=>{ if(!state.src){toast('无源码可下载');return;} exportTxt('index.html',[state.src]); };
+  $('#pkgModeB').onclick=()=>{
+    const lines=['# 网页获源 · 静态资源清单','# 来源：'+(state.baseUrl||location.href),''];
+    lines.push('## 外部样式表'); state.requests.filter(x=>x.ext==='css').forEach(x=>lines.push(x.url));
+    lines.push('## 外部脚本'); state.requests.filter(x=>x.ext==='js').forEach(x=>lines.push(x.url));
+    lines.push('## 图片'); state.img.forEach(x=>lines.push(x.url));
+    lines.push('## 媒体'); state.media.forEach(x=>lines.push(x.url));
+    lines.push('## 其它链接'); state.requests.filter(x=>!['css','js'].includes(x.ext)&&!isImgExt(x.ext)&&!isMediaExt(x.ext)).forEach(x=>lines.push(x.url));
+    exportTxt('resource_manifest.txt', lines);
+  };
+
+  // tray
+  $('#trayClear').onclick=()=>{ state.sel.clear(); updateTray(); renderMedia(); renderImg(); renderNet(); };
+
+  // history clear
+  $('#clrHistBtn').onclick=()=>{ if(!state.history.length)return; state.history=[]; LS.set('history',[]); renderHistory(); toast('历史已清空'); };
+
+  // help modal
+  $('#helpBtn').onclick=()=>$('#helpMask').classList.add('show');
+  $('#helpClose').onclick=()=>$('#helpMask').classList.remove('show');
+  $('#helpMask').onclick=(e)=>{ if(e.target===$('#helpMask')) $('#helpMask').classList.remove('show'); };
+
+  function updateBadges(){
+    $('#b-src').textContent = state.src? '✓':'0';
+    $('#b-media').textContent = state.media.length;
+    $('#b-img').textContent = state.img.length;
+    $('#b-net').textContent = state.requests.length;
+  }
+
+  /* ---------- init ---------- */
+  applyTheme(); renderHistory(); renderSource(); updateBadges();
+})();
+</script>
+</body>
+</html>
