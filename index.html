@@ -352,6 +352,8 @@ const TOOLS = [
     desc:"格式化、压缩、语法校验 JSON，本地即时处理。", tags:["JSON","格式化","校验","开发"] },
   { id:"password",      file:"password.html",       title:"高强度密码生成器",   cat:"security",
     desc:"可定制规则生成强密码，离线生成不存储。", tags:["密码","安全","生成","随机"] },
+  { id:"pdf-unlock",    file:"pdf-unlock.html",      title:"PDF 密码恢复器",     cat:"security",
+    desc:"本地离线找回自己拥有的 PDF 打开密码：字典 / 短口令暴力，纯前端不上传、仅用于合法授权文件。", tags:["PDF","密码恢复","字典","本地","离线"] },
   { id:"lottery-system",file:"lottery-system.html", title:"可配置抽奖系统",     cat:"ops",
     desc:"公平随机抽奖，支持多奖池、中奖查询与导出。", tags:["抽奖","公平","多池","活动"] },
   { id:"long",          file:"long.html",           title:"长视频文字摘要辅助", cat:"ai",
@@ -374,6 +376,8 @@ const TOOLS = [
     desc:"NVIDIA / AMD / Intel / Apple 等品牌显卡，从初代到最新型号按游戏光栅性能统一排名；分品牌与统一天梯双视图、搜索、品牌筛选与型号详情；性能分以 RTX 5090 = 100 为基准，纯本地、可按月更新。", tags:["显卡","天梯图","GPU","性能","对比","硬件","排名"] },
   { id:"camera",        file:"camera-tier.html",         title:"相机性能天梯图",       cat:"hw",
     desc:"索尼 / 佳能 / 尼康 / 富士 / 松下 / 哈苏 / 徕卡等主流品牌，从单反到无反、中画幅到运动相机按综合影像力统一排名；分类榜单 + 统一天梯双视图、每款详细评测介绍、选购指南与对比；纯本地、可按月更新。", tags:["相机","天梯图","单反","微单","摄影","对比","硬件","排名"] },
+  { id:"cpu",           file:"cpu-tier.html",            title:"CPU 性能天梯图",        cat:"hw",
+    desc:"Intel / AMD / Apple / Qualcomm 等处理器，从经典老将到最新型号按综合性能（单核+多核）统一排名；分品牌与统一天梯双视图、搜索、品牌筛选、型号详情与 2–4 颗对比；纯本地、可按月更新。", tags:["CPU","天梯图","处理器","对比","硬件","排名","Intel","AMD","Apple"] },
   { id:"webget",        file:"webget.html",              title:"网页获源 · 资源嗅探",   cat:"tooling",
     desc:"浏览器内网页资源嗅探：输入网址或粘贴源码，解析提取图片 / 视频 / 音频 / m3u8 / 链接，支持源码高亮查看、正则筛选、去重、链接编解码、TXT 导出与静态打包清单；纯前端、本地存储、不上传。", tags:["网页","嗅探","源码","资源","抓取","提取","m3u8","工具"] },
 
@@ -439,6 +443,7 @@ const GLYPHS = {
   "timer-tool":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2"/><path d="M9 3h6"/></svg>',
   "json":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 8l-4 4 4 4"/><path d="M15 8l4 4-4 4"/></svg>',
   "password":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2.2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.2" fill="white" stroke="none"/></svg>',
+  "pdf-unlock":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><rect x="9" y="13" width="6" height="4.6" rx="1.2"/><path d="M10.6 13v-1.1a1.4 1.4 0 0 1 2.8 0V13"/></svg>',
   "lottery-system":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="9" width="16" height="11" rx="1.8"/><path d="M4 13h16M12 9v11"/><path d="M12 9C12 6 10 4 8 4a2.4 2.4 0 0 0 0 5h4zM12 9C12 6 14 4 16 4a2.4 2.4 0 0 1 0 5h-4z"/></svg>',
   "long":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="16" rx="2.2"/><path d="M8.5 9h7M8.5 12.5h7M8.5 16h4.5"/></svg>',
   "rmb":'<svg viewBox="0 0 24 24"><text x="12" y="18" font-size="16" text-anchor="middle" fill="white" font-weight="700" font-family="-apple-system,Segoe UI,sans-serif">¥</text></svg>',
@@ -449,6 +454,7 @@ const GLYPHS = {
   "fx":'<svg viewBox="0 0 24 24"><text x="12" y="18" font-size="16" text-anchor="middle" fill="white" font-weight="700" font-family="-apple-system,Segoe UI,sans-serif">$</text></svg>',
   "translate":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7M7.5 5v1.5c0 3-1.8 5.5-4 7M14 20l4-9 4 9M15.5 17h5"/><path d="M4 5h7" /></svg>',
   "gpu":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 6V3M12 6V3M17 6V3M7 21v-3M12 21v-3M17 21v-3"/><circle cx="12" cy="12" r="2.4"/></svg>',
+  "cpu":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M10 7V4M14 7V4M10 20v-3M14 20v-3M7 10H4M7 14H4M20 10h-3M20 14h-3"/></svg>',
   "camera":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h3l1.5-2.2A1.6 1.6 0 0 1 9.8 5h4.4a1.6 1.6 0 0 1 1.3.8L17 8h4v11H3z"/><circle cx="12" cy="13" r="3.4"/></svg>',
   "webget":'<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/><circle cx="12" cy="12" r="2.6"/></svg>',
 };
