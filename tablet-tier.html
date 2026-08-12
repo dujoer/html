@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>平板性能天梯图 · 平板对比</title>
+<style>
+  :root{
+    --bg:#0a0a0a; --bg2:#101012; --panel:#161616; --panel2:#1e1e1e;
+    --line:#2a2a2a; --text:#fafafa; --muted:#a8a8a8;
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+    --radius:16px;
+    --ig:linear-gradient(45deg,#2af598,#08aeea);
+  }
+  [data-theme="light"]{
+    --bg:#fafafa; --bg2:#f0f0f2; --panel:#ffffff; --panel2:#f4f4f5;
+    --line:#e6e6e6; --text:#0a0a0a; --muted:#737373;
+    --shadow:0 10px 30px rgba(20,20,40,.10);
+  }
+  *{box-sizing:border-box;}
+  html{overflow-x:hidden;-webkit-text-size-adjust:100%;scroll-behavior:smooth;}
+  body{
+    margin:0; background:
+      radial-gradient(900px 500px at 85% -10%, rgba(8,174,234,.12), transparent),
+      radial-gradient(800px 500px at 10% 0%, rgba(42,245,152,.10), transparent),
+      linear-gradient(160deg,var(--bg),var(--bg2));
+    color:var(--text); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",
+      "PingFang SC","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none;}
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 16px 120px;}
+  header.profile{display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;padding:10px 0 6px;}
+  .avatar{width:88px;height:88px;border-radius:50%;padding:4px;background:var(--ig);box-shadow:0 8px 24px rgba(8,174,234,.35);}
+  .avatar .inner{width:100%;height:100%;border-radius:50%;background:var(--panel);display:grid;place-items:center;font-weight:900;font-size:22px;letter-spacing:.5px;background-image:var(--ig);color:#fff;-webkit-background-clip:text;background-clip:text;}
+  .profile h1{margin:0;font-size:clamp(24px,4.4vw,38px);font-weight:900;letter-spacing:.5px;background:var(--ig);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .profile p.lead{margin:0;max-width:660px;color:var(--muted);font-size:clamp(13.5px,2.1vw,15px);line-height:1.65;}
+  .stats{display:flex;gap:26px;margin-top:2px;}
+  .stats .st{display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .stats .st b{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .stats .st span{font-size:12px;color:var(--muted);}
+  .chips{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+  .chip{font-size:12px;padding:5px 11px;border-radius:999px;background:var(--panel);border:1px solid var(--line);color:var(--muted);}
+  .chip b{color:var(--ig);font-weight:700;-webkit-text-fill-color:initial;}
+  .toolbar{position:sticky;top:0;z-index:30;margin:20px 0 22px;padding:12px;border-radius:18px;background:color-mix(in srgb, var(--panel) 88%, transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);box-shadow:var(--shadow);display:flex;flex-wrap:wrap;gap:11px;align-items:center;}
+  .search{flex:1 1 220px;display:flex;align-items:center;gap:8px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:9px 13px;}
+  .search input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-size:14px;}
+  .search svg{flex:none;opacity:.55;}
+  .seg{display:flex;gap:4px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:4px;}
+  .seg button{border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:700;padding:7px 15px;border-radius:9px;cursor:pointer;transition:.18s;white-space:nowrap;}
+  .seg button.active{background:var(--ig);color:#04221c;}
+  .brand-strip{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding:2px;scrollbar-width:none;}
+  .brand-strip::-webkit-scrollbar{display:none;}
+  .bf{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;flex:none;border:1px solid var(--line);background:var(--panel2);border-radius:999px;padding:6px 13px 6px 10px;font-size:13px;font-weight:700;color:var(--muted);transition:.18s;}
+  .bf .dot{width:11px;height:11px;border-radius:50%;flex:none;}
+  .bf.off{opacity:.38;filter:grayscale(.8);}
+  .icon-btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);width:40px;height:40px;border-radius:12px;cursor:pointer;display:grid;place-items:center;transition:.18s;flex:none;}
+  .icon-btn:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--ig) 60%, var(--line));}
+  .cols{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;}
+  @media (max-width:900px){ .cols{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:560px){ .cols{grid-template-columns:1fr;} }
+  .col{background:color-mix(in srgb, var(--panel) 86%, transparent);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:11px;}
+  .col-head{display:flex;align-items:center;gap:9px;padding-bottom:9px;border-bottom:1px dashed var(--line);}
+  .col-head .logo{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-weight:800;font-size:14px;color:#fff;flex:none;}
+  .col-head h3{margin:0;font-size:15px;font-weight:800;}
+  .col-head .cnt{margin-left:auto;font-size:12px;color:var(--muted);}
+  .cpu{position:relative;display:flex;flex-direction:column;gap:9px;padding:14px 14px 13px;background:var(--panel);border:1px solid var(--line);border-radius:16px;cursor:pointer;transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;overflow:hidden;opacity:0;transform:translateY(10px);animation:rise .42s cubic-bezier(.2,.7,.3,1) forwards;}
+  @keyframes rise{to{opacity:1;transform:none;}}
+  .cpu::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--tc,#888);}
+  .cpu:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:color-mix(in srgb,var(--tc) 55%, var(--line));}
+  .cpu .hd{display:flex;align-items:flex-start;gap:8px;padding-right:30px;}
+  .cpu .nm{font-size:14.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .cpu .sub{font-size:11.5px;color:var(--muted);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;}
+  .cpu .bd{display:flex;align-items:center;gap:10px;}
+  .cpu .bar{flex:1;height:8px;border-radius:99px;background:color-mix(in srgb,var(--text) 12%, transparent);overflow:hidden;}
+  .cpu .bar i{display:block;height:100%;border-radius:99px;}
+  .cpu .sc{font-weight:800;font-size:17px;flex:none;font-variant-numeric:tabular-nums;}
+  .cpu .sc small{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:1px;}
+  .add{position:absolute;top:9px;right:9px;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:17px;line-height:1;cursor:pointer;display:grid;place-items:center;transition:.15s;z-index:3;}
+  .add:hover{transform:scale(1.12);}
+  .add.on{background:var(--ig);color:#04221c;border-color:transparent;}
+  mark{background:var(--ig);color:#04221c;border-radius:3px;padding:0 2px;}
+  .tier-rows{display:flex;flex-direction:column;gap:8px;}
+  .trow{display:grid;grid-template-columns:42px 1fr 54px 30px;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:11px 14px;position:relative;transition:.15s;}
+  .trow:hover{transform:translateX(3px);border-color:color-mix(in srgb,var(--tc) 50%, var(--line));}
+  .trow .rank{font-weight:800;font-size:15px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums;}
+  .trow .tmain{display:flex;flex-direction:column;gap:7px;min-width:0;}
+  .trow .tn{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800;min-width:0;}
+  .trow .tn .dot{width:9px;height:9px;border-radius:50%;flex:none;}
+  .trow .tn .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .trow .tbar{height:9px;border-radius:99px;background:color-mix(in srgb,var(--text) 12%, transparent);overflow:hidden;}
+  .trow .tbar i{display:block;height:100%;border-radius:99px;}
+  .trow .tsc{font-weight:800;font-size:16px;text-align:right;font-variant-numeric:tabular-nums;}
+  .trow .tsc small{font-size:10px;color:var(--muted);font-weight:600;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:28px 0 6px;color:var(--muted);font-size:12.5px;}
+  .legend .li{display:flex;align-items:center;gap:6px;}
+  .legend .sw{width:13px;height:13px;border-radius:4px;}
+  .foot{text-align:center;color:var(--muted);font-size:12.5px;line-height:1.7;margin-top:22px;}
+  .foot a{color:#08aeea;cursor:pointer;font-weight:600;}
+  .tray{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:18px;z-index:60;display:none;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:0 14px 40px rgba(0,0,0,.5);padding:12px 16px;max-width:calc(100% - 28px);opacity:0;transition:.25s;}
+  .tray.show{display:flex;opacity:1;transform:translateX(-50%) translateY(0);}
+  .tray .chips{display:flex;gap:8px;flex-wrap:wrap;max-width:52vw;}
+  .tray .cc{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:5px 8px 5px 11px;font-size:12.5px;font-weight:700;white-space:nowrap;}
+  .tray .cc .x{border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:15px;line-height:1;padding:0 2px;}
+  .tray .acts{display:flex;gap:8px;flex:none;}
+  .tray .btn{border:none;border-radius:12px;padding:9px 16px;font-weight:800;cursor:pointer;font-size:13.5px;transition:.15s;}
+  .tray .btn.cmp{background:var(--ig);color:#04221c;}
+  .tray .btn.cmp:disabled{opacity:.4;cursor:not-allowed;}
+  .tray .btn.clear{background:var(--panel2);color:var(--muted);border:1px solid var(--line);}
+  .modal{position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(5,5,10,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+  .modal.show{display:flex;}
+  .sheet{width:min(480px,100%);background:var(--panel);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);padding:22px;animation:pop .22s ease;max-height:88vh;overflow:auto;}
+  @keyframes pop{from{transform:scale(.94);opacity:0;}to{transform:none;opacity:1;}}
+  .sheet h2{margin:0 0 4px;font-size:21px;display:flex;align-items:center;gap:10px;}
+  .sheet .badge{font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;color:#0a0a0a;}
+  .sheet .row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px;}
+  .sheet .row span:first-child{color:var(--muted);}
+  .sheet .row b{text-align:right;}
+  .sheet .note{margin-top:12px;font-size:13px;color:var(--muted);line-height:1.6;background:var(--panel2);border-radius:12px;padding:11px 13px;}
+  .sheet .close{margin-top:16px;width:100%;border:none;background:var(--ig);color:#04221c;font-weight:800;font-size:15px;padding:11px;border-radius:13px;cursor:pointer;}
+  .cmp-row{margin-bottom:15px;}
+  .cmp-row .ch{display:flex;justify-content:space-between;align-items:baseline;font-size:13.5px;margin-bottom:6px;gap:10px;}
+  .cmp-row .ch b{font-weight:800;}
+  .cmp-row .ch .v{font-weight:800;font-variant-numeric:tabular-nums;}
+  .cmp-bar{height:15px;border-radius:99px;background:color-mix(in srgb,var(--text) 12%, transparent);overflow:hidden;}
+  .cmp-bar i{display:block;height:100%;border-radius:99px;}
+  .cmp-delta{margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);}
+  .cmp-delta h3{margin:0 0 10px;font-size:14px;}
+  .cmp-delta .d{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--muted);}
+  .cmp-delta .d b{color:var(--text);font-variant-numeric:tabular-nums;}
+  .empty{text-align:center;color:var(--muted);padding:40px 0;font-size:14px;}
+  @media (prefers-reduced-motion:reduce){ .cpu{animation:none;opacity:1;transform:none;} html{scroll-behavior:auto;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="profile">
+    <div class="avatar"><div class="inner">平板</div></div>
+    <h1>平板性能天梯图</h1>
+    <p class="lead">苹果 iPad · 华为 MatePad · 三星 Galaxy Tab · 小米平板 等主流机型，从入门到专业旗舰，按综合性能统一排名。性能分以 iPad Pro（M4）= 100 为基准，条越长越强。</p>
+    <div class="stats">
+      <div class="st"><b id="statCount">0</b><span>收录机型</span></div>
+      <div class="st"><b id="statVer">2026-08</b><span>数据版本</span></div>
+      <div class="st"><b>100</b><span>iPad Pro 基准</span></div>
+    </div>
+    <div class="chips">
+      <span class="chip">更新于 <b id="metaDate">2026-08-12</b></span>
+      <span class="chip">每月更新</span>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="q" type="text" placeholder="搜索型号，如 iPad Pro / MatePad / Tab S9 / 小米平板6" autocomplete="off">
+    </label>
+    <div class="seg" id="viewSeg">
+      <button data-view="brand" class="active">分品牌</button>
+      <button data-view="tier">统一天梯</button>
+    </div>
+    <div class="brand-strip" id="brandFilters"></div>
+    <button class="icon-btn" id="themeBtn" title="切换主题">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>
+    </button>
+    <button class="icon-btn" id="infoBtn" title="数据说明">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.5"/></svg>
+    </button>
+  </div>
+
+  <div id="stage"></div>
+
+  <div class="legend" id="legend"></div>
+
+  <div class="foot">
+    综合性能分为相对估算（以 iPad Pro M4 = 100 的「综合性能指数」），综合芯片 CPU/GPU 性能、屏幕规格与实测体验取几何均值估算，仅供参考；安卓平板与 iPad 芯片架构不同，分数为综合可用性能的近似参考。<br>
+    <a id="infoLink">数据来源与更新说明</a> · 单 HTML 文件，可离线打开 · 收藏本页，每月来此查看最新数据
+  </div>
+</div>
+
+<div class="tray" id="tray">
+  <div class="chips" id="trayChips"></div>
+  <div class="acts">
+    <button class="btn clear" id="trayClear">清空</button>
+    <button class="btn cmp" id="trayCmp" disabled>对比</button>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+/* ============================================================
+ * 平板性能天梯图 · 数据
+ * 评分体系：以 iPad Pro（M4，当前平板综合性能标杆）≈ 100 的「综合性能指数」。
+ *   = 芯片 CPU/GPU 性能 + 屏幕规格 + 综合体验的相对百分比，取几何均值估算。
+ * 安卓平板与 iPad 架构不同，分数为综合可用性能的近似参考；性能条满格 = 100 封顶。
+ * —— 按月更新：在此数组增删型号，并修改下方 META.updated 为当前年月即可。
+ * 字段：b=品牌 s=综合分(iPad Pro=100) y=年份 chip=芯片 screen=屏幕 n=备注
+ * ============================================================ */
+const META = { version:"2026-08", updated:"2026-08-12", base:100 };
+
+const BRANDS = {
+  apple:   { name:"Apple",    short:"",  color:"#8e8e93", grad:"linear-gradient(135deg,#8e8e93,#c7c7cc)" },
+  huawei:  { name:"华为",     short:"华", color:"#cf0a2c", grad:"linear-gradient(135deg,#cf0a2c,#ff5a5a)" },
+  samsung: { name:"三星",     short:"星", color:"#1428a0", grad:"linear-gradient(135deg,#1428a0,#3a5bd0)" },
+  xiaomi:  { name:"小米",     short:"米", color:"#ff6900", grad:"linear-gradient(135deg,#ff6900,#ffa64d)" }
+};
+
+const TIERS = {
+  flagship:  { name:"旗舰",   color:"#e6b54a" },
+  high:      { name:"高端",   color:"#ff7a45" },
+  uppermid:  { name:"中高端", color:"#ffa940" },
+  mainstream:{ name:"主流",   color:"#36cfc9" },
+  entry:     { name:"入门",   color:"#8c9bab" },
+  classic:   { name:"经典",   color:"#b08d57" }
+};
+
+function tierOf(s){
+  if(s>=95) return "flagship";
+  if(s>=80) return "high";
+  if(s>=68) return "uppermid";
+  if(s>=55) return "mainstream";
+  if(s>=38) return "entry";
+  return "classic";
+}
+
+const TABLETS = [
+  // ---------- Apple iPad ----------
+  {b:"apple",name:"iPad Pro 13英寸 M4",s:100,y:2024,chip:"M4",screen:"13英寸 OLED 120Hz",n:"最强平板（本图基准 = 100）。"},
+  {b:"apple",name:"iPad Pro 11英寸 M4",s:96,y:2024,chip:"M4",screen:"11英寸 OLED 120Hz",n:""},
+  {b:"apple",name:"iPad Air 13英寸 M2",s:80,y:2024,chip:"M2",screen:"13英寸 LCD 60Hz",n:""},
+  {b:"apple",name:"iPad Air 11英寸 M2",s:78,y:2024,chip:"M2",screen:"11英寸 LCD 60Hz",n:""},
+  {b:"apple",name:"iPad mini 7",s:64,y:2024,chip:"A17 Pro",screen:"8.3英寸 LCD 60Hz",n:"小屏便携。"},
+  {b:"apple",name:"iPad 10",s:58,y:2022,chip:"A14",screen:"10.9英寸 LCD 60Hz",n:"中端基准参考（≈1×）。"},
+  {b:"apple",name:"iPad 9",s:50,y:2021,chip:"A13",screen:"10.2英寸 LCD 60Hz",n:"入门。"},
+
+  // ---------- 华为 MatePad ----------
+  {b:"huawei",name:"MatePad Pro 13.2",s:78,y:2023,chip:"麒麟9000S",screen:"13.2英寸 OLED 120Hz",n:"大屏旗舰。"},
+  {b:"huawei",name:"MatePad Air",s:66,y:2023,chip:"骁龙888",screen:"11.5英寸 LCD 144Hz",n:""},
+  {b:"huawei",name:"MatePad Pro 11",s:72,y:2022,chip:"骁龙888",screen:"11英寸 OLED 120Hz",n:""},
+  {b:"huawei",name:"MatePad 11.5",s:60,y:2023,chip:"骁龙7 Gen1",screen:"11.5英寸 LCD 120Hz",n:"主流。"},
+
+  // ---------- 三星 Galaxy Tab ----------
+  {b:"samsung",name:"Galaxy Tab S10 Ultra",s:88,y:2024,chip:"天玑9300+",screen:"14.6英寸 OLED 120Hz",n:"安卓平板旗舰。"},
+  {b:"samsung",name:"Galaxy Tab S9 Ultra",s:84,y:2023,chip:"骁龙8 Gen2",screen:"14.6英寸 OLED 120Hz",n:""},
+  {b:"samsung",name:"Galaxy Tab S9+",s:76,y:2023,chip:"骁龙8 Gen2",screen:"12.4英寸 OLED 120Hz",n:""},
+  {b:"samsung",name:"Galaxy Tab S8",s:70,y:2022,chip:"骁龙8 Gen1",screen:"11英寸 LCD 120Hz",n:""},
+  {b:"samsung",name:"Galaxy Tab A9+",s:46,y:2023,chip:"骁龙695",screen:"11英寸 LCD 90Hz",n:"入门。"},
+
+  // ---------- 小米平板 ----------
+  {b:"xiaomi",name:"小米平板6S Pro",s:74,y:2024,chip:"骁龙8s Gen3",screen:"12.4英寸 LCD 144Hz",n:""},
+  {b:"xiaomi",name:"小米平板6 Pro",s:70,y:2023,chip:"骁龙8 Gen1",screen:"11英寸 LCD 144Hz",n:""},
+  {b:"xiaomi",name:"小米平板6",s:62,y:2023,chip:"骁龙870",screen:"11英寸 LCD 144Hz",n:"中端基准参考（≈1×）。"},
+  {b:"xiaomi",name:"Redmi Pad Pro",s:52,y:2024,chip:"骁龙7s Gen2",screen:"12.1英寸 LCD 120Hz",n:"性价比。"},
+  {b:"xiaomi",name:"Redmi Pad",s:42,y:2022,chip:"Helio G99",screen:"10.6英寸 LCD 90Hz",n:"入门。"}
+];
+
+/* =========================== 渲染逻辑 =========================== */
+const $ = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.prototype.slice.call((r||document).querySelectorAll(s));
+const esc = (s)=> String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function hl(text,q){
+  if(!q) return esc(text);
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  if(i<0) return esc(text);
+  return esc(text.slice(0,i)) + "<mark>" + esc(text.slice(i,i+q.length)) + "</mark>" + esc(text.slice(i+q.length));
+}
+
+const state = { view:"brand", q:"", brands:new Set(Object.keys(BRANDS)), compare:[] };
+const BASE = 42; // iPad 10 / 小米平板6 中端档 ≈ 1× 基准
+function tierColor(t){ return (TIERS[t]||{}).color || "#888"; }
+function brandOf(b){ return BRANDS[b] || {name:b,grad:"linear-gradient(135deg,#888,#aaa)"}; }
+
+function cpuCard(g,q,br){
+  const t = tierOf(g.s), tc = tierColor(t);
+  return '<div class="cpu" style="--tc:'+tc+'" data-name="'+esc(g.name)+'">'
+    + '<button class="add'+(state.compare.indexOf(g.name)>=0?" on":"")+'" data-add="'+esc(g.name)+'" title="加入对比">＋</button>'
+    + '<div class="hd"><div class="info">'
+    + '<div class="nm">'+hl(g.name,q)+'</div>'
+    + '<div class="sub"><span>'+g.y+' 年</span><span>'+(g.chip||"")+'</span></div>'
+    + '</div></div>'
+    + '<div class="bd"><div class="bar"><i style="width:'+Math.min(100,g.s)+'%;background:'+br.grad+'"></i></div>'
+    + '<div class="sc">'+g.s+'<small>%</small></div></div>'
+    + '</div>';
+}
+function tierRow(g,q,br,rank){
+  const t = tierOf(g.s), tc = tierColor(t);
+  return '<div class="trow" style="--tc:'+tc+'" data-name="'+esc(g.name)+'">'
+    + '<div class="rank">#'+rank+'</div>'
+    + '<div class="tmain"><div class="tn"><span class="dot" style="background:'+br.color+'"></span><span class="nm">'+hl(g.name,q)+'</span></div>'
+    + '<div class="tbar"><i style="width:'+Math.min(100,g.s)+'%;background:'+br.grad+'"></i></div></div>'
+    + '<div class="tsc">'+g.s+'<small>%</small></div>'
+    + '<button class="add'+(state.compare.indexOf(g.name)>=0?" on":"")+'" data-add="'+esc(g.name)+'" title="加入对比" style="position:static;width:24px;height:24px;font-size:15px;flex:none;">＋</button>'
+    + '</div>';
+}
+function filtered(){
+  const q = state.q.trim().toLowerCase();
+  return TABLETS.filter(g=> state.brands.has(g.b) && (!q || g.name.toLowerCase().includes(q)));
+}
+
+function renderBrandView(){
+  const q = state.q.trim();
+  const data = filtered().slice().sort((a,b)=> b.s-a.s);
+  const byBrand = {};
+  data.forEach(g=>{ (byBrand[g.b]=byBrand[g.b]||[]).push(g); });
+  const order = Object.keys(BRANDS).filter(b=> state.brands.has(b) && byBrand[b]);
+  if(!order.length){ return '<div class="empty">没有匹配的平板，试试其它关键词或开启品牌筛选。</div>'; }
+  let html = '<div class="cols">';
+  order.forEach(b=>{
+    const br = BRANDS[b];
+    const list = byBrand[b];
+    html += '<div class="col"><div class="col-head">'
+      + '<div class="logo" style="background:'+br.grad+'">'+br.short+'</div>'
+      + '<h3>'+esc(br.name)+'</h3><span class="cnt">'+list.length+' 款</span></div>';
+    list.forEach(g=>{ html += cpuCard(g,q,br); });
+    html += '</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function renderTierView(){
+  const q = state.q.trim();
+  const data = filtered().slice().sort((a,b)=> b.s-a.s);
+  if(!data.length){ return '<div class="empty">没有匹配的平板。</div>'; }
+  let html = '<div class="tier-rows">';
+  data.forEach((g,i)=>{ html += tierRow(g,q,brandOf(g.b),i+1); });
+  html += '</div>';
+  return html;
+}
+
+function render(){
+  const stage = $("#stage");
+  stage.innerHTML = state.view==="brand" ? renderBrandView() : renderTierView();
+  $$(".cpu,.trow",stage).forEach(el=>{
+    el.onclick = (e)=>{
+      if(e.target && e.target.getAttribute && e.target.getAttribute("data-add")){ toggleCompare(e.target.getAttribute("data-add")); e.stopPropagation(); return; }
+      openDetail(el.getAttribute("data-name"));
+    };
+  });
+  if(state.view==="brand"){
+    $$(".cols .cpu",stage).forEach((el,i)=>{ el.style.animationDelay = (i*15)+"ms"; });
+  }
+  $("#statCount").textContent = TABLETS.length;
+  $("#statVer").textContent = META.version;
+  $("#metaDate").textContent = META.updated;
+}
+
+function buildBrandFilters(){
+  const box = $("#brandFilters");
+  box.innerHTML = Object.keys(BRANDS).map(b=>{
+    const br = BRANDS[b];
+    return '<span class="bf'+(state.brands.has(b)?"":" off")+'" data-b="'+b+'">'
+      + '<span class="dot" style="background:'+br.color+'"></span>'+esc(br.name)+'</span>';
+  }).join("");
+  $$(".bf",box).forEach(el=>{
+    el.onclick = ()=>{
+      const b = el.getAttribute("data-b");
+      if(state.brands.has(b)){ if(state.brands.size>1) state.brands.delete(b); }
+      else state.brands.add(b);
+      buildBrandFilters(); render();
+    };
+  });
+}
+
+function buildLegend(){
+  const box = $("#legend");
+  box.innerHTML = Object.keys(TIERS).map(t=>{
+    const ti = TIERS[t];
+    return '<span class="li"><span class="sw" style="background:'+ti.color+'"></span>'+esc(ti.name)+'</span>';
+  }).join("");
+}
+
+function toggleCompare(name){
+  const i = state.compare.indexOf(name);
+  if(i>=0) state.compare.splice(i,1);
+  else { if(state.compare.length>=4){ flashTray("最多对比 4 台"); return; } state.compare.push(name); }
+  render(); renderTray();
+}
+function renderTray(){
+  const tray = $("#tray"), chips = $("#trayChips"), cmp = $("#trayCmp");
+  if(!state.compare.length){ tray.classList.remove("show"); return; }
+  chips.innerHTML = state.compare.map(n=>{
+    const g = TABLETS.find(x=>x.name===n); const br = brandOf(g.b);
+    return '<span class="cc"><span class="dot" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+br.color+'"></span>'+esc(n)+'<button class="x" data-rm="'+esc(n)+'">×</button></span>';
+  }).join("");
+  $$(".cc .x",chips).forEach(b=> b.onclick = ()=> toggleCompare(b.getAttribute("data-rm")) );
+  cmp.disabled = state.compare.length<2;
+  tray.classList.add("show");
+}
+function flashTray(msg){
+  const cmp = $("#trayCmp");
+  cmp.textContent = msg;
+  setTimeout(()=>{ cmp.textContent = "对比"; }, 1200);
+}
+
+function openDetail(name){
+  const g = TABLETS.find(x=> x.name===name);
+  if(!g) return;
+  const br = BRANDS[g.b], t = tierOf(g.s), ti = TIERS[t]||{};
+  const x = (g.s/BASE).toFixed(2);
+  $("#sheet").innerHTML =
+    '<h2><span class="logo" style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:800;color:#fff;background:'+br.grad+'">'+br.short+'</span>'+esc(g.name)+'</h2>'
+    + '<div style="margin:6px 0 14px;display:flex;gap:8px;flex-wrap:wrap;">'
+    + '<span class="badge" style="background:'+ti.color+'">'+esc(ti.name)+'</span>'
+    + '<span class="chip">'+esc(br.name)+'</span></div>'
+    + '<div class="row"><span>发布年份</span><b>'+g.y+' 年</b></div>'
+    + '<div class="row"><span>综合性能分</span><b style="color:'+tierColor(t)+'">'+g.s+' / 100（iPad Pro = 100）</b></div>'
+    + '<div class="row"><span>相对中端</span><b>约 '+x+'×</b></div>'
+    + '<div class="row"><span>芯片</span><b>'+(g.chip||"—")+'</b></div>'
+    + '<div class="row"><span>屏幕</span><b>'+(g.screen||"—")+'</b></div>'
+    + '<div class="note">'+esc(g.n||"")+'</div>'
+    + '<button class="close" id="closeModal">关闭</button>';
+  $("#modal").classList.add("show");
+  $("#closeModal").onclick = closeModal;
+}
+
+function openCompare(){
+  const list = state.compare.map(n=> TABLETS.find(x=>x.name===n)).filter(Boolean).slice().sort((a,b)=>b.s-a.s);
+  if(list.length<2) return;
+  const rows = list.map(g=>{
+    const br = brandOf(g.b), t = tierOf(g.s);
+    return '<div class="cmp-row"><div class="ch"><b style="color:'+tierColor(t)+'">'+esc(g.name)+'</b>'
+      + '<span class="v">'+g.s+'% · 约 '+(g.s/BASE).toFixed(2)+'×</span></div>'
+      + '<div class="cmp-bar"><i style="width:'+Math.min(100,g.s)+'%;background:'+br.grad+'"></i></div></div>';
+  }).join("");
+  const top = list[0];
+  let delta = '<div class="cmp-delta"><h3>相对差距（以最强 '+esc(top.name)+' 为 100%）</h3>';
+  list.slice(1).forEach(g=>{
+    const pct = (g.s/top.s*100);
+    const gap = (100-pct).toFixed(1);
+    delta += '<div class="d"><span>'+esc(g.name)+'</span><b>'+pct.toFixed(1)+'% · 弱 '+gap+'%</b></div>';
+  });
+  delta += '</div>';
+  $("#sheet").innerHTML = '<h2>性能对比</h2><div style="margin:6px 0 14px;color:var(--muted);font-size:13px;">同刻度横向条，越长越强；下方列出与最强型号的相对差距。</div>'
+    + rows + delta + '<button class="close" id="closeModal">关闭</button>';
+  $("#modal").classList.add("show");
+  $("#closeModal").onclick = closeModal;
+}
+
+function closeModal(){ $("#modal").classList.remove("show"); }
+
+function openInfo(){
+  $("#sheet").innerHTML =
+    '<h2>数据说明</h2>'
+    + '<div class="note" style="margin-top:10px;">'
+    + '<p style="margin:0 0 8px;"><b>评分体系</b>：综合性能分以 iPad Pro（M4，当前平板综合性能标杆）≈ <b>100</b> 的「综合性能指数」。指数综合芯片 CPU / GPU 性能、屏幕规格（尺寸 / 材质 / 刷新率）与综合体验的相对百分比取几何均值估算，仅供参考，不代表任何单一基准的绝对分数。</p>'
+    + '<p style="margin:0 0 8px;"><b>怎么看差异</b>：每张卡片和统一天梯里的彩色横条，长度直接代表性能强弱（满格 = iPad Pro = 100）。选中 2–4 台平板点「对比」，可在同刻度下并排查看差距百分比。</p>'
+    + '<p style="margin:0 0 8px;"><b>相对中端</b>：详情与对比中的「×」以 iPad 10 / 小米平板6 这一中端档（≈42，设为 1×）为参照，直观看倍率。</p>'
+    + '<p style="margin:0 0 8px;"><b>关于安卓平板</b>：与 iPad 芯片架构不同，分数为综合可用性能的近似参考，不与 iPad 做严格跑分争论。</p>'
+    + '<p style="margin:0;"><b>如何按月更新</b>：本文件为单 HTML，数据内嵌在 <code>TABLETS</code> 数组与 <code>META</code> 中。每月新增机型只需在数组增删条目、并把 <code>META.updated</code> 改为当前年月即可，无需任何后端。</p>'
+    + '</div>'
+    + '<button class="close" id="closeModal">知道了</button>';
+  $("#modal").classList.add("show");
+  $("#closeModal").onclick = closeModal;
+}
+
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  try{ localStorage.setItem("tablet-theme", t); }catch(e){}
+}
+function init(){
+  let t = "dark";
+  try{ t = localStorage.getItem("tablet-theme") || "dark"; }catch(e){}
+  applyTheme(t);
+
+  $("#q").addEventListener("input", function(){ state.q = this.value; render(); });
+  $$("#viewSeg button").forEach(btn=>{
+    btn.onclick = ()=>{
+      state.view = btn.getAttribute("data-view");
+      $$("#viewSeg button").forEach(x=> x.classList.toggle("active", x===btn));
+      render();
+    };
+  });
+  $("#themeBtn").onclick = ()=>{
+    const cur = document.documentElement.getAttribute("data-theme");
+    applyTheme(cur==="dark"?"light":"dark");
+  };
+  $("#infoBtn").onclick = openInfo;
+  $("#infoLink").onclick = openInfo;
+  $("#trayCmp").onclick = openCompare;
+  $("#trayClear").onclick = ()=>{ state.compare = []; render(); renderTray(); };
+  $("#modal").onclick = (e)=>{ if(e.target.id==="modal") closeModal(); };
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape") closeModal(); });
+
+  buildBrandFilters();
+  buildLegend();
+  render();
+}
+
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init);
+else init();
+</script>
+</body>
+</html>
