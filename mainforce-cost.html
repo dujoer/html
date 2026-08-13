@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>主力成本多线共振测算器</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --card:#ffffff; --text:#1f2430; --sub:#6b7280; --line:#e7eaf2;
+    --up:#e23b3b; --down:#15a85a; --warn:#e08a00; --acc:#3b6cff; --acc2:#7a5cff;
+    --soft:#eef2ff; --shadow:0 6px 24px rgba(30,40,80,.08);
+  }
+  [data-theme="dark"]{
+    --bg:#0f1320; --card:#171c2b; --text:#e8ecf6; --sub:#9aa3b8; --line:#27304a;
+    --up:#ff5b5b; --down:#2ee08a; --warn:#ffb13b; --acc:#6f93ff; --acc2:#a489ff;
+    --soft:#1d2740; --shadow:0 6px 24px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.55;-webkit-tap-highlight-color:transparent}
+  .wrap{max-width:1080px;margin:0 auto;padding:18px 16px 60px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .title{font-size:22px;font-weight:800;letter-spacing:.5px}
+  .title small{font-weight:500;color:var(--sub);font-size:13px;margin-left:8px}
+  .tg{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 14px;
+    cursor:pointer;font-size:13px;color:var(--sub);box-shadow:var(--shadow)}
+  .disclaimer{background:linear-gradient(90deg,#fff4e6,#ffe9e9);border:1px solid #ffd8a8;
+    color:#8a4b00;border-radius:14px;padding:11px 14px;font-size:13px;margin-bottom:16px}
+  [data-theme="dark"] .disclaimer{background:#2a2113;color:#ffcf8f;border-color:#5a4422}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+  .card h3{font-size:15px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .card h3 .n{width:22px;height:22px;border-radius:7px;background:var(--soft);color:var(--acc);
+    display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+  .grid{display:grid;gap:12px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr 1fr}
+  @media(max-width:680px){.g2,.g3{grid-template-columns:1fr}}
+  label{font-size:12.5px;color:var(--sub);display:block;margin-bottom:5px}
+  input,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;
+    background:var(--bg);color:var(--text);font-size:14px;outline:none}
+  input:focus,select:focus{border-color:var(--acc)}
+  .btn{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border:none;
+    border-radius:11px;padding:11px 18px;font-size:14px;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 14px rgba(80,90,255,.3)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:var(--card);color:var(--acc);border:1px solid var(--acc)}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .row>*{flex:1;min-width:130px}
+  .hint{font-size:11.5px;color:var(--sub);margin-top:5px}
+  .pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;
+    background:var(--soft);color:var(--acc);margin-left:6px}
+  .auto-status{font-size:12.5px;margin-top:8px}
+  .ok{color:var(--down)} .bad{color:var(--up)} .wait{color:var(--warn)}
+  .result{display:none}
+  .metric{background:var(--soft);border-radius:12px;padding:12px;margin-bottom:8px}
+  .metric .lab{font-size:12px;color:var(--sub)}
+  .metric .val{font-size:20px;font-weight:800;margin-top:2px}
+  .lines{display:flex;flex-direction:column;gap:7px;margin-top:6px}
+  .line-row{display:flex;align-items:center;gap:10px;font-size:13px}
+  .line-row .ln{width:120px;color:var(--sub);flex-shrink:0}
+  .line-row .bar{flex:1;height:10px;background:var(--line);border-radius:6px;overflow:hidden;position:relative}
+  .line-row .bar i{position:absolute;top:0;bottom:0;width:3px;background:var(--acc);border-radius:3px}
+  .line-row .price{width:78px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+  .band{margin-top:10px;padding:12px;border-radius:12px;background:linear-gradient(135deg,#eaf0ff,#f3eaff);
+    border:1px solid #d8e0ff}
+  [data-theme="dark"] .band{background:#1c2540;border-color:#33407a}
+  .band .big{font-size:24px;font-weight:800;color:var(--acc)}
+  .stars{font-size:18px;letter-spacing:2px;color:var(--warn)}
+  .diag{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .diag .box{flex:1;min-width:150px;padding:11px;border-radius:12px;background:var(--bg);border:1px solid var(--line)}
+  .diag .box .t{font-size:12px;color:var(--sub)}
+  .diag .box .v{font-size:16px;font-weight:800;margin-top:3px}
+  .up{color:var(--up)} .down{color:var(--down)} .warn{color:var(--warn)}
+  .rules li{margin:7px 0 7px 18px;font-size:13.5px}
+  .rules b{color:var(--text)}
+  .rec-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;
+    border:1px solid var(--line);border-radius:11px;margin-bottom:8px;font-size:13px}
+  .rec-item .x{cursor:pointer;color:var(--sub);font-size:18px;padding:0 6px}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+    background:#222;color:#fff;padding:10px 18px;border-radius:999px;font-size:13px;opacity:0;
+    transition:.25s;pointer-events:none;z-index:99}
+  .toast.show{opacity:.95;transform:translateX(-50%) translateY(0)}
+  .legend{font-size:11.5px;color:var(--sub);margin-top:6px}
+  .mini{font-size:11.5px;color:var(--sub);margin-top:4px}
+  canvas{width:100%;height:120px;display:block;margin-top:8px}
+  footer{text-align:center;color:var(--sub);font-size:12px;margin-top:18px}
+  code{background:var(--soft);padding:1px 6px;border-radius:5px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="title">主力成本多线共振测算器<small>估算区间 · 非投资建议</small></div>
+    <div class="tg" id="themeBtn">🌗 主题</div>
+  </header>
+
+  <div class="disclaimer">
+    注意：<b>重要声明</b>：本工具所有结果都是<b>估算区间</b>，算不出一个精准的"主力底牌价格"。市场由机构、游资、量化、散户多方博弈，各有各的成本。主力成本区<b>不是铁底，一样会被砸穿</b>（基金赎回潮、股权质押连环爆仓）。以下内容仅供学习参考，<b>不构成任何投资建议</b>，据此操作风险自负。
+  </div>
+
+  <!-- 输入区 -->
+  <div class="card">
+    <h3><span class="n">⚡</span>输入股票，自动测算</h3>
+    <div class="row">
+      <div>
+        <label>股票代码（沪 60/68、深 00/30、京 8/4 开头，或带 sh/sz/bj）</label>
+        <input id="code" placeholder="例如 600519 / 000858 / sz300750" value="600519">
+      </div>
+      <div style="flex:0 0 auto">
+        <label>&nbsp;</label>
+        <button class="btn" id="go">拉取行情并测算</button>
+      </div>
+    </div>
+    <div class="auto-status" id="autoStatus">未拉取。点击上方按钮自动获取腾讯公开行情计算「区间VWAP + 筹码峰」；若处于离线/微信等无法联网环境，会自动切换为手动模式。</div>
+  </div>
+
+  <!-- 方法1+2 自动 -->
+  <div class="card">
+    <h3><span class="n">1</span>区间 VWAP<span class="pill">自动</span> &nbsp;<span class="n">2</span>筹码峰<span class="pill">估算</span></h3>
+    <div class="grid g3">
+      <div>
+        <label>建仓区间起始日（默认约 120 个交易日前的低点附近）</label>
+        <input id="vStart" type="date">
+      </div>
+      <div>
+        <label>建仓区间截止日</label>
+        <input id="vEnd" type="date">
+      </div>
+      <div>
+        <label>区间 VWAP（成交量加权均价，元）· 可手动改</label>
+        <input id="vwap" type="number" step="0.01" placeholder="自动填入">
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:12px">
+      <div>
+        <label>筹码峰价位（估算，元）· 可手动改</label>
+        <input id="chip" type="number" step="0.01" placeholder="自动填入">
+      </div>
+      <div>
+        <label>90% 成本密集区（估算区间，元）</label>
+        <input id="chipRange" type="text" placeholder="自动填入" readonly style="background:var(--soft);color:var(--sub)">
+      </div>
+    </div>
+    <div class="legend">筹码分布是按历史成交在价格档的<b>算法模拟推算</b>（带衰减权重），<b>不是交易所原始持仓清单</b>；不同软件模型不同，结果会有差异，仅作参考。</div>
+    <canvas id="chipCanvas"></canvas>
+    <div class="mini" id="chipNote"></div>
+  </div>
+
+  <!-- 方法3/4/5 手动 -->
+  <div class="card">
+    <h3><span class="n">3</span>季报机构成本<span class="pill">手动</span> &nbsp;<span class="n">4</span>大宗接盘价<span class="pill">手动</span> &nbsp;<span class="n">5</span>股权质押<span class="pill">手动</span></h3>
+    <div class="grid g3">
+      <div>
+        <label>季报机构成本（元）</label>
+        <input id="report" type="number" step="0.01" placeholder="读 F10 季度 VWAP">
+        <div class="hint">先高后低吸筹 → 真实成本比均价约低 5%；大涨追买 → 约高 5%。</div>
+      </div>
+      <div>
+        <label>大宗交易接盘价（元，多笔用逗号分隔）</label>
+        <input id="block" type="text" placeholder="如 120.5,118.0,122.3">
+        <div class="hint">机构专用席位折价接盘价；新规接盘后锁仓 6 个月。</div>
+      </div>
+      <div>
+        <label>质押股价 / 质押率（元 , %）</label>
+        <div class="row" style="gap:8px">
+          <input id="pledgeP" type="number" step="0.01" placeholder="质押价">
+          <input id="pledgeR" type="number" step="1" placeholder="质押率%" value="40">
+        </div>
+        <div class="hint">警戒线=借出额×1.5；平仓线=借出额×1.3。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-bottom:14px">
+    <button class="btn" id="calc">🧮 综合多线共振测算</button>
+    <button class="btn ghost" id="saveRec">💾 保存当前测算</button>
+  </div>
+
+  <!-- 结果 -->
+  <div class="result" id="result">
+    <div class="card">
+      <h3><span class="n">◎</span>多线共振综合结果</h3>
+      <div id="linesBox" class="lines"></div>
+      <div class="band" id="bandBox"></div>
+      <div class="legend">共振逻辑：把可用的几条「成本线」叠在一起，落在越窄的同一区间，支撑概率越高。警戒线/平仓线作为<b>防御红线</b>单独列出（它们是债务线，不等于成本）。</div>
+    </div>
+
+    <div class="card">
+      <h3><span class="n">🩺</span>当前价诊断（基于最近行情）</h3>
+      <div class="diag" id="diagBox"></div>
+      <div class="mini" id="diagNote"></div>
+    </div>
+  </div>
+
+  <!-- 实操规则 -->
+  <div class="card">
+    <h3><span class="n">🛡</span>三条实操防身规则（视频总结）</h3>
+    <ul class="rules">
+      <li><b>缩量企稳法则</b>：跌到估算主力成本，<b>别马上抄底</b>。要等成交量大幅萎缩（地量）、抛压耗尽再考虑，不接飞刀。</li>
+      <li><b>过滤假跌破</b>：盘中瞬间砸破成本区不算真破。满足其一才算有效破位——①连续 3 天收盘价收不回成本区；②收盘价跌破成本区幅度 &gt; 3%。用来过滤主力砸坑洗盘。</li>
+      <li><b>质押红线</b>：若算出的平仓线被<b>放量跌破</b>又无停牌/公告，<b>无条件跑</b>，防连续跌停踩踏。</li>
+    </ul>
+  </div>
+
+  <!-- 记录 -->
+  <div class="card">
+    <h3><span class="n">📒</span>我的测算记录（本地保存）</h3>
+    <div id="recList"></div>
+  </div>
+
+  <footer>纯前端单文件 · 数据来自腾讯公开行情 / 需你手动补充披露信息 · 估算仅供参考，风险自负</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===================== 工具函数 ===================== */
+function ymd(d){const y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),da=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+da;}
+function normCode(raw){
+  if(!raw) return null;
+  let s=String(raw).trim().toLowerCase().replace(/[\s]/g,'');
+  let market='';
+  if(/^(sh|sz|bj)/.test(s)){market=s.slice(0,2);s=s.slice(2);}
+  s=s.replace(/[^0-9]/g,'');
+  if(!/^\d{4,6}$/.test(s)) return null;
+  if(!market){
+    if(/^(60|68|90)/.test(s)) market='sh';
+    else if(/^(00|30|20)/.test(s)) market='sz';
+    else if(/^(8|4|92)/.test(s)) market='bj';
+    else market='sh';
+  }
+  return {code:market+s, market, num:s};
+}
+function parseNums(str){
+  if(!str) return [];
+  return String(str).split(/[,，\s]+/).map(x=>parseFloat(x)).filter(x=>!isNaN(x)&&x>0);
+}
+
+/* ===================== 行情获取（JSONP 跨域，纯前端） ===================== */
+function fetchJSONP(url, timeout){
+  timeout=timeout||8000;
+  return new Promise(function(resolve,reject){
+    const s=document.createElement('script');
+    const cbid='__jp'+Math.random().toString(36).slice(2);
+    const sep=url.indexOf('?')>=0?'&':'?';
+    const t=setTimeout(function(){cleanup();reject(new Error('timeout'));},timeout);
+    function cleanup(){clearTimeout(t);try{s.remove();}catch(e){}try{delete window[cbid];}catch(e){}}
+    window[cbid]=function(data){cleanup();resolve(data);};
+    s.onerror=function(){cleanup();reject(new Error('network'));};
+    s.src=url+sep+'callback='+cbid;
+    document.head.appendChild(s);
+  });
+}
+function fetchQuoteVar(code, timeout){
+  timeout=timeout||8000;
+  return new Promise(function(resolve,reject){
+    const s=document.createElement('script');
+    const t=setTimeout(function(){cleanup();reject(new Error('timeout'));},timeout);
+    function cleanup(){clearTimeout(t);try{s.remove();}catch(e){}}
+    s.onerror=function(){cleanup();reject(new Error('network'));};
+    s.onload=function(){cleanup();var v=window['v_'+code];if(v)resolve(v);else reject(new Error('empty'));};
+    s.src='https://qt.gtimg.cn/q='+code;
+    document.head.appendChild(s);
+  });
+}
+async function fetchKline(code, days){
+  days=days||320;
+  const end=new Date();
+  const start=new Date(Date.now()-(days+12)*86400000);
+  const param=code+',day,'+ymd(start)+','+ymd(end)+','+days+',qfq';
+  const url='https://web.ifzq.gtimg.cn/appstock/app/fqkday/get?param='+param;
+  const data=await fetchJSONP(url);
+  const node=data&&data.data&&data.data[code.toUpperCase()];
+  const arr=(node&&(node.qfqday||node.day))||[];
+  return arr.map(function(r){return {date:r[0],o:+r[1],c:+r[2],h:+r[3],l:+r[4],v:+r[5]};});
+}
+async function fetchQuote(code){
+  const raw=await fetchQuoteVar(code);
+  const f=String(raw).split('~');
+  return {name:f[1]||code, price:parseFloat(f[3])||0};
+}
+
+/* ===================== 方法1 区间VWAP ===================== */
+function calcVWAP(kls, startIdx, endIdx){
+  if(!kls||kls.length===0) return null;
+  const i0=Math.max(0,startIdx|0), i1=Math.min(kls.length-1,endIdx|0);
+  let sv=0, spv=0;
+  for(let i=i0;i<=i1;i++){
+    const k=kls[i];
+    const dayP=(k.h+k.l+k.c)/3;          // 当日近似成交均价
+    sv+=k.v; spv+=dayP*k.v;
+  }
+  if(sv<=0) return null;
+  return spv/sv;
+}
+function idxByDate(kls, dateStr){
+  if(!dateStr) return -1;
+  for(let i=0;i<kls.length;i++){ if(kls[i].date>=dateStr) return i; }
+  return kls.length-1;
+}
+
+/* ===================== 方法2 筹码分布（算法估算） ===================== */
+function estimateChip(kls, lookback, decay){
+  lookback=lookback||130; decay=decay||0.92;
+  const arr=kls.slice(-lookback);
+  if(arr.length<5) return null;
+  let min=Infinity,max=-Infinity;
+  arr.forEach(function(k){min=Math.min(min,k.l);max=Math.max(max,k.h);});
+  const pad=(max-min)*0.02; min-=pad; max+=pad;
+  const N=80, step=(max-min)/N;
+  const bins=new Array(N).fill(0);
+  const n=arr.length;
+  for(let i=0;i<n;i++){
+    const k=arr[i];
+    const w=k.v*Math.pow(decay,(n-1-i));   // 越久的筹码权重越小（换手稀释）
+    const a=Math.max(min,k.l), b=Math.min(max,k.h);
+    const i0=Math.max(0,Math.floor((a-min)/step));
+    const i1=Math.min(N-1,Math.ceil((b-min)/step));
+    const cnt=(i1-i0+1)||1;
+    for(let j=i0;j<=i1;j++) bins[j]+=w/cnt;
+  }
+  const prices=bins.map(function(_,j){return min+(j+0.5)*step;});
+  let tot=0,peakIdx=0;
+  for(let j=0;j<N;j++){tot+=bins[j];if(bins[j]>bins[peakIdx])peakIdx=j;}
+  if(tot<=0) return null;
+  const peak=prices[peakIdx];
+  // 90% 成本区间
+  const order=Array.from({length:N},function(_,j){return j;}).sort(function(a,b){return bins[b]-bins[a];});
+  let cum=0,lo=Infinity,hi=-Infinity;
+  for(const j of order){cum+=bins[j];lo=Math.min(lo,prices[j]);hi=Math.max(hi,prices[j]);if(cum>=tot*0.9)break;}
+  return {peak:peak, denseLo:lo, denseHi:hi, prices:prices, bins:bins, min:min, max:max};
+}
+
+/* ===================== 方法5 质押线 ===================== */
+function computePledge(price, rate){
+  if(!price||!rate) return null;
+  const borrow=price*(rate/100);
+  return {warn:borrow*1.5, liq:borrow*1.3, borrow:borrow};
+}
+
+/* ===================== 综合多线共振 ===================== */
+function compositeCost(costs){
+  const vs=costs.filter(function(c){return c.value>0;});
+  if(vs.length===0) return null;
+  const sorted=vs.map(function(c){return c.value;}).sort(function(a,b){return a-b;});
+  const sum=sorted.reduce(function(a,b){return a+b;},0);
+  const mean=sum/sorted.length;
+  const mid=Math.floor(sorted.length/2);
+  const median=sorted.length%2?sorted[mid]:(sorted[mid-1]+sorted[mid])/2;
+  let variance=0; sorted.forEach(function(x){variance+=(x-mean)*(x-mean);});
+  const std=Math.sqrt(variance/sorted.length);
+  const bandLo=Math.max(0,median-std), bandHi=median+std;
+  const widthPct=(bandHi-bandLo)/(median||1)*100;
+  let level = (vs.length>=4 && widthPct<=8)?3 : ((vs.length>=3 && widthPct<=16)?2:1);
+  return {median:median, mean:mean, std:std, bandLo:bandLo, bandHi:bandHi, widthPct:widthPct, count:vs.length, level:level, lines:vs};
+}
+
+/* ===================== 假跌破 / 放量 诊断 ===================== */
+function evalBreakRule(kls, center){
+  if(!kls||kls.length<3||!center) return null;
+  const cls=kls.map(function(k){return k.c;});
+  const last=cls[cls.length-1];
+  const last3=cls.slice(-3);
+  const below3=last3.length===3 && last3.every(function(c){return c<center;});
+  const belowPct=(center-last)/center*100;
+  const breakPct=belowPct>3;
+  let verdict,color;
+  if(below3||breakPct){verdict='有效破位（谨慎）';color='down';}
+  else if(last<center){verdict='浅破/疑似（观望）';color='warn';}
+  else {verdict='位于成本区上方/之内';color='up';}
+  return {last:last, below3:below3, belowPct:belowPct, breakPct:breakPct, verdict:verdict, color:color};
+}
+function isVolumeSpike(kls, win){
+  win=win||5;
+  const v=kls.map(function(k){return k.v;});
+  if(v.length<win+6) return false;
+  const recent=v.slice(-win);
+  const base=v.slice(-win-15,-win);
+  const ra=recent.reduce(function(a,b){return a+b;},0)/recent.length;
+  const ba=base.reduce(function(a,b){return a+b;},0)/base.length;
+  return ba>0 && ra/ba>1.8;
+}
+
+/* ===================== 以下为界面逻辑（DOMContentLoaded 内执行） ===================== */
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(function(){t.classList.remove('show');},1800);
+}
+function setTheme(th){document.documentElement.setAttribute('data-theme',th);try{localStorage.setItem('mfc-theme',th);}catch(e){}}
+function readTheme(){try{return localStorage.getItem('mfc-theme')||'light';}catch(e){return 'light';}}
+
+let STATE={kls:[], name:'', quote:0};
+
+function drawChip(chip){
+  const cv=document.getElementById('chipCanvas');
+  if(!cv||!chip) return;
+  const ctx=cv.getContext('2d');
+  const dpr=window.devicePixelRatio||1;
+  const W=cv.clientWidth||600, H=120;
+  cv.width=W*dpr; cv.height=H*dpr; ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,W,H);
+  const maxB=Math.max.apply(null,chip.bins);
+  const n=chip.bins.length;
+  const bw=W/n;
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  for(let j=0;j<n;j++){
+    const h=chip.bins[j]/maxB*(H-22);
+    const t=j/n;
+    ctx.fillStyle='rgba('+Math.round(59+ (123-59)*t)+','+Math.round(108+(92-108)*t)+','+Math.round(255+(140-255)*t)+',.85)';
+    ctx.fillRect(j*bw, H-18-h, Math.max(1,bw-1), h);
+  }
+  // 标出筹码峰
+  ctx.fillStyle=dark?'#e8ecf6':'#1f2430';
+  ctx.font='11px sans-serif';
+  ctx.fillText('筹码峰 ≈ '+chip.peak.toFixed(2), 6, 12);
+  ctx.strokeStyle=dark?'#ff5b5b':'#e23b3b';
+  ctx.beginPath();
+  const px=(chip.peak-chip.min)/(chip.max-chip.min)*W;
+  ctx.moveTo(px,H-18); ctx.lineTo(px,4); ctx.stroke();
+}
+
+function autoFill(){
+  const kls=STATE.kls;
+  if(!kls||kls.length<5){toast('行情数据不足，请手动填写');return;}
+  // 默认区间：最近 120 个交易日
+  const defStart=kls.length-120;
+  document.getElementById('vStart').value=kls[Math.max(0,defStart)].date;
+  document.getElementById('vEnd').value=kls[kls.length-1].date;
+  const v=calcVWAP(kls, defStart, kls.length-1);
+  if(v) document.getElementById('vwap').value=v.toFixed(2);
+  const chip=estimateChip(kls);
+  if(chip){
+    document.getElementById('chip').value=chip.peak.toFixed(2);
+    document.getElementById('chipRange').value=chip.denseLo.toFixed(2)+' ~ '+chip.denseHi.toFixed(2);
+    const cur=STATE.quote||kls[kls.length-1].c;
+    let pos = cur>chip.peak*1.08?'当前价高于筹码峰，警惕高位派发'
+            : cur<chip.peak*0.92?'当前价低于筹码峰，关注低位吸筹'
+            : '当前价贴近筹码峰';
+    document.getElementById('chipNote').textContent='📊 '+pos+'（模拟推算，仅供参考）';
+    drawChip(chip);
+  }
+  toast('已自动填入区间VWAP与筹码峰');
+}
+
+function gatherCosts(){
+  const out=[];
+  const vwap=parseFloat(document.getElementById('vwap').value);
+  const chip=parseFloat(document.getElementById('chip').value);
+  const report=parseFloat(document.getElementById('report').value);
+  const blocks=parseNums(document.getElementById('block').value);
+  if(vwap>0) out.push({label:'区间VWAP',value:vwap});
+  if(chip>0) out.push({label:'筹码峰',value:chip});
+  if(report>0) out.push({label:'季报机构',value:report});
+  blocks.forEach(function(b,i){out.push({label:'大宗'+(blocks.length>1?('#'+(i+1)):''),value:b});});
+  return out;
+}
+function gatherDefense(){
+  const p=parseFloat(document.getElementById('pledgeP').value);
+  const r=parseFloat(document.getElementById('pledgeR').value);
+  if(p>0&&r>0){const pl=computePledge(p,r);return {warn:pl.warn,liq:pl.liq};}
+  return null;
+}
+
+function renderResult(){
+  const costs=gatherCosts();
+  const comp=compositeCost(costs);
+  const box=document.getElementById('linesBox');
+  const band=document.getElementById('bandBox');
+  if(!comp){box.innerHTML='<div class="hint">请至少填写一条成本数据（区间VWAP / 筹码峰 / 季报机构 / 大宗）。</div>';band.innerHTML='';return;}
+  // 线条条
+  let html='';
+  const maxV=Math.max.apply(null,costs.map(function(c){return c.value;}).concat([comp.bandHi]));
+  const minV=Math.min.apply(null,costs.map(function(c){return c.value;}).concat([comp.bandLo]));
+  const span=(maxV-minV)||1;
+  costs.forEach(function(c){
+    const left=((c.value-minV)/span*100);
+    html+='<div class="line-row"><span class="ln">'+c.label+'</span>'+
+      '<span class="bar"><i style="left:'+left+'%"></i></span>'+
+      '<span class="price">'+c.value.toFixed(2)+'</span></div>';
+  });
+  box.innerHTML=html;
+  const stars='★★★'.slice(0,comp.level)+'☆☆☆'.slice(0,3-comp.level);
+  const lvlTxt=['','低','中','高'][comp.level];
+  band.innerHTML='<div class="lab">主力成本中枢（共振估算）</div>'+
+    '<div class="big">'+comp.median.toFixed(2)+' 元</div>'+
+    '<div class="mini">共振窄区间：'+comp.bandLo.toFixed(2)+' ~ '+comp.bandHi.toFixed(2)+
+    '（宽度 '+comp.widthPct.toFixed(1)+'%）· 参与线条 '+comp.count+' 条</div>'+
+    '<div class="stars">可信度：'+stars+' '+lvlTxt+'</div>';
+
+  // 诊断
+  const diag=document.getElementById('diagBox');
+  const br=evalBreakRule(STATE.kls, comp.median);
+  const def=gatherDefense();
+  let dhtml='';
+  if(br){
+    dhtml+='<div class="box"><div class="t">当前价 vs 成本中枢</div><div class="v '+(br.color==='up'?'up':br.color==='down'?'down':'warn')+'">'+br.last.toFixed(2)+'</div>'+
+      '<div class="mini '+br.color+'">'+br.verdict+'</div></div>';
+    dhtml+='<div class="box"><div class="t">破位判定</div><div class="v '+(br.breakPct||br.below3?'down':'up')+'">'+
+      (br.breakPct?('跌破 '+br.belowPct.toFixed(1)+'%'):(br.below3?'3日收不回':'未有效破位'))+'</div>'+
+      '<div class="mini">条件：3日收不回 或 破>3%</div></div>';
+  }
+  if(def){
+    const cur=STATE.quote||(STATE.kls.length?STATE.kls[STATE.kls.length-1].c:0);
+    const spike=isVolumeSpike(STATE.kls);
+    const breach=cur<def.liq;
+    const dz = breach ? ('注意：已'+(spike?'放量':'')+'跌破，谨慎') : '未触及';
+    dhtml += '<div class="box"><div class="t">质押平仓线</div>'
+      + '<div class="v '+(breach?'down':'warn')+'">'+def.liq.toFixed(2)+'</div>'
+      + '<div class="mini '+(breach?'down':'')+'">'+dz+' 警戒线 '+def.warn.toFixed(2)+'</div></div>';
+  }
+  if(!dhtml) dhtml='<div class="hint">无行情数据，仅展示成本区间；接入行情后可自动诊断破位与质押红线。</div>';
+  diag.innerHTML=dhtml;
+  document.getElementById('diagNote').textContent='提示：缩量企稳再考虑，不接飞刀；放量跌破平仓线且无公告 → 无条件跑。';
+  document.getElementById('result').style.display='block';
+}
+
+function loadRecords(){
+  let recs=[];try{recs=JSON.parse(localStorage.getItem('mfc-records-v1')||'[]');}catch(e){}
+  const list=document.getElementById('recList');
+  if(recs.length===0){list.innerHTML='<div class="hint">暂无记录。测算后可点「保存当前测算」。</div>';return;}
+  list.innerHTML=recs.map(function(r,i){
+    return '<div class="rec-item"><div><b>'+r.code+'</b> '+(r.name||'')+
+      ' · 中枢 <b>'+r.center+'</b> 元 · '+r.level+'星 · '+r.time+'</div>'+
+      '<span class="x" data-i="'+i+'">×</span></div>';
+  }).join('');
+  list.querySelectorAll('.x').forEach(function(el){
+    el.onclick=function(){
+      let a=[];try{a=JSON.parse(localStorage.getItem('mfc-records-v1')||'[]');}catch(e){}
+      a.splice(+el.dataset.i,1);localStorage.setItem('mfc-records-v1',JSON.stringify(a));loadRecords();toast('已删除');
+    };
+  });
+}
+function saveRecord(){
+  const costs=gatherCosts();
+  const comp=compositeCost(costs);
+  if(!comp){toast('先测算再保存');return;}
+  const stars='★★★'.slice(0,comp.level)+'☆☆☆'.slice(0,3-comp.level);
+  const rec={code:(document.getElementById('code').value||'').trim(), name:STATE.name,
+    center:comp.median.toFixed(2), level:stars, time:ymd(new Date())};
+  let a=[];try{a=JSON.parse(localStorage.getItem('mfc-records-v1')||'[]');}catch(e){}
+  a.unshift(rec); a=a.slice(0,30); localStorage.setItem('mfc-records-v1',JSON.stringify(a));
+  loadRecords(); toast('已保存');
+}
+
+async function run(){
+  const raw=document.getElementById('code').value;
+  const nc=normCode(raw);
+  const st=document.getElementById('autoStatus');
+  if(!nc){st.className='auto-status bad';st.textContent='代码无法识别，请检查格式。';return;}
+  st.className='auto-status wait';st.textContent='正在拉取 '+nc.code+' 行情…';
+  try{
+    const [kls,q]=await Promise.all([fetchKline(nc.code,320), fetchQuote(nc.code).catch(function(){return {name:nc.code,price:0};})]);
+    if(!kls||kls.length<5) throw new Error('empty');
+    STATE.kls=kls; STATE.name=q.name; STATE.quote=q.price||kls[kls.length-1].c;
+    st.className='auto-status ok';
+    st.textContent='✅ 已获取 '+kls.length+' 个交易日（'+q.name+'）。已自动填入 VWAP 与筹码峰，可手动微调后点「综合测算」。';
+    autoFill();
+  }catch(e){
+    st.className='auto-status bad';
+    st.textContent='注意：自动行情获取失败（可能离线/微信环境/网络受限）。已切换手动模式：请在上方直接填写 VWAP、筹码峰及下方披露数据，再点「综合测算」。';
+  }
+}
+
+document.addEventListener('DOMContentLoaded',function(){
+  setTheme(readTheme());
+  document.getElementById('themeBtn').onclick=function(){
+    const cur=document.documentElement.getAttribute('data-theme');
+    setTheme(cur==='dark'?'light':'dark');
+  };
+  document.getElementById('go').onclick=run;
+  document.getElementById('calc').onclick=function(){renderResult();window.scrollTo({top:document.getElementById('result').offsetTop-10,behavior:'smooth'});};
+  document.getElementById('saveRec').onclick=saveRecord;
+  loadRecords();
+});
+</script>
+</body>
+</html>
