@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SPA · 每日剧集电影推荐</title>
+<meta name="description" content="每天自动抓取最新剧集与电影，告诉你今天有什么新剧、即将上线什么，以及在哪里看。" />
+<style>
+  :root{
+    --bg:#f6f7fb; --panel:#ffffff; --panel-2:#f0f2f8; --text:#171a21; --muted:#6b7280;
+    --border:#e6e8ef; --accent:#5b6cff; --accent-soft:#eceeff; --shadow:0 6px 22px rgba(20,24,40,.08);
+    --chip:#eef0f7; --star:#f5a623; --radius:16px;
+  }
+  html[data-theme="dark"]{
+    --bg:#0e1118; --panel:#171b24; --panel-2:#1f2532; --text:#e8ebf2; --muted:#9aa3b2;
+    --border:#2a3140; --accent:#7c8bff; --accent-soft:#222a3d; --shadow:0 8px 26px rgba(0,0,0,.45);
+    --chip:#222a3a; --star:#ffc24b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:inherit}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 18px}
+  header.top{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 86%,transparent);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
+  .top-inner{display:flex;align-items:center;gap:14px;padding:14px 0}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;letter-spacing:.3px}
+  .logo .mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#5b6cff,#9b6bff);
+    display:grid;place-items:center;color:#fff;font-size:15px;box-shadow:var(--shadow)}
+  .logo small{font-weight:500;color:var(--muted);font-size:12px;margin-left:2px}
+  .spacer{flex:1}
+  .search{position:relative;flex:1;max-width:420px}
+  .search input{width:100%;padding:10px 14px 10px 38px;border-radius:999px;border:1px solid var(--border);
+    background:var(--panel);color:var(--text);font-size:14px;outline:none}
+  .search input:focus{border-color:var(--accent)}
+  .search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);opacity:.5}
+  .icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--panel);
+    color:var(--text);cursor:pointer;display:grid;place-items:center;font-size:18px}
+  .icon-btn:hover{border-color:var(--accent)}
+
+  .hero{padding:30px 0 8px}
+  .hero h1{margin:0 0 6px;font-size:30px;line-height:1.2}
+  .hero p{margin:0;color:var(--muted);max-width:720px}
+  .meta-line{margin-top:10px;font-size:12.5px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+  .badge-live{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent);
+    padding:3px 10px;border-radius:999px;font-weight:600}
+  .dot{width:7px;height:7px;border-radius:50%;background:#2ecc71;box-shadow:0 0 0 3px rgba(46,204,113,.18)}
+
+  .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:18px 0 6px}
+  .tabs{display:inline-flex;background:var(--panel-2);border:1px solid var(--border);border-radius:999px;padding:4px}
+  .tabs button{border:0;background:transparent;color:var(--muted);padding:8px 16px;border-radius:999px;
+    cursor:pointer;font-size:14px;font-weight:600;white-space:nowrap}
+  .tabs button.active{background:var(--panel);color:var(--text);box-shadow:var(--shadow)}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 18px}
+  .chip{border:1px solid var(--border);background:var(--chip);color:var(--text);border-radius:999px;
+    padding:6px 12px;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .chip .cnt{color:var(--muted);font-size:11px}
+  .chip.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .chip .swatch{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:18px;padding-bottom:40px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;
+    box-shadow:var(--shadow);display:flex;flex-direction:column;transition:transform .15s ease,border-color .15s ease}
+  .card:hover{transform:translateY(-3px);border-color:var(--accent)}
+  .poster{position:relative;aspect-ratio:2/3;background:linear-gradient(135deg,var(--panel-2),var(--accent-soft));
+    display:grid;place-items:center;overflow:hidden}
+  .poster img{width:100%;height:100%;object-fit:cover;display:block}
+  .poster .ph{font-size:30px;font-weight:800;color:var(--muted);opacity:.55;text-align:center;padding:10px}
+  .rating{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.62);color:#fff;border-radius:999px;
+    padding:3px 9px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px}
+  .type-tag{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.55);color:#fff;border-radius:8px;
+    padding:3px 8px;font-size:11px;font-weight:600}
+  .card-body{padding:12px 13px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .card h3{margin:0;font-size:15.5px;line-height:1.35}
+  .sub{font-size:12px;color:var(--muted)}
+  .genres{display:flex;gap:5px;flex-wrap:wrap}
+  .genres span{font-size:11px;background:var(--panel-2);color:var(--muted);padding:2px 7px;border-radius:6px}
+  .plats{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+  .plat{font-size:11.5px;font-weight:700;color:#fff;border-radius:7px;padding:3px 8px;line-height:1.2}
+  .ep{font-size:12px;color:var(--accent);font-weight:600;background:var(--accent-soft);border-radius:8px;padding:5px 8px}
+  .summary{font-size:12.5px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .card-body .open{margin-top:auto;font-size:12.5px;color:var(--accent);font-weight:600;text-decoration:none}
+  .empty{text-align:center;color:var(--muted);padding:60px 20px;grid-column:1/-1}
+  footer{border-top:1px solid var(--border);padding:22px 0 40px;color:var(--muted);font-size:13px}
+  footer a{color:var(--accent);text-decoration:none}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--text);
+    color:var(--bg);padding:10px 18px;border-radius:999px;font-size:13.5px;opacity:0;pointer-events:none;
+    transition:.25s;z-index:50;box-shadow:var(--shadow)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media(max-width:640px){
+    .hero h1{font-size:24px}
+    .search{order:3;max-width:none;flex-basis:100%}
+    .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-inner">
+    <div class="logo"><span class="mark">SPA</span><span>每日剧荐<small>剧集 · 电影 · 在哪看</small></span></div>
+    <div class="spacer"></div>
+    <div class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <input id="search" type="search" placeholder="搜索剧名 / 电影 / 平台…" />
+    </div>
+    <button class="icon-btn" id="themeBtn" title="切换深浅色">🌓</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1>今天有什么新剧？接下来又上线什么？</h1>
+    <p>每天自动从公开数据源抓取最新剧集与即将上线的内容，并告诉你能在哪个平台观看。电视剧数据每日实时更新，电影板块为精选种子数据（可一键接入 TMDB 变实时）。</p>
+    <div class="meta-line">
+      <span class="badge-live"><span class="dot"></span> 每日自动更新</span>
+      <span id="updated">数据加载中…</span>
+      <span id="srcInfo"></span>
+    </div>
+  </section>
+
+  <div class="controls">
+    <div class="tabs" id="tabs">
+      <button data-tab="today" class="active">今日新剧</button>
+      <button data-tab="upcoming">即将上线</button>
+      <button data-tab="movies">电影</button>
+    </div>
+  </div>
+  <div class="filters" id="filters"></div>
+
+  <section class="grid" id="grid"></section>
+</main>
+
+<footer class="wrap">
+  <div>SPA · 每日剧集电影推荐 — 纯前端单页应用，数据由 GitHub Actions 每日自动抓取（电视剧来源 TVmaze，免 API Key）。</div>
+  <div style="margin-top:6px">电影板块默认使用精选种子数据；在仓库 Secrets 配置 <code>TMDB_API_KEY</code> 后，电影也会变成每日实时数据。本站为信息聚合，播放请前往各平台官方渠道。</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var PLATFORM_COLORS = {
+    "Netflix":"#E50914","Disney+":"#113ccf","HBO Max":"#5822b4","Max":"#5822b4","HBO":"#5822b4",
+    "Apple TV+":"#0a0a0a","Prime Video":"#00a8e1","Amazon":"#00a8e1","Hulu":"#1ce783","Peacock":"#002b9b",
+    "Paramount+":"#0064ff","HBO GO":"#5822b4","BBC":"#000000","BBC One":"#000000","BBC Two":"#000000",
+    "ABC":"#0a4ea2","CBS":"#1c1c1c","NBC":"#e8a100","Fox":"#3b6fb5","FX":"#e30613","Showtime":"#00a0e0"
+  };
+  function platColor(name){
+    if(PLATFORM_COLORS[name]) return PLATFORM_COLORS[name];
+    var key = Object.keys(PLATFORM_COLORS).find(function(k){ return name && name.indexOf(k)===0; });
+    return key ? PLATFORM_COLORS[key] : "#6b7280";
+  }
+  function isLight(hex){
+    var c = hex.replace('#',''); if(c.length===3) c=c.split('').map(function(x){return x+x;}).join('');
+    var r=parseInt(c.substr(0,2),16),g=parseInt(c.substr(2,2),16),b=parseInt(c.substr(4,2),16);
+    return (r*299+g*587+b*114)/1000 > 150;
+  }
+
+  var state = { tab:'today', platform:null, query:'', data:{today:[],upcoming:[],movies:[]}, meta:{} };
+
+  // 内置回退示例（仅当无法从 data/ 拉取时，保证本地直接打开也好看）
+  var FALLBACK = {
+    today:[ {id:1,title:"示例剧集 A",type:"tv",year:2025,rating:8.4,genres:["剧情","科幻"],
+      summary:"这是一段示例简介，用于演示界面。实际数据由 GitHub Actions 每日从 TVmaze 抓取。",
+      image:null,platforms:["Netflix"],episode:{season:2,number:3,name:"第2季第3集",airdate:"2026-08-14"},url:null},
+      {id:2,title:"示例剧集 B",type:"tv",year:2024,rating:7.9,genres:["悬疑"],summary:"示例数据。",
+      image:null,platforms:["Disney+"],episode:{season:1,number:1,name:"首播",airdate:"2026-08-14"},url:null} ],
+    upcoming:[ {id:3,title:"即将上线示例",type:"tv",year:2026,rating:null,genres:["喜剧"],summary:"未来7天即将上线的示例条目。",
+      image:null,platforms:["Apple TV+"],episode:{season:1,number:1,name:"首播",airdate:"2026-08-18"},url:null} ],
+    movies:[ {id:11,title:"示例电影 X",type:"movie",year:2025,rating:7.5,genres:["动作"],summary:"电影板块为精选种子数据，配置 TMDB Key 后转实时。",
+      image:null,platforms:["Prime Video"],url:null} ]
+  };
+
+  function $(s){ return document.querySelector(s); }
+
+  function toast(msg){
+    var t=$('#toast'); t.textContent=msg; t.classList.add('show');
+    clearTimeout(toast._t); toast._t=setTimeout(function(){ t.classList.remove('show'); },1800);
+  }
+
+  function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  function fmtDate(s){
+    if(!s) return '';
+    var d=new Date(s); if(isNaN(d)) return s;
+    return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
+  }
+
+  function cardHTML(it){
+    var poster = it.image
+      ? '<img loading="lazy" src="'+esc(it.image)+'" alt="'+esc(it.title)+'" onerror="this.style.display=\'none\'">'
+      : '<div class="ph">'+(esc(it.title||'?').slice(0,2))+'</div>';
+    var rating = (it.rating!=null) ? '<div class="rating">★ '+it.rating+'</div>' : '';
+    var typeTag = '<div class="type-tag">'+(it.type==='movie'?'电影':'剧集')+'</div>';
+    var plats = (it.platforms||[]).map(function(p){
+      var c=platColor(p), dark=isLight(c);
+      return '<span class="plat" style="background:'+c+';color:'+(dark?'#111':'#fff')+'">'+esc(p)+'</span>';
+    }).join('');
+    var ep = (it.type==='tv' && it.episode) ? '<div class="ep">S'+it.episode.season+'E'+it.episode.number+' · '+(it.episode.airdate?fmtDate(it.episode.airdate)+' · ':'')+esc(it.episode.name||'')+'</div>' : '';
+    var year = it.type==='movie' ? (it.year?it.year+' · ':'') : (it.premiered?fmtDate(it.premiered).slice(0,4)+' · ':'');
+    var genres = (it.genres||[]).slice(0,3).map(function(g){return '<span>'+esc(g)+'</span>';}).join('');
+    var link = it.url ? '<a class="open" href="'+esc(it.url)+'" target="_blank" rel="noopener">查看详情 ↗</a>' : '<span class="open" style="color:var(--muted)">平台官方观看</span>';
+    return '<article class="card">'
+      + '<div class="poster">'+poster+rating+typeTag+'</div>'
+      + '<div class="card-body">'
+      + '<h3>'+esc(it.title)+'</h3>'
+      + '<div class="sub">'+(it.type==='movie'?'':year)+((it.rating!=null)?'':'')+'</div>'
+      + (genres?'<div class="genres">'+genres+'</div>':'')
+      + (plats?'<div class="plats">'+plats+'</div>':'')
+      + ep
+      + (it.summary?'<div class="summary">'+esc(it.summary)+'</div>':'')
+      + link
+      + '</div></article>';
+  }
+
+  function currentItems(){
+    var arr = state.data[state.tab] || [];
+    var q = state.query.trim().toLowerCase();
+    return arr.filter(function(it){
+      if(state.platform && (it.platforms||[]).indexOf(state.platform)===-1) return false;
+      if(q){
+        var hay = ((it.title||'')+' '+(it.platforms||[]).join(' ')+' '+(it.genres||[]).join(' ')).toLowerCase();
+        if(hay.indexOf(q)===-1) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderFilters(){
+    var box=$('#filters'); box.innerHTML='';
+    var all = state.data[state.tab]||[];
+    var counts={};
+    all.forEach(function(it){ (it.platforms||[]).forEach(function(p){ counts[p]=(counts[p]||0)+1; }); });
+    var names = Object.keys(counts).sort(function(a,b){return counts[b]-counts[a];});
+    if(names.length===0) return;
+    var chips = '';
+    chips += '<button class="chip'+(state.platform==null?' active':'')+'" data-p="__all">全部<span class="cnt">'+all.length+'</span></button>';
+    names.forEach(function(n){
+      var c=platColor(n), dark=isLight(c);
+      chips += '<button class="chip'+(state.platform===n?' active':'')+'" data-p="'+esc(n)+'">'
+        + '<span class="swatch" style="background:'+c+';"></span>'+esc(n)+'<span class="cnt">'+counts[n]+'</span></button>';
+    });
+    box.innerHTML = chips;
+    Array.prototype.forEach.call(box.querySelectorAll('.chip'),function(b){
+      b.addEventListener('click',function(){
+        var p=b.getAttribute('data-p'); state.platform = (p==='__all')?null:p; renderFilters(); renderGrid();
+      });
+    });
+  }
+
+  function renderGrid(){
+    var grid=$('#grid'); var items=currentItems();
+    if(items.length===0){ grid.innerHTML='<div class="empty">没有匹配的内容。试试切换标签、清除筛选或搜索其他关键词。</div>'; return; }
+    grid.innerHTML = items.map(cardHTML).join('');
+  }
+
+  function render(){
+    document.querySelectorAll('#tabs button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tab')===state.tab);
+    });
+    renderFilters(); renderGrid();
+  }
+
+  function setMeta(){
+    var m=state.meta||{};
+    $('#updated').textContent = m.generatedAt ? ('数据更新于 '+fmtDate(m.generatedAt)+' '+new Date(m.generatedAt).toTimeString().slice(0,5)) : '示例数据（未连接到自动更新）';
+    var parts=[];
+    if(m.tvTodayCount!=null) parts.push('今日新剧 '+m.tvTodayCount);
+    if(m.tvUpcomingCount!=null) parts.push('即将上线 '+m.tvUpcomingCount);
+    if(m.moviesCount!=null) parts.push('电影 '+m.moviesCount);
+    $('#srcInfo').textContent = parts.join(' · ');
+  }
+
+  function applyTheme(){
+    var t = localStorage.getItem('spa-theme') || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light');
+    document.documentElement.setAttribute('data-theme', t);
+  }
+
+  async function loadData(){
+    async function get(path){
+      var r = await fetch(path, {cache:'no-store'});
+      if(!r.ok) throw new Error(path+' '+r.status);
+      return r.json();
+    }
+    try{
+      var res = await Promise.allSettled([
+        get('data/meta.json'), get('data/tv-today.json'),
+        get('data/tv-upcoming.json'), get('data/movies.json')
+      ]);
+      var meta = res[0].status==='fulfilled' ? res[0].value : {};
+      var today = res[1].status==='fulfilled' ? res[1].value.items : FALLBACK.today;
+      var up = res[2].status==='fulfilled' ? res[2].value.items : FALLBACK.upcoming;
+      var movies = res[3].status==='fulfilled' ? res[3].value.items : FALLBACK.movies;
+      // 某分类为空（如首次运行前）时回退到内置示例，保证界面不空白
+      if(today.length===0) today = FALLBACK.today;
+      if(up.length===0) up = FALLBACK.upcoming;
+      if(movies.length===0) movies = FALLBACK.movies;
+      state.meta = meta;
+      state.data = { today:today, upcoming:up, movies:movies };
+      setMeta(); render();
+    }catch(e){
+      state.data = { today:FALLBACK.today, upcoming:FALLBACK.upcoming, movies:FALLBACK.movies };
+      setMeta(); render();
+      toast('使用内置示例数据（未连接到自动更新）');
+    }
+  }
+
+  // 事件
+  document.querySelectorAll('#tabs button').forEach(function(b){
+    b.addEventListener('click',function(){ state.tab=b.getAttribute('data-tab'); state.platform=null; render(); });
+  });
+  var st; $('#search').addEventListener('input',function(){ clearTimeout(st); var v=this; st=setTimeout(function(){ state.query=v.value; renderGrid(); },180); });
+  $('#themeBtn').addEventListener('click',function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    var nx=cur==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme',nx);
+    localStorage.setItem('spa-theme',nx); toast(nx==='dark'?'已切换深色':'已切换浅色');
+  });
+
+  applyTheme();
+  loadData();
+})();
+</script>
+</body>
+</html>
