@@ -104,15 +104,15 @@
     <h3><span class="n">⚡</span>输入股票，自动测算</h3>
     <div class="row">
       <div>
-        <label>股票代码（沪 60/68、深 00/30、京 8/4 开头，或带 sh/sz/bj）</label>
-        <input id="code" placeholder="例如 600519 / 000858 / sz300750" value="600519">
+        <label>股票代码或名称（沪 60/68、深 00/30、京 8/4 开头，或带 sh/sz/bj；也可输名称自动识别）</label>
+        <input id="code" placeholder="例如 600519 / 贵州茅台 / sz300750" value="600519">
       </div>
       <div style="flex:0 0 auto">
         <label>&nbsp;</label>
         <button class="btn" id="go">拉取行情并测算</button>
       </div>
     </div>
-    <div class="auto-status" id="autoStatus">未拉取。点击上方按钮自动获取腾讯公开行情计算「区间VWAP + 筹码峰」；若处于离线/微信等无法联网环境，会自动切换为手动模式。</div>
+    <div class="auto-status" id="autoStatus">未拉取。输入代码或名称，自动获取行情计算「区间VWAP + 筹码峰」并直接出结果；若处于离线/微信等无法联网环境，会自动切换为手动模式。</div>
   </div>
 
   <!-- 方法1+2 自动 -->
@@ -147,9 +147,10 @@
     <div class="mini" id="chipNote"></div>
   </div>
 
-  <!-- 方法3/4/5 手动 -->
+  <!-- 方法3/4/5 可选增强 -->
   <div class="card">
-    <h3><span class="n">3</span>季报机构成本<span class="pill">手动</span> &nbsp;<span class="n">4</span>大宗接盘价<span class="pill">手动</span> &nbsp;<span class="n">5</span>股权质押<span class="pill">手动</span></h3>
+    <h3><span class="n">3</span>季报机构成本<span class="pill">可选</span> &nbsp;<span class="n">4</span>大宗接盘价<span class="pill">可选</span> &nbsp;<span class="n">5</span>股权质押<span class="pill">可选</span></h3>
+    <div class="legend">这三项来自披露文件，没有统一免费接口，<b>留空不影响自动结论</b>（上方 VWAP + 筹码峰已自动算出核心支撑）。想提高精度时再补填，填完点下方「综合多线共振测算」重算即可。</div>
     <div class="grid g3">
       <div>
         <label>季报机构成本（元）</label>
@@ -209,7 +210,7 @@
     <div id="recList"></div>
   </div>
 
-  <footer>纯前端单文件 · 数据来自腾讯公开行情 / 需你手动补充披露信息 · 估算仅供参考，风险自负</footer>
+  <footer>纯前端单文件 · 行情来自腾讯公开接口（新浪备用）· 估算仅供参考，风险自负</footer>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -266,19 +267,87 @@ function fetchQuoteVar(code, timeout){
 }
 async function fetchKline(code, days){
   days=days||320;
+  const sources=[
+    function(){return fetchKlineTencent(code,days);},
+    function(){return fetchKlineSina(code,days);}
+  ];
+  let lastErr;
+  for(let attempt=0; attempt<2; attempt++){
+    for(const src of sources){
+      try{ const r=await src(); if(r&&r.length>=5) return r; }
+      catch(e){ lastErr=e; }
+    }
+  }
+  throw lastErr||new Error('all-failed');
+}
+function fetchKlineTencent(code, days){
   const end=new Date();
   const start=new Date(Date.now()-(days+12)*86400000);
   const param=code+',day,'+ymd(start)+','+ymd(end)+','+days+',qfq';
-  const url='https://web.ifzq.gtimg.cn/appstock/app/fqkday/get?param='+param;
-  const data=await fetchJSONP(url);
-  const node=data&&data.data&&data.data[code.toUpperCase()];
-  const arr=(node&&(node.qfqday||node.day))||[];
-  return arr.map(function(r){return {date:r[0],o:+r[1],c:+r[2],h:+r[3],l:+r[4],v:+r[5]};});
+  const url='https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param='+param;
+  return fetchJSONP(url).then(function(data){
+    const node=data&&data.data&&data.data[code.toUpperCase()];
+    const arr=(node&&(node.qfqday||node.day))||[];
+    if(!arr.length) throw new Error('empty');
+    return arr.map(function(r){return {date:r[0],o:+r[1],c:+r[2],h:+r[3],l:+r[4],v:+r[5]};});
+  });
+}
+function fetchKlineSina(code, days){
+  const url='https://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol='+code+'&scale=240&ma=no&datalen='+days;
+  return fetchJSONP(url).then(function(arr){
+    if(!arr||!arr.length) throw new Error('empty');
+    return arr.map(function(r){return {date:r.day,o:+r.open,c:+r.close,h:+r.high,l:+r.low,v:+r.volume};});
+  });
 }
 async function fetchQuote(code){
   const raw=await fetchQuoteVar(code);
   const f=String(raw).split('~');
   return {name:f[1]||code, price:parseFloat(f[3])||0};
+}
+/* 名称 → 代码（腾讯搜索优先，东方财富备用） */
+async function resolveCode(input){
+  input=(input||'').trim();
+  if(!input) return null;
+  if(/^\d{4,6}$/.test(input)||/^(sh|sz|bj)\d{4,6}$/i.test(input)) return normCode(input);
+  const code=await searchCode(input);
+  return code?normCode(code):null;
+}
+async function searchCode(name){
+  let c=await fetchSmartbox(name);
+  if(c) return c;
+  c=await fetchEastmoneySuggest(name);
+  return c;
+}
+function parseSmartboxItem(item){
+  const parts=String(item).split('~');
+  return parts.length>=3 ? parts[2] : null;
+}
+function fetchSmartbox(name){
+  return new Promise(function(resolve){
+    const s=document.createElement('script');
+    const t=setTimeout(function(){try{s.remove();}catch(e){}resolve(null);},8000);
+    s.onerror=function(){clearTimeout(t);try{s.remove();}catch(e){}resolve(null);};
+    s.onload=function(){
+      clearTimeout(t);
+      try{ const arr=window.v_pv_data; if(Array.isArray(arr)&&arr.length) resolve(parseSmartboxItem(arr[0])); else resolve(null); }
+      catch(e){ resolve(null); }
+      try{s.remove();}catch(e){}
+    };
+    s.src='https://smartbox.gtimg.cn/s3/?v=2&t=1&q='+encodeURIComponent(name);
+    document.head.appendChild(s);
+  });
+}
+function fetchEastmoneySuggest(name){
+  return new Promise(function(resolve){
+    const cbid='__jp'+Math.random().toString(36).slice(2);
+    const s=document.createElement('script');
+    const t=setTimeout(function(){cleanup();resolve(null);},8000);
+    function cleanup(){clearTimeout(t);try{s.remove();}catch(e){}try{delete window[cbid];}catch(e){}}
+    window[cbid]=function(data){cleanup(); try{ const arr=(data&&data)||[]; if(Array.isArray(arr)&&arr.length) resolve(arr[0].code); else resolve(null);}catch(e){resolve(null);} };
+    s.onerror=function(){cleanup();resolve(null);};
+    s.src='https://searchapi.eastmoney.com/api/suggest/get?input='+encodeURIComponent(name)+'&type=14&token=D43BF7224E5C4220A8B5A4F0BBE5A744&cb='+cbid;
+    document.head.appendChild(s);
+  });
 }
 
 /* ===================== 方法1 区间VWAP ===================== */
@@ -537,7 +606,7 @@ function saveRecord(){
   const comp=compositeCost(costs);
   if(!comp){toast('先测算再保存');return;}
   const stars='★★★'.slice(0,comp.level)+'☆☆☆'.slice(0,3-comp.level);
-  const rec={code:(document.getElementById('code').value||'').trim(), name:STATE.name,
+  const rec={code:STATE.code||(document.getElementById('code').value||'').trim(), name:STATE.name,
     center:comp.median.toFixed(2), level:stars, time:ymd(new Date())};
   let a=[];try{a=JSON.parse(localStorage.getItem('mfc-records-v1')||'[]');}catch(e){}
   a.unshift(rec); a=a.slice(0,30); localStorage.setItem('mfc-records-v1',JSON.stringify(a));
@@ -546,20 +615,28 @@ function saveRecord(){
 
 async function run(){
   const raw=document.getElementById('code').value;
-  const nc=normCode(raw);
   const st=document.getElementById('autoStatus');
-  if(!nc){st.className='auto-status bad';st.textContent='代码无法识别，请检查格式。';return;}
+  st.className='auto-status wait';st.textContent='正在识别并拉取行情…';
+  let nc;
+  try{ nc=await resolveCode(raw); }catch(e){ nc=null; }
+  if(!nc){
+    st.className='auto-status bad';
+    st.textContent='未能识别「'+raw+'」。请输入 6 位代码（如 600519），或改用代码代替名称。';
+    return;
+  }
   st.className='auto-status wait';st.textContent='正在拉取 '+nc.code+' 行情…';
   try{
     const [kls,q]=await Promise.all([fetchKline(nc.code,320), fetchQuote(nc.code).catch(function(){return {name:nc.code,price:0};})]);
     if(!kls||kls.length<5) throw new Error('empty');
-    STATE.kls=kls; STATE.name=q.name; STATE.quote=q.price||kls[kls.length-1].c;
+    STATE.kls=kls; STATE.name=q.name; STATE.quote=q.price||kls[kls.length-1].c; STATE.code=nc.code;
     st.className='auto-status ok';
-    st.textContent='✅ 已获取 '+kls.length+' 个交易日（'+q.name+'）。已自动填入 VWAP 与筹码峰，可手动微调后点「综合测算」。';
+    st.textContent='已获取 '+kls.length+' 个交易日（'+q.name+'）。已自动填入 VWAP 与筹码峰并完成测算；下方季报/大宗/质押为可选，填了更精准。';
     autoFill();
+    renderResult();
   }catch(e){
     st.className='auto-status bad';
-    st.textContent='注意：自动行情获取失败（可能离线/微信环境/网络受限）。已切换手动模式：请在上方直接填写 VWAP、筹码峰及下方披露数据，再点「综合测算」。';
+    const why = e && /timeout/.test(e.message) ? '请求超时' : e && /network/.test(e.message) ? '网络被拦截' : '接口无返回';
+    st.textContent='自动行情获取失败（'+why+'，多为离线/微信环境限制）。仍可手动：在上方填写 VWAP、筹码峰及下方披露数据，再点「综合测算」。';
   }
 }
 
