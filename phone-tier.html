@@ -240,7 +240,7 @@
  * —— 按月更新：在此数组增删型号，并修改下方 META.updated 为当前年月即可。
  * 字段：b=品牌 s=综合分(旗舰=100) y=年份 chip=芯片 screen=屏幕 n=备注
  * ============================================================ */
-const META = { version:"2026-08", updated:"2026-08-12", base:100 };
+const META = { version:"2026-08", updated:"2026-08-15", base:100 };
 
 const BRANDS = {
   apple:   { name:"Apple",    short:"",  color:"#8e8e93", grad:"linear-gradient(135deg,#8e8e93,#c7c7cc)" },
@@ -338,7 +338,15 @@ const PHONES = [
   {b:"oneplus",name:"一加13",s:99,y:2024,chip:"骁龙8 Elite",screen:"6.82英寸 OLED 120Hz",n:""},
   {b:"oneplus",name:"一加12",s:94,y:2023,chip:"骁龙8 Gen3",screen:"6.82英寸 OLED 120Hz",n:""},
   {b:"oneplus",name:"一加Ace 3",s:82,y:2024,chip:"骁龙8 Gen2",screen:"6.78英寸 OLED 120Hz",n:""},
-  {b:"oneplus",name:"一加11",s:88,y:2023,chip:"骁龙8 Gen2",screen:"6.7英寸 OLED 120Hz",n:""}
+  {b:"oneplus",name:"一加11",s:88,y:2023,chip:"骁龙8 Gen2",screen:"6.7英寸 OLED 120Hz",n:""},
+  // AUTO-ADDED 2026-08-15
+  {b:"samsung", name:"Galaxy S26 Ultra", s:100, y:2026, chip:"骁龙8 Elite Gen5", screen:"6.9英寸 OLED 120Hz", n:"2026年2月发布，骁龙8 Elite Gen5 旗舰。", e:1},
+  {b:"vivo", name:"X300 Ultra", s:100, y:2026, chip:"骁龙8至尊版(第五代)", screen:"2K LTPO AMOLED", n:"2026年3月发布，蔡司双2亿像素影像旗舰。", e:1},
+  {b:"oppo", name:"Find X9 Ultra", s:100, y:2026, chip:"骁龙8 Elite Gen5", screen:"—", n:"2026年旗舰，双2亿像素影像。", e:1},
+  {b:"xiaomi", name:"17 Ultra", s:100, y:2026, chip:"骁龙8 Elite Gen5", screen:"6.9英寸 2K AMOLED 120Hz", n:"2026性能旗舰，支持8K录制。", e:1},
+  {b:"iqoo", name:"15 Ultra", s:98, y:2026, chip:"骁龙8 Elite Gen5", screen:"—", n:"2026年2月游戏旗舰，内置风扇散热。", e:1},
+  {b:"motorola", name:"Signature", s:92, y:2026, chip:"骁龙8 Gen5", screen:"—", n:"2026年1月发布，近原生安卓。", e:1},
+  {b:"redmi", name:"K90 Max", s:88, y:2026, chip:"天玑9500", screen:"—", n:"2026年4月发布，全大核性能机。", e:1}
 ];
 
 /* =========================== 渲染逻辑 =========================== */
