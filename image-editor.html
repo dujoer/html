@@ -632,7 +632,8 @@ function drawPreview(item){
   ctx.drawImage(sb,0,0,dispW,dispH);
   // 位置
   preview.style.position="absolute";preview.style.left=ox+"px";preview.style.top=oy+"px";
-  view={dispW:dispW,dispH:dispH,ar:ar,ox:ox,oy:oy};
+  // 只更新本次绘制得到的几何量，必须保留 zoom / panX / panY，否则缩放与平移会失效（NaN）
+  view.dispW=dispW;view.dispH=dispH;view.ar=ar;view.ox=ox;view.oy=oy;
   // 原图对比层
   origCanvas.width=preview.width;origCanvas.height=preview.height;
   origCanvas.style.width=dispW+"px";origCanvas.style.height=dispH+"px";
@@ -693,11 +694,12 @@ var item_measure_cb=function(item,blob){
   $("#iNew").textContent=fmtBytes(blob.size);
   $("#sEst").textContent=fmtBytes(blob.size);
   var save=active.origSize>0?Math.round((1-blob.size/active.origSize)*100):0;
-  $("#iSave").textContent=(save>=0?(save+"%"):"0%");
+  var isPng=active.edits.format==="image/png";
+  $("#iSave").textContent=isPng?"无损":(save>=0?(save+"%"):"0%");
   // 压缩面板
   $("#cOrig").textContent=fmtBytes(active.origSize);
   $("#cNew").textContent=fmtBytes(blob.size);
-  $("#cSave").textContent=(save>=0?save+"%":"0%");
+  $("#cSave").textContent=isPng?"无损":(save>=0?save+"%":"0%");
   $("#cRes").textContent=ow+"×"+oh;
 };
 function measure(cb){
@@ -809,7 +811,11 @@ function syncControls(){
   $("#cropToggle").classList.toggle("on",cropMode);
   // 质量
   var q=Math.round(e.quality*100);
-  $("#quality").value=q;$("#qualityVal").textContent=q+"%";$("#qLbl").textContent="";
+  $("#quality").value=q;$("#qualityVal").textContent=q+"%";
+  // PNG 为无损格式，质量滑块不生效；明确禁用并提示，避免“压缩无效”的误解
+  var isPng=e.format==="image/png";
+  $("#quality").disabled=isPng;
+  $("#qLbl").textContent=isPng?"（PNG 无损，不生效）":"";
   // 格式
   $$("#fmtChips .chip").forEach(function(c){c.classList.toggle("on",c.dataset.f===e.format);});
   $("#scalePctLbl").textContent="(输出 "+td.tw+"×"+td.th+")";
@@ -1166,9 +1172,11 @@ function buildZip(files){
   var enc=new TextEncoder(),chunks=[],central=[],offset=0,i;
   for(i=0;i<files.length;i++){
     var f=files[i],nameBytes=enc.encode(f.name),data=f.bytes,crc=crc32(data);
-    var local=concat([u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nameBytes.length),u16(0),nameBytes,data]);
+    // 0x0800 = 文件名为 UTF-8 编码，确保中文等非 ASCII 文件名在各类解压工具中正确显示
+    var flag=u16(0x0800);
+    var local=concat([u32(0x04034b50),u16(20),flag,u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nameBytes.length),u16(0),nameBytes,data]);
     chunks.push(local);var lo=offset;offset+=local.length;
-    central.push(concat([u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nameBytes.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(lo),nameBytes]));
+    central.push(concat([u32(0x02014b50),u16(20),u16(20),flag,u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nameBytes.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(lo),nameBytes]));
   }
   var cdStart=offset,cdSize=0,cd=[];
   for(i=0;i<central.length;i++){cd.push(central[i]);cdSize+=central[i].length;}
