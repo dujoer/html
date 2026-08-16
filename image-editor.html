@@ -108,8 +108,8 @@ input,select{font-family:inherit}
 
 /* controls */
 .sec-title{font-size:13px;font-weight:600;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-.field{margin-bottom:14px}
-.field label{display:block;font-size:13px;margin-bottom:6px;color:var(--text)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;margin-bottom:7px;color:var(--text);font-weight:500}
 .row{display:flex;gap:8px}
 .row > *{flex:1;min-width:0}
 input[type=number],select,input[type=text]{
@@ -130,17 +130,23 @@ input:focus,select:focus{border-color:var(--primary)}
 .slider-wrap{display:flex;align-items:center;gap:12px}
 input[type=range]{flex:1;accent-color:var(--primary);height:30px}
 .slider-val{min-width:48px;text-align:center;font-size:14px;font-weight:600;background:var(--panel-2);padding:6px 8px;border-radius:8px}
-.toggle{display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer}
+.field label.toggle{display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer}
 .switch{width:44px;height:26px;border-radius:20px;background:var(--line);position:relative;transition:.2s;flex:0 0 auto}
 .switch::after{content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
-.toggle.on .switch{background:var(--primary)}
-.toggle.on .switch::after{left:20px}
+.field label.toggle.on .switch{background:var(--primary)}
+.field label.toggle.on .switch::after{left:20px}
+.lock-toggle{align-items:flex-start;padding:8px 0}
+.lock-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--primary);flex:0 0 auto;margin-top:2px}
+.lock-icon svg{display:block;width:18px;height:18px;fill:currentColor}
+.lock-text{display:flex;flex-direction:column;gap:2px;line-height:1.3;flex:1;min-width:0}
+.lock-text b{font-weight:600;display:block}
+.lock-text small{font-size:12px;color:var(--muted);font-weight:400;display:block}
 .stat-card{background:var(--panel-2);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
 .stat-card .k{font-size:12px;color:var(--muted)}
 .stat-card .v{font-size:18px;font-weight:700}
 .stat-card .v.r{color:var(--ok)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.note{font-size:12px;color:var(--muted);line-height:1.5;background:var(--panel-2);padding:10px;border-radius:9px;margin-top:8px}
+.note{font-size:12px;color:var(--muted);line-height:1.5;background:var(--panel-2);padding:10px 12px;border-radius:9px;margin-top:8px;border:1px solid var(--line)}
 .divider{height:1px;background:var(--line);margin:16px 0}
 .batch-box{border:1px dashed var(--line);border-radius:10px;padding:12px;margin-top:6px}
 .batch-box .ttl{font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px}
@@ -179,10 +185,11 @@ input[type=range]{flex:1;accent-color:var(--primary);height:30px}
 .crop-center.v{left:50%;top:0;bottom:0;width:1px;transform:translateX(-.5px)}
 .crop-center.h{top:50%;left:0;right:0;height:1px;transform:translateY(-.5px)}
 /* scale stat */
-.scale-stat{display:flex;gap:10px;background:var(--panel-2);border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px}
-.scale-stat .it{flex:1;display:flex;flex-direction:column;gap:3px}
+.scale-stat{display:flex;gap:10px;background:var(--panel-2);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13px;border:1px solid var(--line)}
+.scale-stat .it{flex:1;display:flex;flex-direction:column;gap:4px}
 .scale-stat .it .k{color:var(--muted);font-size:11.5px}
-.scale-stat .it .v{font-weight:700;font-size:15px;color:var(--primary)}
+.scale-stat .it .v{font-weight:700;font-size:16px;color:var(--primary)}
+input[type=range]:disabled{opacity:.45;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -266,7 +273,11 @@ input[type=range]{flex:1;accent-color:var(--primary);height:30px}
             <div class="it"><span class="k">预估大小</span><span class="v" id="sEst">-</span></div>
           </div>
           <div class="field">
-            <label class="toggle" id="lockToggle"><span class="switch"></span><span>等比例锁定（禁止变形）</span></label>
+            <label class="toggle lock-toggle" id="lockToggle">
+              <span class="lock-icon" id="lockIcon"></span>
+              <span class="switch"></span>
+              <span class="lock-text"><b>等比锁定</b><small>修改宽高时自动保持比例，防止变形</small></span>
+            </label>
           </div>
           <div class="field">
             <label>常用尺寸预设</label>
@@ -290,7 +301,7 @@ input[type=range]{flex:1;accent-color:var(--primary);height:30px}
             </div>
           </div>
           <div class="field">
-            <label>缩放比例 <span id="scalePctLbl" style="color:var(--muted)"></span></label>
+            <label>缩放比例 <span id="scalePctLbl" style="color:var(--muted);font-weight:400;font-size:12px"></span></label>
             <div class="slider-wrap">
               <input type="range" id="scalePct" min="1" max="200" value="100">
               <span class="slider-val" id="scalePctVal">100%</span>
@@ -303,7 +314,7 @@ input[type=range]{flex:1;accent-color:var(--primary);height:30px}
               <input type="number" id="inH" min="1" placeholder="高">
             </div>
           </div>
-          <div class="note">提示：宽高输入与上方滑块联动；开启等比例后修改任一值另一值自动跟随。场景预设（如证件照）会按固定尺寸输出。</div>
+          <div class="note">提示：开启等比锁定后，修改宽度或高度时另一值自动跟随；关闭锁定则可自由输入任意宽高。场景预设（如证件照）会按固定尺寸输出。</div>
         </div>
 
         <!-- 旋转 -->
@@ -493,12 +504,18 @@ function fmtBytes(b){if(b<1024)return b+" B";if(b<1048576)return (b/1024).toFixe
 function deepClone(o){return JSON.parse(JSON.stringify(o));}
 function toast(msg){var t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove("show");},1900);}
 function extOf(fmt){return fmt==="image/png"?"png":fmt==="image/webp"?"webp":"jpg";}
+function lockIconSvg(locked){
+  return locked
+    ?'<svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-9c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>'
+    :'<svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h2a3 3 0 0 1 6 0v2H6c-1.1 0-2 .9-2 2v9c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-9c0-1.1-.9-2-2-2zm0 11H6v-9h12v9zM12 17c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>';
+}
 
 /* ============ 编辑状态 ============ */
 function newEdits(){
+  var locked=prefs.aspectLock!==false; // 默认开启等比锁定
   return {
     rot:0, angle:0, flipH:false, flipV:false,
-    scalePct:100, fixedDim:false, targetW:null, targetH:null,
+    scalePct:100, fixedDim:!locked, targetW:null, targetH:null,
     crop:{x:0,y:0,w:1,h:1}, quality:prefs.quality, format:prefs.format
   };
 }
@@ -795,14 +812,17 @@ function removeImage(item){
 /* ============ 控件同步 ============ */
 function syncControls(){
   if(!active)return;var e=active.edits;
+  var td=targetDims(active),sa=stageA(active);
   // 等比例开关：非 fixedDim 即等比例锁定开启
-  $("#lockToggle").classList.toggle("on",!e.fixedDim);
-  // 缩放滑块
-  var pct=e.fixedDim?100:(e.scalePct||100);
-  $("#scalePct").value=pct;$("#scalePctVal").textContent=pct+"%";
-  $("#scalePctLbl").textContent="";
+  var isLocked=!e.fixedDim;
+  $("#lockToggle").classList.toggle("on",isLocked);
+  $("#lockIcon").innerHTML=lockIconSvg(isLocked);
+  // 缩放滑块：自由尺寸时显示实际比例但禁用滑块，等比时可直接拖动
+  var pct=e.fixedDim?Math.round(td.tw/sa.w*100):(e.scalePct||100);
+  $("#scalePct").value=clamp(pct,1,200);$("#scalePctVal").textContent=pct+"%";
+  $("#scalePct").disabled=e.fixedDim;
+  $("#scalePctLbl").textContent=e.fixedDim?"（自由尺寸）":"（等比缩放）";
   // 宽高
-  var td=targetDims(active);
   $("#inW").value=td.tw;$("#inH").value=td.th;
   $("#sDim").textContent=td.tw+"×"+td.th;
   // 角度
@@ -818,7 +838,13 @@ function syncControls(){
   $("#qLbl").textContent=isPng?"（PNG 无损，不生效）":"";
   // 格式
   $$("#fmtChips .chip").forEach(function(c){c.classList.toggle("on",c.dataset.f===e.format);});
-  $("#scalePctLbl").textContent="(输出 "+td.tw+"×"+td.th+")";
+}
+function syncScaleUI(){
+  if(!active)return;
+  var e=active.edits,td=targetDims(active),sa=stageA(active);
+  var pct=e.fixedDim?Math.round(td.tw/sa.w*100):(e.scalePct||100);
+  $("#scalePct").value=clamp(pct,1,200);$("#scalePctVal").textContent=pct+"%";
+  $("#sDim").textContent=td.tw+"×"+td.th;
 }
 
 /* ============ 缩放逻辑 ============ */
@@ -1046,11 +1072,11 @@ $("#scalePct").addEventListener("change",function(){if(!active)return;setScalePc
 // 宽高输入
 $("#inW").addEventListener("input",function(){if(!active)return;var w=parseInt(this.value,10);if(!w)return;
   if(!active.edits.fixedDim){var sa=stageA(active);var pct=clamp(Math.round(w/sa.w*100),1,200);active.edits.scalePct=pct;$("#inH").value=Math.round(sa.h*pct/100);}else{active.edits.targetW=w;var h=parseInt($("#inH").value,10)||1;active.edits.targetH=h;}
-  $("#scalePctLbl").textContent="(输出 "+targetDims(active).tw+"×"+targetDims(active).th+")";});
+  syncScaleUI();});
 $("#inW").addEventListener("change",function(){if(!active)return;syncControls();renderActive();commit(active);$$("#sizeChips .chip").forEach(function(x){x.classList.remove("on");});});
 $("#inH").addEventListener("input",function(){if(!active)return;var h=parseInt(this.value,10);if(!h)return;
   if(!active.edits.fixedDim){var sa=stageA(active);var pct=clamp(Math.round(h/sa.h*100),1,200);active.edits.scalePct=pct;$("#inW").value=Math.round(sa.w*pct/100);}else{active.edits.targetH=h;var w=parseInt($("#inW").value,10)||1;active.edits.targetW=w;}
-  $("#scalePctLbl").textContent="(输出 "+targetDims(active).tw+"×"+targetDims(active).th+")";});
+  syncScaleUI();});
 $("#inH").addEventListener("change",function(){if(!active)return;syncControls();renderActive();commit(active);$$("#sizeChips .chip").forEach(function(x){x.classList.remove("on");});});
 // 无效数值自动纠错：失焦时若为空或非法，恢复为当前有效尺寸
 $("#inW").addEventListener("blur",function(){if(!active)return;var v=parseInt(this.value,10);this.value=(v&&v>=1)?v:targetDims(active).tw;});
