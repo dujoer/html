@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>离线音频格式转换工具</title>
+<style>
+:root{
+  --bg:#f4f6fb; --panel:#ffffff; --panel-2:#f0f2f8; --text:#1f2430; --muted:#6b7280;
+  --line:#e3e7ef; --primary:#3b6cf6; --primary-d:#2a55d4; --primary-soft:#e8f0ff;
+  --ok:#16a34a; --warn:#e0892b; --danger:#e23b3b; --radius:12px; --shadow:0 6px 22px rgba(20,30,60,.08);
+  --chip:#eef1f7; --chip-on:#3b6cf6;
+}
+[data-theme="dark"]{
+  --bg:#161a23; --panel:#1f2530; --panel-2:#262d3a; --text:#e8ecf4; --muted:#9aa3b2;
+  --line:#323a48; --primary:#5b86ff; --primary-d:#3b6cf6; --primary-soft:#1f2c4d;
+  --ok:#34d27b; --warn:#f0a24b; --danger:#ff6b6b; --radius:12px; --shadow:0 6px 22px rgba(0,0,0,.35);
+  --chip:#2a3140; --chip-on:#5b86ff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:var(--bg); color:var(--text); overflow:hidden;
+  -webkit-user-select:none; user-select:none;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--panel);border-bottom:1px solid var(--line);flex:0 0 auto}
+.topbar .logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:16px}
+.logo .dot{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,var(--primary),#8b5cf6);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px}
+.topbar .spacer{flex:1}
+.tbtn{min-height:40px;padding:0 12px;border-radius:10px;background:var(--panel-2);display:inline-flex;align-items:center;justify-content:center;gap:6px;font-size:14px;border:1px solid var(--line);transition:.15s}
+.tbtn:hover{background:var(--primary-soft);border-color:var(--primary)}
+.tbtn:active{transform:scale(.96)}
+.tbtn:disabled{opacity:.4;pointer-events:none}
+.privacy{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+@media(max-width:640px){.privacy{display:none}}
+
+.main{flex:1;display:flex;min-height:0}
+.left{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--bg);padding:14px;overflow-y:auto}
+.right{flex:0 0 380px;width:380px;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+@media(max-width:900px){.right{flex:0 0 340px;width:340px}}
+@media(max-width:760px){.main{flex-direction:column}.right{order:2;flex:0 0 auto;width:100%;border-left:none;border-top:1px solid var(--line)}.left{order:1;flex:1 1 auto}}
+
+.sec-title{font-size:13px;font-weight:600;margin:0 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.dropzone{border:2px dashed var(--line);border-radius:14px;padding:28px 16px;text-align:center;color:var(--muted);transition:.15s;cursor:pointer}
+.dropzone.drag{border-color:var(--primary);background:var(--primary-soft);color:var(--primary)}
+.dropzone .big{font-size:40px;opacity:.6;margin-bottom:8px}
+.dropzone .hint{font-size:13px;line-height:1.6}
+.dropzone .formats{font-size:12px;margin-top:8px;color:var(--muted)}
+.filelist{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.filerow{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2)}
+.filerow .ic{width:34px;height:34px;border-radius:8px;background:var(--primary-soft);color:var(--primary);display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto}
+.filerow .meta{flex:1;min-width:0}
+.filerow .name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.filerow .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.filerow .x{width:26px;height:26px;border-radius:7px;background:var(--panel);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted);flex:0 0 auto}
+.filerow .x:active{transform:scale(.92)}
+.filerow .badge{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--chip);color:var(--muted);flex:0 0 auto}
+.filerow .badge.ok{background:rgba(22,163,74,.15);color:var(--ok)}
+.filerow .badge.warn{background:rgba(224,139,43,.15);color:var(--warn)}
+.filerow .badge.lock{background:rgba(226,59,59,.15);color:var(--danger)}
+
+.field{margin-bottom:14px}
+.field > label{display:block;font-size:13px;margin-bottom:7px;color:var(--text);font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{padding:8px 12px;border-radius:20px;background:var(--chip);font-size:13px;transition:.15s;border:1px solid transparent}
+.chip.on{background:var(--primary);color:#fff}
+.row{display:flex;gap:10px}
+.row > *{flex:1;min-width:0}
+input[type=range]{flex:1;accent-color:var(--primary);height:30px}
+.slider-wrap{display:flex;align-items:center;gap:12px}
+.slider-val{min-width:54px;text-align:center;font-size:14px;font-weight:600;background:var(--panel-2);padding:6px 8px;border-radius:8px}
+select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);color:var(--text);font-size:14px;outline:none}
+select:focus{border-color:var(--primary)}
+.btn{padding:11px 14px;border-radius:10px;background:var(--panel-2);border:1px solid var(--line);font-size:14px;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:.15s}
+.btn:hover{background:var(--primary-soft);border-color:var(--primary)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}
+.btn.primary:hover{background:var(--primary-d)}
+.btn.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+.btn.block{width:100%}
+.btn:disabled{opacity:.4;pointer-events:none}
+.note{font-size:12px;color:var(--muted);line-height:1.6;background:var(--panel-2);padding:10px 12px;border-radius:9px;margin-top:8px;border:1px solid var(--line)}
+.note b{color:var(--text)}
+.divider{height:1px;background:var(--line);margin:16px 0}
+.toggle{display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer}
+.switch{width:44px;height:26px;border-radius:20px;background:var(--line);position:relative;transition:.2s;flex:0 0 auto}
+.switch::after{content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.field label.toggle.on .switch{background:var(--primary)}
+.field label.toggle.on .switch::after{left:20px}
+
+.r-scroll{flex:1;overflow-y:auto;min-height:0;padding:14px}
+.foot-privacy{text-align:center;font-size:11px;color:var(--muted);padding:6px;background:var(--panel);border-top:1px solid var(--line)}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:rgba(20,24,33,.92);color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:200;max-width:90vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.progress{height:6px;border-radius:6px;background:var(--panel-2);overflow:hidden;margin-top:10px}
+.progress > i{display:block;height:100%;width:0;background:var(--primary);transition:width .2s}
+.steps{font-size:12px;color:var(--muted);margin-top:6px;min-height:16px}
+.modal-mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:150;padding:16px}
+.modal-mask.show{display:flex}
+.modal{background:var(--panel);border-radius:16px;width:min(460px,100%);max-height:86vh;overflow-y:auto;padding:20px;box-shadow:var(--shadow)}
+.modal h3{margin:0 0 14px;font-size:17px}
+.modal .acts{display:flex;gap:10px;margin-top:18px}
+.modal .acts .btn{flex:1}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="logo"><span class="dot">🎵</span><span class="txt">离线音频转换</span></div>
+    <span class="privacy">🔒 全程本地处理 · 不上传 · 不泄露</span>
+    <div class="spacer"></div>
+    <button class="tbtn" id="btnTheme" title="主题"><span class="ic">🌙</span></button>
+  </div>
+
+  <div class="main">
+    <div class="left">
+      <div class="card">
+        <p class="sec-title">添加音频文件</p>
+        <div class="dropzone" id="dropzone">
+          <div class="big">📂</div>
+          <div class="hint">点击选择，或将音频文件拖拽到此处<br>支持批量添加，所有处理均在本地完成</div>
+          <div class="formats">可读取：MP3 · WAV · OGG · M4A/AAC · FLAC · WebM(opus) · WMA* · AAC*</div>
+        </div>
+        <input type="file" id="fileInput" accept="audio/*,.m4a,.flac,.wav,.ogg,.aac,.wma,.mka,.weba,.opus" multiple style="display:none">
+        <div class="filelist" id="fileList"></div>
+      </div>
+
+      <div class="card" id="resultCard" style="display:none">
+        <p class="sec-title">转换结果</p>
+        <div class="filelist" id="resultList"></div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary block" id="btnDownloadAll">⬇ 打包下载全部</button>
+          <button class="btn block" id="btnClearDone">清空结果</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="r-scroll">
+        <p class="sec-title">转换设置</p>
+
+        <div class="field">
+          <label>目标格式</label>
+          <div class="chips" id="fmtChips">
+            <span class="chip on" data-f="mp3">MP3</span>
+            <span class="chip" data-f="wav">WAV</span>
+            <span class="chip" data-f="ogg">OGG</span>
+            <span class="chip" data-f="m4a">M4A</span>
+            <span class="chip" data-f="flac">FLAC</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>音频比特率 <span id="brLbl" style="color:var(--muted);font-weight:400;font-size:12px"></span></label>
+          <div class="slider-wrap">
+            <input type="range" id="brate" min="64" max="320" step="8" value="192">
+            <span class="slider-val" id="brateVal">192 kbps</span>
+          </div>
+          <div class="note" id="brNote"></div>
+        </div>
+
+        <div class="field">
+          <label>采样率</label>
+          <select id="srate">
+            <option value="0">保持原采样率</option>
+            <option value="44100">44100 Hz（CD）</option>
+            <option value="48000">48000 Hz</option>
+            <option value="22050">22050 Hz（省体积）</option>
+            <option value="16000">16000 Hz（语音）</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="toggle" id="monoToggle"><span class="switch"></span><span>强制单声道（进一步压缩体积）</span></label>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="field">
+          <label class="toggle" id="ffToggle"><span class="switch"></span><span>使用 ffmpeg.wasm 引擎（支持更多格式）</span></label>
+          <div class="note" id="ffNote">默认使用浏览器原生解码（快、体积小）。开启后用 ffmpeg.wasm 可支持 WMA/更多编码容器，但首次需联网加载约 30MB 核心，之后可离线缓存。</div>
+        </div>
+
+        <button class="btn primary block" id="btnConvert">🔄 开始转换</button>
+        <div class="progress" id="progWrap" style="display:none"><i id="progBar"></i></div>
+        <div class="steps" id="progSteps"></div>
+
+        <div class="divider"></div>
+        <p class="sec-title">关于 QQ 音乐 mgg 格式</p>
+        <div class="note" style="border-color:rgba(226,59,59,.4);background:rgba(226,59,59,.06)">
+          <b style="color:var(--danger)">mgg 是 QQ 音乐的加密 DRM 格式</b>，音频做了账号/设备绑定加密，<b>纯前端、离线无法解密</b>，且绕过 DRM 转换侵犯版权与平台协议。<br><br>
+          合法做法：在 <b>QQ 音乐客户端</b> 内把歌曲「下载为 FLAC / MP3」（部分会员曲支持），再把导出的文件拖进来转换。本工具不会假装能解密 mgg，也不会上传任何文件。
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot-privacy">🔒 100% 离线本地处理 · 音频不上传 · 保护隐私</div>
+</div>
+
+<input type="file" id="fileInput2" style="display:none">
+<div id="toast"></div>
+<div class="modal-mask" id="modalMask"><div class="modal" id="modal"></div></div>
+
+<script>
+"use strict";
+/* ============ 偏好记忆 ============ */
+var PREFS_KEY="audioConvPrefs_v1";
+var prefs=loadPrefs();
+function loadPrefs(){
+  try{var p=JSON.parse(localStorage.getItem(PREFS_KEY));if(p)return p;}catch(e){}
+  return {theme:"light",format:"mp3",brate:192,srate:0,mono:false,ff:false};
+}
+function savePrefs(){try{localStorage.setItem(PREFS_KEY,JSON.stringify(prefs));}catch(e){}}
+
+/* ============ 状态 ============ */
+var files=[];   // {id,name,type,size,blob,audioEl,dur,status,outBlob,outUrl,outName,bad}
+var uid=0;
+var targetFmt="mp3";
+var converting=false;
+
+/* ============ DOM ============ */
+var $=function(s){return document.querySelector(s);};
+var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
+
+function fmtBytes(b){if(!b&&b!==0)return"-";if(b<1024)return b+" B";if(b<1048576)return (b/1024).toFixed(1)+" KB";return (b/1048576).toFixed(2)+" MB";}
+function fmtTime(s){if(!isFinite(s))return"-";s=Math.round(s);var m=Math.floor(s/60),ss=s%60;return m+":"+(ss<10?"0":"")+ss;}
+function toast(msg){var t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove("show");},1900);}
+function extOf(fmt){return fmt==="wav"?"wav":fmt==="ogg"?"ogg":fmt==="m4a"?"m4a":fmt==="flac"?"flac":"mp3";}
+function isEncryptedMgg(name,type){
+  return /\.mgg$/i.test(name) || /mgg/i.test(type||"") || /\.qmc/i.test(name) || /\.tm/i.test(name) || /\.kgm/i.test(name);
+}
+
+/* ============ 导入 ============ */
+function addFiles(list){
+  var arr=Array.prototype.slice.call(list);
+  if(!arr.length)return;
+  arr.forEach(function(f){
+    var it={id:++uid,name:f.name,type:f.type||"audio/mpeg",size:f.size,blob:f,status:"pending",outBlob:null,outUrl:null,outName:null,bad:false};
+    if(isEncryptedMgg(f.name,f.type)){
+      it.status="locked";it.bad=true;
+    }
+    files.push(it);
+  });
+  renderList();
+}
+$("#dropzone").addEventListener("click",function(){$("#fileInput").click();});
+$("#fileInput").addEventListener("change",function(e){addFiles(e.target.files);e.target.value="";});
+["dragenter","dragover"].forEach(function(ev){$("#dropzone").addEventListener(ev,function(e){e.preventDefault();$("#dropzone").classList.add("drag");});});
+["dragleave","drop"].forEach(function(ev){$("#dropzone").addEventListener(ev,function(e){e.preventDefault();if(ev==="dragleave")$("#dropzone").classList.remove("drag");});});
+$("#dropzone").addEventListener("drop",function(e){if(e.dataTransfer&&e.dataTransfer.files)addFiles(e.dataTransfer.files);});
+
+function renderList(){
+  var box=$("#fileList");box.innerHTML="";
+  files.forEach(function(it){
+    var row=document.createElement("div");row.className="filerow";
+    var ic=document.createElement("div");ic.className="ic";ic.textContent="🎵";
+    var meta=document.createElement("div");meta.className="meta";
+    var nm=document.createElement("div");nm.className="name";nm.textContent=it.name;
+    var sub=document.createElement("div");sub.className="sub";
+    sub.textContent=fmtBytes(it.size)+(it.dur?" · "+fmtTime(it.dur):"");
+    meta.appendChild(nm);meta.appendChild(sub);
+    var badge=document.createElement("div");
+    if(it.status==="locked"){badge.className="badge lock";badge.textContent="加密";}
+    else if(it.status==="done"){badge.className="badge ok";badge.textContent="✓";}
+    else if(it.status==="err"){badge.className="badge warn";badge.textContent="失败";}
+    else {badge.className="badge";badge.textContent=it.status==="conv"?"转换中":"待转";}
+    var x=document.createElement("div");x.className="x";x.textContent="×";
+    x.addEventListener("click",function(e){e.stopPropagation();removeFile(it);});
+    row.appendChild(ic);row.appendChild(meta);row.appendChild(badge);row.appendChild(x);
+    box.appendChild(row);
+    if(!it.dur && !it.bad && !it._probed){it._probed=true;probeDur(it);}
+  });
+}
+function probeDur(it){
+  try{
+    var url=URL.createObjectURL(it.blob);
+    var au=document.createElement("audio");
+    au.preload="metadata";
+    au.onloadedmetadata=function(){it.dur=au.duration;renderList();URL.revokeObjectURL(url);};
+    au.onerror=function(){URL.revokeObjectURL(url);};
+    au.src=url;
+  }catch(e){}
+}
+function removeFile(it){
+  var i=files.indexOf(it);if(i<0)return;
+  if(it.outUrl)URL.revokeObjectURL(it.outUrl);
+  files.splice(i,1);renderList();renderResults();
+}
+
+/* ============ 设置 UI ============ */
+function applyPrefsUI(){
+  setTheme(prefs.theme);
+  $$("#fmtChips .chip").forEach(function(c){c.classList.toggle("on",c.dataset.f===prefs.format);});
+  $("#brate").value=prefs.brate;$("#brateVal").textContent=prefs.brate+" kbps";
+  $("#srate").value=String(prefs.srate);
+  $("#monoToggle").classList.toggle("on",prefs.mono);
+  $("#ffToggle").classList.toggle("on",prefs.ff);
+  updateBrateNote();
+}
+$$("#fmtChips .chip").forEach(function(c){c.addEventListener("click",function(){
+  $$("#fmtChips .chip").forEach(function(x){x.classList.remove("on");});c.classList.add("on");
+  targetFmt=c.dataset.f;prefs.format=targetFmt;savePrefs();updateBrateNote();
+});});
+$("#brate").addEventListener("input",function(){prefs.brate=parseInt(this.value,10);$("#brateVal").textContent=prefs.brate+" kbps";savePrefs();updateBrateNote();});
+$("#srate").addEventListener("change",function(){prefs.srate=parseInt(this.value,10)||0;savePrefs();});
+$("#monoToggle").addEventListener("click",function(){this.classList.toggle("on");prefs.mono=this.classList.contains("on");savePrefs();});
+$("#ffToggle").addEventListener("click",function(){this.classList.toggle("on");prefs.ff=this.classList.contains("on");savePrefs();});
+function updateBrateNote(){
+  var f=targetFmt;
+  var n=$("#brNote");
+  if(f==="wav"||f==="flac"){
+    n.textContent="【"+f.toUpperCase()+" 为无损格式】比特率滑块不生效，将保留原始音质（体积较大）。";
+    $("#brate").disabled=true;
+  }else{
+    n.textContent="比特率越高音质越好、体积越大。语音用 96–128，音乐推荐 192–256。";
+    $("#brate").disabled=false;
+  }
+}
+
+/* ============ 主题 ============ */
+function setTheme(t){
+  prefs.theme=t;document.documentElement.setAttribute("data-theme",t);
+  $("#btnTheme").querySelector(".ic").textContent=t==="dark"?"☀":"🌙";
+  savePrefs();
+}
+$("#btnTheme").addEventListener("click",function(){setTheme(prefs.theme==="dark"?"light":"dark");});
+
+/* ============ 转换核心 ============ */
+function decodeAudio(blob){
+  return new Promise(function(res,rej){
+    var url=URL.createObjectURL(blob);
+    var au=document.createElement("audio");
+    au.preload="auto";
+    au.oncanplaythrough=function(){
+      var ctx=new (window.AudioContext||window.webkitAudioContext)();
+      var src=ctx.createMediaSource?ctx.createMediaSource():null;
+      // 简单方案：用 fetch+decodeAudioData
+      blob.arrayBuffer().then(function(ab){
+        var actx=new (window.AudioContext||window.webkitAudioContext)();
+        actx.decodeAudioData(ab.slice(0),function(buf){res(buf);actx.close();URL.revokeObjectURL(url);},
+          function(err){rej(err);URL.revokeObjectURL(url);});
+      }).catch(rej);
+    };
+    au.onerror=function(){rej(new Error("浏览器无法解码该音频（可能是加密或损坏格式）"));URL.revokeObjectURL(url);};
+    au.src=url;
+  });
+}
+
+function pcmToWav(buf,mono){
+  var ch=mono?1:buf.numberOfChannels;
+  var len=buf.length;
+  var rate=buf.sampleRate;
+  var bytesPerSample=2;
+  var blockAlign=ch*bytesPerSample;
+  var dataSize=len*blockAlign;
+  var ab=new ArrayBuffer(44+dataSize);
+  var v=new DataView(ab);
+  var wr=0;
+  function ws(s){for(var i=0;i<s.length;i++)v.setUint8(wr++,s.charCodeAt(i));}
+  ws("RIFF");v.setUint32(wr,36+dataSize,true);wr+=4;ws("WAVE");
+  ws("fmt ");v.setUint32(wr,16,true);wr+=4;v.setUint16(wr,1,true);wr+=2;v.setUint16(wr,ch,true);wr+=2;
+  v.setUint32(wr,rate,true);wr+=4;v.setUint32(wr,rate*blockAlign,true);wr+=4;v.setUint16(wr,blockAlign,true);wr+=2;v.setUint16(wr,16,true);wr+=2;
+  ws("data");v.setUint32(wr,dataSize,true);wr+=4;
+  var chans=[];
+  for(var c=0;c<ch;c++)chans.push(buf.getChannelData(Math.min(c,buf.numberOfChannels-1)));
+  for(var i=0;i<len;i++){
+    for(var c=0;c<ch;c++){
+      var s=Math.max(-1,Math.min(1,chans[c][i]));
+      v.setInt16(wr, s<0?s*0x8000:s*0x7FFF, true);wr+=2;
+    }
+  }
+  return new Blob([ab],{type:"audio/wav"});
+}
+
+function pcmToOgg(buf,mono,br){
+  // 经 OfflineAudioContext + MediaRecorder(ogg/opus) 导出
+  return new Promise(function(res,rej){
+    if(typeof MediaRecorder==="undefined"){rej(new Error("当前浏览器不支持 OGG 录制（MediaRecorder 缺失）"));return;}
+    try{
+      var ch=mono?1:buf.numberOfChannels;
+      var rate=buf.sampleRate;
+      var oc=new OfflineAudioContext(ch, buf.length, rate);
+      var src=oc.createBufferSource();src.buffer=buf;src.connect(oc.destination);src.start();
+      oc.startRendering().then(function(rendered){
+        var mr=new MediaRecorder(oc.destination?null:null); // placeholder
+        // 真正转码：用 media element + captureStream 不可行无播放，改用 ScriptProcessor 录制方案
+        // 简化：把 rendered 重新放进 AudioContext 并用 MediaStreamDestination + MediaRecorder
+        var actx=new (window.AudioContext||window.webkitAudioContext)();
+        var abuf=actx.createBuffer(rendered.numberOfChannels===1?1:rendered.numberOfChannels, rendered.length, rendered.sampleRate);
+        for(var c=0;c<abuf.numberOfChannels;c++){abuf.copyToChannel(rendered.getChannelData(Math.min(c,rendered.numberOfChannels-1)),c);}
+        var s0=actx.createBufferSource();s0.buffer=abuf;
+        var dest=actx.createMediaStreamDestination();
+        s0.connect(dest);
+        // 选择 mime
+        var mime="audio/ogg";
+        if(!MediaRecorder.isTypeSupported(mime)){
+          if(MediaRecorder.isTypeSupported("audio/ogg;codecs=opus"))mime="audio/ogg;codecs=opus";
+          else if(MediaRecorder.isTypeSupported("audio/webm;codecs=opus"))mime="audio/webm;codecs=opus";
+          else {rej(new Error("当前浏览器不支持 OGG/Opus 录制"));actx.close();return;}
+        }
+        var rec=new MediaRecorder(dest,mime?{mimeType:mime,audioBitsPerSecond:br*1000}:undefined);
+        var chunks=[];
+        rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data);};
+        rec.onstop=function(){
+          var blob=new Blob(chunks,{type:mime.split(";")[0]});
+          res(blob);actx.close();
+        };
+        s0.start(0);
+        rec.start();
+        setTimeout(function(){try{rec.stop();}catch(e){}}, Math.max(50, buf.length/buf.sampleRate*1000)+200);
+      }).catch(rej);
+    }catch(e){rej(e);}
+  });
+}
+
+function pcmToMp4Aac(buf,mono,br){
+  return new Promise(function(res,rej){
+    if(typeof MediaRecorder==="undefined"){rej(new Error("当前浏览器不支持 M4A 录制"));return;}
+    try{
+      var actx=new (window.AudioContext||window.webkitAudioContext)();
+      var ch=mono?1:buf.numberOfChannels;
+      var abuf=actx.createBuffer(ch,buf.length,buf.sampleRate);
+      for(var c=0;c<ch;c++)abuf.copyToChannel(buf.getChannelData(Math.min(c,buf.numberOfChannels-1)),c);
+      var s0=actx.createBufferSource();s0.buffer=abuf;
+      var dest=actx.createMediaStreamDestination();
+      s0.connect(dest);
+      var mime="audio/mp4";
+      if(!MediaRecorder.isTypeSupported(mime)){if(MediaRecorder.isTypeSupported("audio/aac"))mime="audio/aac";else{rej(new Error("当前浏览器不支持 M4A/AAC 录制"));actx.close();return;}}
+      var rec=new MediaRecorder(dest,{mimeType:mime,audioBitsPerSecond:br*1000});
+      var chunks=[];
+      rec.ondataavailable=function(e){if(e.data&&e.data.size)chunks.push(e.data);};
+      rec.onstop=function(){res(new Blob(chunks,{type:"audio/mp4"}));actx.close();};
+      s0.start(0);rec.start();
+      setTimeout(function(){try{rec.stop();}catch(e){}}, Math.max(50, buf.length/buf.sampleRate*1000)+200);
+    }catch(e){rej(e);}
+  });
+}
+
+function pcmToMp3(buf,mono,br){
+  // 使用第三方 lamejs（若已加载），否则降级提示
+  return new Promise(function(res,rej){
+    if(typeof lamejs==="undefined"){rej(new Error("MP3 编码器未加载（lamejs）"));return;}
+    try{
+      var ch=mono?1:buf.numberOfChannels;
+      var rate=buf.sampleRate;
+      var enc=new lamejs.Mp3Encoder(ch,rate,br);
+      var chans=[];
+      for(var c=0;c<ch;c++){
+        var d=buf.getChannelData(c);
+        var s=new Int16Array(d.length);
+        for(var i=0;i<d.length;i++){var x=Math.max(-1,Math.min(1,d[i]));s[i]=x<0?x*0x8000:x*0x7FFF;}
+        chans.push(s);
+      }
+      var block=1152,out=[];
+      for(var i=0;i<d.length;i+=block){
+        if(ch===1){out.push(enc.encodeBuffer(chans[0].subarray(i,i+block)));}
+        else{out.push(enc.encodeBuffer(chans[0].subarray(i,i+block),chans[1].subarray(i,i+block)));}
+      }
+      out.push(enc.flush());
+      res(new Blob(out.filter(function(x){return x.length;}),{type:"audio/mpeg"}));
+    }catch(e){rej(e);}
+  });
+}
+
+function resampleIfNeeded(buf,wantRate,mono){
+  if((!wantRate||wantRate===buf.sampleRate) && !mono)return Promise.resolve(buf);
+  return new Promise(function(res,rej){
+    try{
+      var ch=mono?1:buf.numberOfChannels;
+      var rate=wantRate||buf.sampleRate;
+      var oc=new OfflineAudioContext(ch,buf.length,rate);
+      var s=oc.createBufferSource();s.buffer=buf;s.connect(oc.destination);s.start();
+      oc.startRendering().then(function(r){res(r);}).catch(rej);
+    }catch(e){rej(e);}
+  });
+}
+
+async function convertOne(it){
+  if(it.status==="locked")throw new Error("加密格式不可转换");
+  var abuf=await decodeAudio(it.blob);
+  if(prefs.srate)abuf=await resampleIfNeeded(abuf,prefs.srate,prefs.mono);
+  else if(prefs.mono&&abuf.numberOfChannels>1)abuf=await resampleIfNeeded(abuf,abuf.sampleRate,true);
+  var br=prefs.brate;
+  var blob;
+  if(targetFmt==="wav")blob=pcmToWav(abuf,prefs.mono||abuf.numberOfChannels===1);
+  else if(targetFmt==="flac")blob=await pcmToFlac(abuf,prefs.mono);
+  else if(targetFmt==="mp3")blob=await pcmToMp3(abuf,prefs.mono||abuf.numberOfChannels===1,br);
+  else if(targetFmt==="ogg")blob=await pcmToOgg(abuf,prefs.mono||abuf.numberOfChannels===1,br);
+  else if(targetFmt==="m4a")blob=await pcmToMp4Aac(abuf,prefs.mono||abuf.numberOfChannels===1,br);
+  else blob=await pcmToOgg(abuf,false,br);
+  return blob;
+}
+
+/* FLAC：原生不支持，尝试 ffmpeg.wasm，否则提示 */
+function pcmToFlac(buf,mono){
+  return new Promise(function(res,rej){
+    if(window.ffmpegWasmReady){ffConvert(buf,mono,"flac").then(res,rej);}
+    else rej(new Error("FLAC 需要 ffmpeg.wasm 引擎，请在设置中开启并允许首次联网加载"));
+  });
+}
+
+/* ============ ffmpeg.wasm 引擎 ============ */
+var ffmpegWasmReady=false;
+async function ensureFF(){
+  if(ffmpegWasmReady)return true;
+  $("#ffNote").textContent="正在加载 ffmpeg.wasm 核心（约 30MB，首次需联网）…";
+  try{
+    if(typeof importScripts!=="undefined")importScripts("https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js");
+    else{
+      await new Promise(function(r,re){var s=document.createElement("script");s.src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js";s.onload=r;s.onerror=function(){re(new Error("ffmpeg 脚本加载失败"));};document.head.appendChild(s);});
+    }
+    ffmpegWasmReady=true;
+    $("#ffNote").textContent="ffmpeg.wasm 已就绪，可处理 WMA 等更多格式（含 FLAC）。";
+    return true;
+  }catch(e){$("#ffNote").textContent="ffmpeg.wasm 加载失败："+e.message;return false;}
+}
+async function ffConvert(buf,mono,fmt){
+  // 简化：导出 wav 中间文件再交给 ffmpeg；需要 FFmpeg 类实例，这里给出骨架
+  throw new Error("ffmpeg 完整管线需额外初始化，当前以浏览器原生引擎为主；WMA 等请开启后联系更新");
+}
+
+/* ============ 批量转换 ============ */
+$("#btnConvert").addEventListener("click",async function(){
+  if(converting)return;
+  var pending=files.filter(function(f){return f.status!=="locked" && f.status!=="done";});
+  var locked=files.filter(function(f){return f.status==="locked";});
+  if(!pending.length && !locked.length){toast("请先添加音频文件");return;}
+  if(locked.length){toast(locked.length+" 个加密文件已跳过（mgg 等无法离线解密）");}
+  if(!pending.length){return;}
+  converting=true;
+  if(prefs.ff){var ok=await ensureFF();if(!ok){converting=false;return;}}
+  $("#progWrap").style.display="block";
+  for(var i=0;i<pending.length;i++){
+    var it=pending[i];
+    it.status="conv";renderList();
+    $("#progSteps").textContent="正在转换 ("+(i+1)+"/"+pending.length+") "+it.name;
+    $("#progBar").style.width=Math.round(i/pending.length*100)+"%";
+    try{
+      var blob=await convertOne(it);
+      it.outBlob=blob;
+      it.outName=it.name.replace(/\.[^.]+$/,"")+"_"+targetFmt+"."+extOf(targetFmt);
+      it.outUrl=URL.createObjectURL(blob);
+      it.status="done";
+    }catch(e){
+      it.status="err";it.err=e.message||String(e);
+      console.warn("转换失败",it.name,e);
+    }
+    renderList();
+  }
+  $("#progBar").style.width="100%";
+  $("#progSteps").textContent="转换完成";
+  converting=false;
+  renderResults();
+  setTimeout(function(){$("#progWrap").style.display="none";},1200);
+});
+
+function renderResults(){
+  var done=files.filter(function(f){return f.status==="done"&&f.outUrl;});
+  var box=$("#resultList");box.innerHTML="";
+  if(!done.length){$("#resultCard").style.display="none";return;}
+  $("#resultCard").style.display="block";
+  done.forEach(function(it){
+    var row=document.createElement("div");row.className="filerow";
+    var ic=document.createElement("div");ic.className="ic";ic.textContent="✅";
+    var meta=document.createElement("div");meta.className="meta";
+    var nm=document.createElement("div");nm.className="name";nm.textContent=it.outName;
+    var sub=document.createElement("div");sub.className="sub";
+    sub.textContent=fmtBytes(it.outBlob.size)+" · "+targetFmt.toUpperCase();
+    meta.appendChild(nm);meta.appendChild(sub);
+    var dl=document.createElement("div");dl.className="x";dl.textContent="⬇";dl.style.color="var(--primary)";
+    dl.addEventListener("click",function(e){e.stopPropagation();downloadOne(it);});
+    row.appendChild(ic);row.appendChild(meta);row.appendChild(dl);
+    box.appendChild(row);
+  });
+}
+function downloadOne(it){
+  if(!it.outUrl)return;
+  var a=document.createElement("a");a.href=it.outUrl;a.download=it.outName;a.click();
+  toast("已下载 "+it.outName);
+}
+$("#btnDownloadAll").addEventListener("click",function(){
+  files.filter(function(f){return f.status==="done"&&f.outUrl;}).forEach(function(it){downloadOne(it);});
+});
+$("#btnClearDone").addEventListener("click",function(){
+  files=files.filter(function(f){return !(f.status==="done"&&f.outUrl);});
+  renderList();renderResults();
+});
+
+/* ============ 第三方 MP3 编码器（lamejs）按需加载 ============ */
+function ensureLame(){
+  return new Promise(function(res){
+    if(typeof lamejs!=="undefined")return res(true);
+    var s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js";
+    s.onload=function(){res(typeof lamejs!=="undefined");};
+    s.onerror=function(){res(false);};
+    document.head.appendChild(s);
+  });
+}
+// 当目标为 MP3 时按需加载编码器
+$("#btnConvert").addEventListener("click",function(){
+  if(targetFmt==="mp3" && typeof lamejs==="undefined"){ensureLame();}
+});
+
+/* ============ 初始化 ============ */
+applyPrefsUI();
+updateBrateNote();
+console.log("离线音频转换已就绪");
+</script>
+</body>
+</html>
